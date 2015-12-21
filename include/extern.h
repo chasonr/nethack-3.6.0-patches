@@ -1098,7 +1098,7 @@ E boolean FDECL(usmellmon, (struct permonst *));
 
 /* ### mapglyph.c ### */
 
-E int FDECL(mapglyph, (int, int *, int *, unsigned *, int, int));
+E int FDECL(mapglyph, (int, nhsym *, int *, unsigned *, int, int));
 E char *FDECL(encglyph, (int));
 E void FDECL(genl_putmixed, (winid, int, const char *));
 
@@ -1634,7 +1634,7 @@ E int FDECL(choose_classes_menu,
             (const char *, int, BOOLEAN_P, char *, char *));
 E void FDECL(add_menu_cmd_alias, (CHAR_P, CHAR_P));
 E char FDECL(map_menu_cmd, (CHAR_P));
-E void FDECL(assign_warnings, (uchar *));
+E void FDECL(assign_warnings, (nhsym *));
 E char *FDECL(nh_getenv, (const char *));
 E void FDECL(set_duplicate_opt_detection, (int));
 E void FDECL(set_wc_option_mod_status, (unsigned long, int));
@@ -1668,7 +1668,7 @@ E char *FDECL(dowhatdoes_core, (CHAR_P, char *));
 E int NDECL(dohelp);
 E int NDECL(dohistory);
 E int FDECL(do_screen_description,
-            (coord, BOOLEAN_P, int, char *, const char **));
+            (coord, BOOLEAN_P, nhsym, char *, const char **));
 E int FDECL(do_look, (int, coord *));
 
 /* ### pcmain.c ### */

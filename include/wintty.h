@@ -161,7 +161,7 @@ E void NDECL(setclipped);
 #endif
 E void FDECL(docorner, (int, int));
 E void NDECL(end_glyphout);
-E void FDECL(g_putch, (int));
+E void FDECL(g_putch, (nhsym));
 E void FDECL(win_tty_init, (int));
 
 /* external declarations */

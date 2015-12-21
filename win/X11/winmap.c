@@ -99,7 +99,8 @@ int bkglyph UNUSED;
     {
         uchar ch;
         register unsigned char *ch_ptr;
-        int color, och;
+        int color;
+        nhsym och;
         unsigned special;
 #ifdef TEXTCOLOR
         register unsigned char *co_ptr;
