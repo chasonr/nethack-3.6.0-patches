@@ -1,0 +1,20 @@
+This repository collects the source code of NetHack 3.6.0
+(http://www.nethack.org/) with all published patches and other known bugs fixed
+as described in bugfixes.txt.
+
+The master branch contains only bug fixes. The interfaces branch, when
+complete, will feature Unicode support on the map and additional user
+interfaces:
+
+* SDL 2
+* Qt 4 or 5
+* A Unicode-enabled Curses interface
+
+The above listed interfaces will all support Unicode on the map. Unicode will
+also be available for TTY on Unix (including Linux and Mac OS X) and for TTY
+and Win32 on the Windows NT series (NT, 2000, XP, Vista, 8 and 10).
+
+Qt 3 may eventually support Unicode if I feel like including it. X11 could
+support Unicode, but the Athena label widget is broken and the Xorg developers
+have made it clear that they have no intention of fixing it. Thus Unicode
+cannot be supported on X11.
