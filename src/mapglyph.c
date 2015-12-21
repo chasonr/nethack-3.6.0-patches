@@ -58,7 +58,7 @@ static int explcolors[] = {
 int
 mapglyph(glyph, ochar, ocolor, ospecial, x, y)
 int glyph, *ocolor, x, y;
-int *ochar;
+nhsym *ochar;
 unsigned *ospecial;
 {
     register int offset, idx;
@@ -221,7 +221,7 @@ unsigned *ospecial;
         color = NO_COLOR;
 #endif
 
-    *ochar = (int) ch;
+    *ochar = ch;
     *ospecial = special;
 #ifdef TEXTCOLOR
     *ocolor = color;
@@ -235,7 +235,37 @@ int glyph;
 {
     static char encbuf[20];
 
-    Sprintf(encbuf, "\\G%04X%04X", context.rndencode, glyph);
+    if (SYMHANDLING(H_UNICODE)) {
+        nhsym in_ch;
+        int oc, os;
+        mapglyph(glyph, &in_ch, &oc, &os, 0, 0);
+        /* Exclude invalid code points */
+        if ((in_ch & 0xFFFFFC00) == 0xD800 || glyph > 0x10FFFF) {
+            in_ch = 0xFFFD;
+        }
+        /* Convert to UTF-8 */
+        if (in_ch < 0x80) {
+            encbuf[0] = (char) in_ch;
+            encbuf[1] = '\0';
+        } else if (in_ch < 0x800) {
+            encbuf[0] = (char) (0xC0 |  (in_ch >>  6)        );
+            encbuf[1] = (char) (0x80 | ( in_ch        & 0x3F));
+            encbuf[2] = '\0';
+        } else if (in_ch < 0x10000) {
+            encbuf[0] = (char) (0xE0 |  (in_ch >> 12)        );
+            encbuf[1] = (char) (0x80 | ((in_ch >>  6) & 0x3F));
+            encbuf[2] = (char) (0x80 | ( in_ch        & 0x3F));
+            encbuf[3] = '\0';
+        } else {
+            encbuf[0] = (char) (0xF0 |  (in_ch >> 18)        );
+            encbuf[1] = (char) (0x80 | ((in_ch >> 12) & 0x3F));
+            encbuf[2] = (char) (0x80 | ((in_ch >>  6) & 0x3F));
+            encbuf[3] = (char) (0x80 | ( in_ch        & 0x3F));
+            encbuf[4] = '\0';
+        }
+    } else {
+        Sprintf(encbuf, "\\G%04X%04X", context.rndencode, glyph);
+    }
     return encbuf;
 }
 
@@ -264,7 +294,8 @@ const char *str;
 
     while (*cp) {
         if (*cp == '\\') {
-            int rndchk, dcount, so, gv, ch = 0, oc = 0;
+            int rndchk, dcount, so, gv, oc = 0;
+            nhsym ch = 0;
             unsigned os = 0;
             const char *dp, *save_cp;
 
