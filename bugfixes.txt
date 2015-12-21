@@ -3,3 +3,7 @@ List of bugs fixed in this repository:
 * C360-19:  xlog's realtime field is not accurate.
             Author: NetHack development team
             Source: http://nethack.org/v360/bugmore/nh360-realtime.diff
+
+* W360-1:   Help->About crashes the game. (So don't do that.)
+            Author: NetHack development team
+            Source: http://nethack.org/v360/bugmore/winfix02.diff
