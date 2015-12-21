@@ -1,0 +1,5 @@
+List of bugs fixed in this repository:
+
+* C360-19:  xlog's realtime field is not accurate.
+            Author: NetHack development team
+            Source: http://nethack.org/v360/bugmore/nh360-realtime.diff
