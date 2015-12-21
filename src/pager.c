@@ -543,7 +543,7 @@ int
 do_screen_description(cc, looked, sym, out_str, firstmatch)
 coord cc;
 boolean looked;
-int sym;
+nhsym sym;
 char *out_str;
 const char **firstmatch;
 {

@@ -2836,7 +2836,8 @@ mswin_status_update(int idx, genericptr_t ptr, int chg, int percent)
     long cond, *condptr = (long *) ptr;
     char *text = (char *) ptr;
     MSNHMsgUpdateStatus update_cmd_data;
-    int ocolor, ochar;
+    int ocolor;
+    nhsym ochar;
     unsigned ospecial;
     long value = -1;
 
