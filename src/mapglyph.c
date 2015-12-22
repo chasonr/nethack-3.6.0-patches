@@ -48,10 +48,10 @@ static int explcolors[] = {
 
 #if defined(USE_TILES) && defined(MSDOS)
 #define HAS_ROGUE_IBM_GRAPHICS \
-    (currentgraphics == ROGUESET && SYMHANDLING(H_IBM) && !iflags.grmode)
+    (currentgraphics == ROGUESET && (SYMHANDLING(H_IBM) || SYMHANDLING(H_UNICODE)) && !iflags.grmode)
 #else
 #define HAS_ROGUE_IBM_GRAPHICS \
-    (currentgraphics == ROGUESET && SYMHANDLING(H_IBM))
+    (currentgraphics == ROGUESET && (SYMHANDLING(H_IBM) || SYMHANDLING(H_UNICODE)))
 #endif
 
 /*ARGSUSED*/
