@@ -43,3 +43,4 @@ util/lev_lex.c
 util/lev_yacc.c
 util/makedefs
 util/recover
+util/tilemap
