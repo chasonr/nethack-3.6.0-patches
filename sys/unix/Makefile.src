@@ -161,7 +161,9 @@ GNOMEINC=-I/usr/lib/glib/include -I/usr/lib/gnome-libs/include -I../win/gnome
 # NetHack is standard C.  If using Qt, uncomment the LINK line here to get
 # the C++ libraries linked in.
 CXXFLAGS = $(CFLAGS) -I. -I$(QTDIR)/include
+ifndef CXX
 CXX=g++
+endif
 #LINK=g++
 #	For cross-compiling, eg. with gcc on Linux (see also CC further up):
 #CXX=arm-linux-g++
@@ -195,6 +197,19 @@ WINX11OBJ = Window.o dialogs.o winX.o winmap.o winmenu.o winmesg.o \
 #
 WINQTSRC = ../win/Qt/qt_win.cpp ../win/Qt/qt_clust.cpp ../win/Qt/qttableview.cpp
 WINQTOBJ = qt_win.o qt_clust.o qttableview.o tile.o
+#
+# Files for an SDL2 port
+#
+WINSDL2SRC = ../win/sdl2/sdl2bind.cpp ../win/sdl2/sdl2extcmd.cpp \
+	../win/sdl2/sdl2font_mac.cpp ../win/sdl2/sdl2font_pango.cpp \
+	../win/sdl2/sdl2getlin.cpp ../win/sdl2/sdl2interface.cpp \
+	../win/sdl2/sdl2map.cpp ../win/sdl2/sdl2menu.cpp \
+	../win/sdl2/sdl2message.cpp ../win/sdl2/sdl2plsel.cpp \
+	../win/sdl2/sdl2posbar.cpp ../win/sdl2/sdl2status.cpp \
+	../win/sdl2/sdl2text.cpp ../win/sdl2/sdl2window.cpp
+WINSDL2OBJ = sdl2bind.o sdl2extcmd.o sdl2font_mac.o sdl2font_pango.o \
+	sdl2getlin.o sdl2interface.o sdl2map.o sdl2menu.o sdl2message.o \
+	sdl2plsel.o sdl2posbar.o sdl2status.o sdl2text.o sdl2window.o tile.o
 #
 # Files for a Gnome port
 #
@@ -250,6 +265,9 @@ WINX11LIB = -lXaw -lXmu -lXext -lXt -lX11
 #
 # libraries for Qt
 WINQTLIB = -L$(QTDIR)/lib -lqt
+#
+# libraries for SDL2
+WINSDL2LIB =
 #
 # libraries for KDE (with Qt)
 WINKDELIB = -lkdecore -lkdeui -lXext
@@ -338,7 +356,7 @@ HACKCSRC = allmain.c alloc.c apply.c artifact.c attrib.c ball.c bones.c \
 	   spell.c steal.c steed.c sys.c teleport.c timeout.c topten.c track.c \
 	   trap.c \
 	   u_init.c uhitm.c vault.c version.c vision.c weapon.c were.c wield.c \
-	   windows.c wizard.c worm.c worn.c write.c zap.c
+	   windows.c wizard.c worm.c worn.c write.c zap.c string.c unicode.c
 
 # all operating-system-dependent .c (for dependencies and such)
 SYSCSRC = ../sys/atari/tos.c ../sys/share/pcmain.c ../sys/share/pcsys.c \
@@ -404,7 +422,7 @@ HOBJ = $(FIRSTOBJ) allmain.o alloc.o apply.o artifact.o attrib.o ball.o \
 	sys.o \
 	steal.o steed.o teleport.o timeout.o topten.o track.o trap.o u_init.o \
 	uhitm.o vault.o vision.o vis_tab.o weapon.o were.o wield.o windows.o \
-	wizard.o worm.o worn.o write.o zap.o \
+	wizard.o worm.o worn.o write.o zap.o string.o unicode.o \
 	$(REGEXOBJ) $(RANDOBJ) $(SYSOBJ) $(WINOBJ) $(HINTOBJ) version.o
 # the .o files from the HACKCSRC, SYSSRC, and WINSRC lists
 
@@ -719,6 +737,34 @@ qt_clust.o: ../win/Qt/qt_clust.cpp ../include/qt_clust.h
 	$(CXX) $(CXXFLAGS) -c ../win/Qt/qt_clust.cpp
 qttableview.o: ../win/Qt/qttableview.cpp ../include/qttableview.h
 	$(CXX) $(CXXFLAGS) -c ../win/Qt/qttableview.cpp
+sdl2bind.o: ../win/sdl2/sdl2bind.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2bind.cpp
+sdl2extcmd.o: ../win/sdl2/sdl2extcmd.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2extcmd.cpp
+sdl2font_mac.o: ../win/sdl2/sdl2font_mac.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2font_mac.cpp
+sdl2font_pango.o: ../win/sdl2/sdl2font_pango.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2font_pango.cpp
+sdl2getlin.o: ../win/sdl2/sdl2getlin.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2getlin.cpp
+sdl2interface.o: ../win/sdl2/sdl2interface.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2interface.cpp
+sdl2map.o: ../win/sdl2/sdl2map.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2map.cpp
+sdl2menu.o: ../win/sdl2/sdl2menu.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2menu.cpp
+sdl2message.o: ../win/sdl2/sdl2message.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2message.cpp
+sdl2plsel.o: ../win/sdl2/sdl2plsel.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2plsel.cpp
+sdl2posbar.o: ../win/sdl2/sdl2posbar.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2posbar.cpp
+sdl2status.o: ../win/sdl2/sdl2status.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2status.cpp
+sdl2text.o: ../win/sdl2/sdl2text.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2text.cpp
+sdl2window.o: ../win/sdl2/sdl2window.cpp
+	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2window.cpp
 wc_chainin.o: ../win/chain/wc_chainin.c $(HACK_H)
 	$(CC) $(CFLAGS) -c ../win/chain/wc_chainin.c
 wc_chainout.o: ../win/chain/wc_chainout.c $(HACK_H)
@@ -840,6 +886,8 @@ worm.o: worm.c $(HACK_H) ../include/lev.h
 worn.o: worn.c $(HACK_H)
 write.o: write.c $(HACK_H)
 zap.o: zap.c $(HACK_H)
+string.o: string.c $(HACK_H)
+unicode.o: unicode.c $(HACK_H) ../include/unicode.h
 # DEPENDENCIES MUST END AT END OF FILE
 # IF YOU PUT STUFF HERE IT WILL GO AWAY
 # see make depend above
