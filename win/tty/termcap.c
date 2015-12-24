@@ -1265,6 +1265,11 @@ int color;
     if (windowprocs.name != NULL && !strcmpi(windowprocs.name, "Qt"))
         return TRUE;
 #endif
+#ifdef SDL2_GRAPHICS
+    /* XXX has_color() should be added to windowprocs */
+    if (windowprocs.name != NULL && !strcmpi(windowprocs.name, "sdl2"))
+        return TRUE;
+#endif
 #ifdef AMII_GRAPHICS
     /* hilites[] not used */
     return iflags.use_color;

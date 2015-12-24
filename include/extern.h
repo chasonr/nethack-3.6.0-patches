@@ -2228,6 +2228,44 @@ E void FDECL(dismount_steed, (int));
 E void FDECL(place_monster, (struct monst *, int, int));
 E boolean FDECL(stucksteed, (BOOLEAN_P));
 
+/* ### string.c ### */
+
+E void NDECL(str_clear);
+E str_context FDECL(str_open_context, (const char *));
+E void FDECL(str_close_context, (str_context));
+E genericptr_t FDECL(str_mem_alloc, (size_t));
+E char *FDECL(str_alloc, (size_t));
+E utf16_t *FDECL(str_alloc16, (size_t));
+E utf32_t *FDECL(str_alloc32, (size_t));
+E char *FDECL(str_copy, (const char *));
+E utf16_t *FDECL(str_copy16, (const utf16_t *));
+E utf32_t *FDECL(str_copy32, (const utf32_t *));
+E genericptr_t FDECL(str_export, (str_context, genericptr_t));
+E char *FDECL(str_detach, (char *));
+E utf16_t *FDECL(str_detach16, (utf16_t *));
+E utf32_t *FDECL(str_detach32, (utf32_t *));
+
+#ifdef __cplusplus
+class StringContext {
+public:
+    StringContext(const char *trace)
+    : m_ctx(::str_open_context(trace)) {}
+
+    ~StringContext(void)
+    {
+        ::str_close_context(m_ctx);
+    }
+
+    operator ::str_context(void)
+    {
+        return m_ctx;
+    }
+
+private:
+    ::str_context m_ctx;
+};
+#endif
+
 /* ### teleport.c ### */
 
 E boolean FDECL(goodpos, (int, int, struct monst *, unsigned));

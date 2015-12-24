@@ -66,16 +66,28 @@ typedef xchar boolean; /* 0 or 1 */
 #endif
 
 /*
- * type nhsym: loadable symbols go into this type
- * For Unicode support, we want a 32 bit unsigned integer. The unsigned type
- * is adequate on most systems. Conceivable 16 bit MS-DOS and OS/2 versions
- * (which may never be built) will need unsigned long.
+ * Unicode character types
+ * Improvise a bit
  */
+typedef unsigned short utf16_t;
 #if defined(MSDOS) || defined(OS2)
-typedef unsigned long nhsym;
+    /* Possible 16 bit build; ensure 32 bit */
+    typedef unsigned long utf32_t;
 #else
-typedef unsigned nhsym;
+    /* Most things have 32 bit int */
+    typedef unsigned utf32_t;
 #endif
+
+/*
+ * type nhsym: loadable symbols go into this type
+ */
+typedef utf32_t nhsym;
+
+/*
+ * opaque type for string allocation
+ */
+struct str_context_rec;
+typedef struct str_context_rec *str_context;
 
 #ifndef STRNCMPI
 #ifndef __SASC_60 /* SAS/C already shifts to stricmp */
