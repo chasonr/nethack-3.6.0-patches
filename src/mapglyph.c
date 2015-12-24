@@ -237,7 +237,8 @@ int glyph;
 
     if (SYMHANDLING(H_UNICODE)) {
         nhsym in_ch;
-        int oc, os;
+        int oc;
+        unsigned os;
         mapglyph(glyph, &in_ch, &oc, &os, 0, 0);
         /* Exclude invalid code points */
         if ((in_ch & 0xFFFFFC00) == 0xD800 || glyph > 0x10FFFF) {
