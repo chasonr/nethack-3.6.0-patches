@@ -211,6 +211,16 @@ WINSDL2OBJ = sdl2bind.o sdl2extcmd.o sdl2font_mac.o sdl2font_pango.o \
 	sdl2getlin.o sdl2interface.o sdl2map.o sdl2menu.o sdl2message.o \
 	sdl2plsel.o sdl2posbar.o sdl2status.o sdl2text.o sdl2window.o tile.o
 #
+# Files for a Curses port
+#
+WINCURSESSRC = ../win/curses/cursdial.c ../win/curses/cursinit.c \
+	../win/curses/cursmain.c ../win/curses/cursmesg.c \
+	../win/curses/cursmisc.c ../win/curses/cursstat.c \
+	../win/curses/curswins.c
+#
+WINCURSESOBJ = cursdial.o cursinit.o cursmain.o cursmesg.o cursmisc.o \
+	cursstat.o curswins.o
+#
 # Files for a Gnome port
 #
 WINGNOMESRC = ../win/gnome/gnaskstr.c ../win/gnome/gnbind.c \
@@ -268,6 +278,9 @@ WINQTLIB = -L$(QTDIR)/lib -lqt
 #
 # libraries for SDL2
 WINSDL2LIB =
+#
+# libraries for Curses
+WINCURSESLIB = $(WINTTYLIB)
 #
 # libraries for KDE (with Qt)
 WINKDELIB = -lkdecore -lkdeui -lXext
@@ -765,6 +778,20 @@ sdl2text.o: ../win/sdl2/sdl2text.cpp
 	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2text.cpp
 sdl2window.o: ../win/sdl2/sdl2window.cpp
 	$(CXX) $(CXXFLAGS) -c ../win/sdl2/sdl2window.cpp
+cursdial.o: ../win/curses/cursdial.c
+	$(CC) $(CFLAGS) -c ../win/curses/cursdial.c
+cursinit.o: ../win/curses/cursinit.c
+	$(CC) $(CFLAGS) -c ../win/curses/cursinit.c
+cursmain.o: ../win/curses/cursmain.c
+	$(CC) $(CFLAGS) -c ../win/curses/cursmain.c
+cursmesg.o: ../win/curses/cursmesg.c
+	$(CC) $(CFLAGS) -c ../win/curses/cursmesg.c
+cursmisc.o: ../win/curses/cursmisc.c
+	$(CC) $(CFLAGS) -c ../win/curses/cursmisc.c
+cursstat.o: ../win/curses/cursstat.c
+	$(CC) $(CFLAGS) -c ../win/curses/cursstat.c
+curswins.o: ../win/curses/curswins.c
+	$(CC) $(CFLAGS) -c ../win/curses/curswins.c
 wc_chainin.o: ../win/chain/wc_chainin.c $(HACK_H)
 	$(CC) $(CFLAGS) -c ../win/chain/wc_chainin.c
 wc_chainout.o: ../win/chain/wc_chainout.c $(HACK_H)
