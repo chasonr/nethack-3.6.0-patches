@@ -655,7 +655,6 @@ boolean redraw;
     }
 
     /* Experience */
-#ifdef EXP_ON_BOTL
     if (prevexp.display != flags.showexp) { /* Setting has changed */
         prevexp.display = flags.showexp;
         free(prevlevel.label);
@@ -700,7 +699,6 @@ boolean redraw;
     }
 
     prevexp.value = u.uexp; /* Track it even when it's not displayed */
-#endif  /* EXP_ON_BOTL */
 
     /* Level */
     if (u.mtimedone) {  /* Currently polymorphed - show monster HD */
@@ -1253,14 +1251,12 @@ curses_decrement_highlight()
             unhighlight = TRUE;
         }
     }
-#ifdef EXP_ON_BOTL
     if (prevexp.highlight_turns > 0) {
         prevexp.highlight_turns--;
         if (prevexp.highlight_turns == 0) {
             unhighlight = TRUE;
         }
     }
-#endif
     if (prevtime.highlight_turns > 0) {
         prevtime.highlight_turns--;
         if (prevtime.highlight_turns == 0) {
@@ -1546,7 +1542,6 @@ init_stats()
     set_stat_color(&prevac);
 
     /* Experience */
-#ifdef EXP_ON_BOTL
     prevexp.value = u.uexp;
     sprintf(buf, "%ld", u.uexp);
     prevexp.txt = curses_copy_of(buf);
@@ -1555,7 +1550,6 @@ init_stats()
     prevexp.label = NULL;
     prevexp.id = "xp";
     set_stat_color(&prevexp);
-#endif
 
     /* Level */
     prevlevel.label = NULL;
@@ -1793,13 +1787,11 @@ int label_width;
         }
         prevac.label = curses_copy_of("AC:");
 
-#ifdef EXP_ON_BOTL
         /* Experience */
         if (prevexp.label) {
             free (prevexp.label);
         }
         prevexp.label = curses_copy_of("XP:");
-#endif
 
         /* Level */
         if (prevlevel.label) {
@@ -1904,13 +1896,11 @@ int label_width;
         }
         prevac.label = curses_copy_of("AC:");
 
-#ifdef EXP_ON_BOTL
         /* Experience */
         if (prevexp.label) {
             free (prevexp.label);
         }
         prevexp.label = curses_copy_of("XP:");
-#endif
 
         /* Level */
         if (prevlevel.label) {
@@ -2015,13 +2005,11 @@ int label_width;
         }
         prevac.label = curses_copy_of("Armor Class:   ");
 
-#ifdef EXP_ON_BOTL
         /* Experience */
         if (prevexp.label) {
             free (prevexp.label);
         }
         prevexp.label = curses_copy_of("Experience:    ");
-#endif
 
         /* Level */
         if (prevlevel.label) {
