@@ -20,14 +20,17 @@ dat/options
 dat/oracles
 dat/quest.dat
 dat/quest_levs
+dat/rip.xpm
 dat/rumors
 dat/spec_levs
+dat/x11tiles
 doc/Guidebook
 include/date.h
 include/dgn_comp.h
 include/lev_comp.h
 include/onames.h
 include/pm.h
+include/tile.h
 include/vis_tab.h
 src/Sysunix
 src/config.h-t
@@ -45,4 +48,6 @@ util/lev_lex.c
 util/lev_yacc.c
 util/makedefs
 util/recover
+util/tile2x11
 util/tilemap
+util/tiletxt.c
