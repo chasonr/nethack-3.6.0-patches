@@ -8,6 +8,7 @@ Makefile
 # Intermediate and final build products
 *.o
 *.lev
+*.moc
 dat/bogusmon
 dat/data
 dat/dungeon
