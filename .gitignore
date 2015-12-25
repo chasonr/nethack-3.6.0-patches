@@ -8,6 +8,7 @@ Makefile
 # Intermediate and final build products
 *.o
 *.lev
+*.moc
 dat/bogusmon
 dat/data
 dat/dungeon
@@ -33,6 +34,7 @@ src/config.h-t
 src/hack.h-t
 src/monstr.c
 src/nethack
+src/tile.c
 src/vis_tab.c
 util/dgn_comp
 util/dgn_lex.c
@@ -43,3 +45,4 @@ util/lev_lex.c
 util/lev_yacc.c
 util/makedefs
 util/recover
+util/tilemap
