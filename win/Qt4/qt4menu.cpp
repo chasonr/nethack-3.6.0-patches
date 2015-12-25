@@ -188,7 +188,7 @@ void NetHackQtMenuWindow::AddMenu(int glyph, const ANY_P* identifier,
 	int bracket = str.indexOf('[');
 	if (bracket != -1) {
 	    itemlist[itemcount].str = str.left(bracket+1)
-		+ QChar(cp437(str.at(bracket+1).unicode()))
+		+ QChar(chrConvert(str.at(bracket+1).unicode()))
 		+ str.mid(bracket+2);
 	}
     }

@@ -136,7 +136,7 @@ void NetHackQtMapViewport::paintEvent(QPaintEvent* event)
 		painter.setPen( Qt::green );
 		/* map glyph to character and color */
 		(void) mapglyph(g, &ch, &color, &special, i, j);
-		ch = cp437(ch);
+		ch = chrConvert(ch);
 #ifdef TEXTCOLOR
 		painter.setPen( nhcolor_to_pen(color) );
 #endif
