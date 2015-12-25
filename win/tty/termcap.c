@@ -1270,6 +1270,11 @@ int color;
     if (windowprocs.name != NULL && !strcmpi(windowprocs.name, "sdl2"))
         return TRUE;
 #endif
+#ifdef CURSES_GRAPHICS
+    /* XXX has_color() should be added to windowprocs */
+    if (windowprocs.name != NULL && !strcmpi(windowprocs.name, "curses"))
+        return TRUE;
+#endif
 #ifdef AMII_GRAPHICS
     /* hilites[] not used */
     return iflags.use_color;
