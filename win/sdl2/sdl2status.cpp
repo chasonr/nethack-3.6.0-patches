@@ -156,10 +156,8 @@ void SDL2StatusWindow::redraw(void)
     // Experience
     if (Upolyd)
         snprintf(str2, SIZE(str2), " HD:%d", mons[u.umonnum].mlevel);
-#ifdef EXP_ON_BOTL
     else if (flags.showexp)
         snprintf(str2, SIZE(str2), " Xp:%u/%-1d", u.ulevel, u.uexp);
-#endif
     else
         snprintf(str2, SIZE(str2), " Exp:%u", u.ulevel);
     rect = render(str2, x, y, textColor(sc->lev_color()), textBG(ATR_NONE));
