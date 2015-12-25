@@ -8,8 +8,9 @@ List of bugs fixed in this repository:
             Author: NetHack development team
             Source: http://nethack.org/v360/bugmore/winfix02.diff
 
-Bugs not mentioned on the DevTeam's website 
+* S360-2:   The top of include/qt_xpms.h has been chopped off.
+            Author: NetHack development team
+            Source: missing lines restored from NetHack 3.4.3
 
-* The top of include/qt_xpms.h has been chopped off.
-  Author: NetHack development team
-  Source: missing lines restored from NetHack 3.4.3
+Bugs not mentioned on the DevTeam's website:
+  None to report here.
