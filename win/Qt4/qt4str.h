@@ -17,7 +17,7 @@ extern QString str_titlecase(const QString& str);
 extern QString nh_capitalize_words(const QString& str);
 
 // Map symbol conversion
-extern int cp437(int ch);
+extern nhsym chrConvert(nhsym ch);
 
 } // namespace nethack_qt4
 
