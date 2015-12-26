@@ -557,7 +557,7 @@ onMSNHCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         int col, row;
         int color;
         unsigned special;
-        int mgch;
+        nhsym mgch;
 
         index = 0;
         for (row = 0; row < ROWNO; row++) {
@@ -665,7 +665,7 @@ onPaint(HWND hWnd)
                         RECT glyph_rect;
                         int color;
                         unsigned special;
-                        int mgch;
+                        nhsym mgch;
                         HBRUSH back_brush;
                         COLORREF OldFg;
 
@@ -715,7 +715,7 @@ onPaint(HWND hWnd)
 #ifdef USE_PILEMARK
             int color;
             unsigned special;
-            int mgch;
+            nhsym mgch;
 #endif
             /* prepare tiles DC for mapping */
             tileDC = CreateCompatibleDC(hDC);

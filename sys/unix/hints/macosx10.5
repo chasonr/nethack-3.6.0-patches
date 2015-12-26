@@ -14,22 +14,25 @@
 # Edit the next section to match the type of build you need.
 
 # 1. Which window system(s) should be included in this binary?
-WANT_WIN_TTY=1
+#WANT_WIN_TTY=1
 #WANT_WIN_X11=1
-#WANT_WIN_QT=1
+WANT_WIN_QT=1
+#WANT_WIN_SDL2=1
+#WANT_WIN_CURSES=1
 
 # 1a. What is the default window system?
-WANT_DEFAULT=tty
+#WANT_DEFAULT=tty
 #WANT_DEFAULT=x11
-#WANT_DEFAULT=qt
+WANT_DEFAULT=Qt
+#WANT_DEFAULT=sdl2
+#WANT_DEFAULT=curses
 
 # 1b. If you set WANT_WIN_QT, you need to
-#  A) set QTDIR either here or in the environment to point to the Qt2 or Qt3
-#     library installation root.  (Qt4 will not work; Qt3 does not presently
-#     compile under Leopard (MacOSX 10.5) out-of-the-box.)
+#  A) set QTDIR either here or in the environment to point to the Qt4 or Qt5
+#     library installation root.  (Qt2 or Qt3 will not work.)
 #  B) set XPMLIB to point to the Xpm library
 ifdef WANT_WIN_QT
-QTDIR=/Developer/Qt
+QTDIR=/usr
 LIBXPM= -L/Developer/SDKs/MacOSX10.3.9.sdk/usr/X11R6/lib -lXpm
 endif	# WANT_WIN_QT
 
@@ -53,54 +56,66 @@ GAMEGRP  = games
 #WANT_SOURCE_INSTALL=1
 
 #CC=gcc -W -Wimplicit -Wreturn-type -Wunused -Wformat -Wswitch -Wshadow -Wcast-qual -Wwrite-strings -DGCC_WARN
-CC=gcc -Wall -Wextra -Wno-missing-field-initializers -Wimplicit -Wreturn-type -Wunused -Wformat -Wswitch -Wshadow -Wwrite-strings -DGCC_WARN -ansi -pedantic
+CC=clang
+CXX=clang++ -std=c++11
 
 #
 # You shouldn't need to change anything below here.
 #
 
 # XXX -g vs -O should go here, -I../include goes in the makefile
-CFLAGS=-g -I../include
+CFLAGS+=-Wall -Wextra -Wno-missing-field-initializers -Wimplicit -Wreturn-type -Wunused -Wformat -Wswitch -Wshadow -Wwrite-strings -DGCC_WARN -ansi -pedantic
+CFLAGS+=-g -I../include
 CFLAGS+=-DNOCLIPPING -DNOMAIL -DNOTPARMDECL -DHACKDIR=\"$(HACKDIR)\"
 CFLAGS+= -DDEFAULT_WINDOW_SYS=\"$(WANT_DEFAULT)\" -DDLB
 
 CFLAGS+= -DGREPPATH=\"/usr/bin/grep\"
 
+WINSRC =
+WINOBJ0 =
+WINLIB =
+LINK = $(CC)
+
 ifdef WANT_WIN_TTY
 WINSRC = $(WINTTYSRC)
-WINOBJ = $(WINTTYOBJ)
+WINOBJ0 = $(WINTTYOBJ)
 WINLIB = $(WINTTYLIB)
 WINTTYLIB=-lncurses
 else	# !WANT_WIN_TTY
 CFLAGS += -DNOTTYGRAPHICS
 endif	# !WANT_WIN_TTY
 
+ifdef WANT_WIN_CURSES
+WINSRC = $(WINCURSESSRC)
+WINOBJ0 = $(WINCURSESOBJ)
+WINLIB = $(WINCURSESLIB)
+WINTTYLIB=-lncurses
+CFLAGS += -DCURSES_GRAPHICS
+endif	# !WANT_WIN_CURSES
+
 ifdef WANT_WIN_X11
 WINSRC += $(WINX11SRC)
-WINOBJ += $(WINX11OBJ)
+WINOBJ0 += $(WINX11OBJ)
 WINLIB += $(WINX11LIB)
 LFLAGS=-L/usr/X11R6/lib
-VARDATND = x11tiles NetHack.ad pet_mark.xbm pilemark.xbm
+VARDATND += x11tiles NetHack.ad pet_mark.xbm pilemark.xbm
 POSTINSTALL+= bdftopcf win/X11/nh10.bdf > $(INSTDIR)/nh10.pcf; (cd $(INSTDIR); mkfontdir);
 CFLAGS += -DX11_GRAPHICS
 endif	# WANT_WIN_X11
 
 ifdef WANT_WIN_QT
-CFLAGS += -DQT_GRAPHICS -DNOUSER_SOUNDS
-CFLAGS += -isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4
-LINK=g++
-WINSRC += $(WINQTSRC)
-WINLIB += $(WINQTLIB) $(LIBXPM)
-WINLIB += -framework Carbon -framework QuickTime -lz -framework OpenGL
-WINLIB += -framework AGL
+QT_FRAMEWORKS_DIR = /Library/Frameworks
+CFLAGS += -DQT_GRAPHICS -DNOUSER_SOUNDS -DZLIB_COMP
+CFLAGS += -F$(QT_FRAMEWORKS_DIR) -mmacosx-version-min=10.4
+LINK=$(CXX)
+WINSRC += $(WINQT4SRC)
+WINLIB += $(LIBXPM) -F$(QT_FRAMEWORKS_DIR) -framework QtCore -framework QtGui
 ifdef WANT_WIN_X11
-	# prevent duplicate tile.o in WINOBJ
-WINOBJ = $(sort $(WINQTOBJ) $(WINX11OBJ))
 ifdef WANT_WIN_TTY
-WINOBJ += $(WINTTYOBJ)
+WINOBJ0 += $(WINTTYOBJ)
 endif	# WANT_WIN_TTY
 else	# !WANT_WIN_X11
-WINOBJ += $(WINQTOBJ)
+WINOBJ0 += $(WINQT4OBJ) /usr/lib/libz.dylib
 endif	# !WANT_WIN_X11
 
 # XXX if /Developer/qt exists and QTDIR not set, use that
@@ -109,8 +124,21 @@ $(error QTDIR not defined in the environment or Makefile)
 endif	# QTDIR
 # XXX make sure QTDIR points to something reasonable
 else	# !WANT_WIN_QT
-LINK=$(CC)
+VARDATND += x11tiles rip.xpm
 endif	# !WANT_WIN_QT
+
+ifdef WANT_WIN_SDL2
+SDL_FRAMEWORKS_DIR = /Library/Frameworks
+CFLAGS += -DSDL2_GRAPHICS -DPOSITIONBAR -F$(SDL_FRAMEWORKS_DIR)
+WINSRC += $(WINSDL2SRC)
+WINOBJ0 += $(WINSDL2OBJ)
+WINLIB += $(WINSDL2LIB) -F$(SDL_FRAMEWORKS_DIR) -framework SDL2 -framework SDL2_image -framework CoreFoundation -framework CoreGraphics -framework CoreText
+LINK=$(CXX)
+VARDATND += nhtiles.bmp
+endif	# WANT_WIN_SDL2
+
+# prevent duplicate tile.o in WINOBJ
+WINOBJ = $(sort $(WINOBJ0))
 
 ifdef WANT_SHARE_INSTALL
 # if $GAMEUID is root, we install into roughly proper Mac locations, otherwise
