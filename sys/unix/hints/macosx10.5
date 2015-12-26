@@ -134,6 +134,7 @@ WINSRC += $(WINSDL2SRC)
 WINOBJ0 += $(WINSDL2OBJ)
 WINLIB += $(WINSDL2LIB) -F$(SDL_FRAMEWORKS_DIR) -framework SDL2 -framework SDL2_image -framework CoreFoundation -framework CoreGraphics -framework CoreText
 LINK=$(CXX)
+VARDATND += nhtiles.bmp
 endif	# WANT_WIN_SDL2
 
 # prevent duplicate tile.o in WINOBJ
