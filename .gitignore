@@ -16,6 +16,7 @@ dat/dungeon.pdf
 dat/engrave
 dat/epitaph
 dat/nhdat
+dat/nhtiles.bmp
 dat/options
 dat/oracles
 dat/quest.dat
@@ -48,6 +49,7 @@ util/lev_lex.c
 util/lev_yacc.c
 util/makedefs
 util/recover
+util/tile2bmp
 util/tile2x11
 util/tilemap
 util/tiletxt.c
