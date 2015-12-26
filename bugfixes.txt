@@ -13,4 +13,5 @@ List of bugs fixed in this repository:
             Source: missing lines restored from NetHack 3.4.3
 
 Bugs not mentioned on the DevTeam's website:
-  None to report here.
+* tile2bmp.c produces broken bitmaps with 64 bit GCC
+  Author: Ray Chason
