@@ -542,6 +542,13 @@ void SDL2Interface::sdl2_putstr(winid window, int attr, const std::string& str)
     winp->putStr(attr, str);
 }
 
+void SDL2Interface::sdl2_putmixed(winid window, int attr, const std::string& str)
+{
+    SDL2Window *winp = window_map[window];
+
+    winp->putMixed(attr, str);
+}
+
 void SDL2Interface::sdl2_display_file(const char *filename, bool complain)
 {
     dlb *file;
