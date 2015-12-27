@@ -23,6 +23,7 @@ public:
     int heightHint(void);
 
     virtual void putStr(int attr, const std::string& str);
+    virtual void putMixed(int attr, const std::string& str);
     void prevMessage(void);
 
     void newTurn(void) { m_combine = false; }
@@ -31,6 +32,7 @@ public:
 private:
     struct Line
     {
+        int glyph;
         std::string text;
         uint32_t attributes;
     };
@@ -48,6 +50,8 @@ private:
     int m_more_width;
     bool m_more;
     bool m_combine;
+
+    void putMixed(int attr, const std::string& str, int glyph);
 };
 
 }

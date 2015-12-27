@@ -46,6 +46,7 @@ public:
     virtual void endMenu(const std::string& prompt);
     virtual int  selectMenu(int how, menu_item ** menu_list);
     virtual void putStr(int attr, const std::string& str);
+    virtual void putMixed(int attr, const std::string& str);
     virtual void clear(void);
     virtual void printGlyph(xchar x, xchar y, int glyph);
     virtual void setCursor(int x, int y);

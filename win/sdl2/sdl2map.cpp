@@ -13,6 +13,26 @@ extern short glyph2tile[];
 namespace NH_SDL2
 {
 
+const SDL_Color SDL2MapWindow::colors[] =
+{
+    {  96,  96,  96, 255 }, // "black" is actually dark gray (e.g., black dragon)
+    { 176,   0,   0, 255 }, // red
+    {   0, 191,   0, 255 }, // green
+    { 127, 127,   0, 255 }, // brown
+    {   0,   0, 176, 255 }, // blue
+    { 176,   0, 176, 255 }, // magenta
+    {   0, 176, 176, 255 }, // cyan
+    { 176, 176, 176, 255 }, // gray
+    { 255, 255, 255, 255 }, // no color (Rogue level)
+    { 255, 127,   0, 255 }, // orange
+    { 127, 255, 127, 255 }, // bright green
+    { 255, 255,   0, 255 }, // yellow
+    { 127, 127, 255, 255 }, // bright blue
+    { 255, 127, 255, 255 }, // bright magenta
+    { 127, 255, 255, 255 }, // bright cyan
+    { 255, 255, 255, 255 }  // white
+};
+
 SDL2MapWindow::SDL2MapWindow(SDL2Interface *interface) :
     SDL2Window(interface),
     m_tile_mode(iflags.wc_tiled_map),
@@ -192,25 +212,6 @@ void SDL2MapWindow::clear(void)
 void SDL2MapWindow::printGlyph(xchar x, xchar y, int glyph)
 {
     static const SDL_Color black = { 0, 0, 0, 255 };
-    static const SDL_Color colors[] =
-    {
-        {  96,  96,  96, 255 }, // "black" is actually dark gray (e.g., black dragon)
-        { 176,   0,   0, 255 }, // red
-        {   0, 191,   0, 255 }, // green
-        { 127, 127,   0, 255 }, // brown
-        {   0,   0, 176, 255 }, // blue
-        { 176,   0, 176, 255 }, // magenta
-        {   0, 176, 176, 255 }, // cyan
-        { 176, 176, 176, 255 }, // gray
-        { 255, 255, 255, 255 }, // no color (Rogue level)
-        { 255, 127,   0, 255 }, // orange
-        { 127, 255, 127, 255 }, // bright green
-        { 255, 255,   0, 255 }, // yellow
-        { 127, 127, 255, 255 }, // bright blue
-        { 255, 127, 255, 255 }, // bright magenta
-        { 127, 255, 255, 255 }, // bright cyan
-        { 255, 255, 255, 255 }  // white
-    };
 
     if (x < 0 || COLNO <= x || y < 0 || ROWNO <= y) { return; }
 

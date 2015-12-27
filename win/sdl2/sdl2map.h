@@ -41,6 +41,8 @@ public:
 
     bool mapMouse(int x_in, int y_in, int *x_out, int *y_out);
 
+    static const SDL_Color colors[];
+
 private:
     struct Glyph
     {
