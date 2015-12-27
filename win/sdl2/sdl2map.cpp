@@ -219,6 +219,7 @@ void SDL2MapWindow::printGlyph(xchar x, xchar y, int glyph)
     unsigned ospecial;
 
     mapglyph(glyph, &ochar, &ocolor, &ospecial, x, y);
+    ochar = chrConvert(ochar);
 
     if (ocolor < 0 || ocolor > SIZE(colors)) { ocolor = 0; }
     m_map[y][x].text_glyph = ochar;

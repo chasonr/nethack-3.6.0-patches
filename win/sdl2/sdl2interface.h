@@ -154,6 +154,8 @@ private:
     void newDisplay(void);
 };
 
+nhsym chrConvert(nhsym ch);
+
 }
 
 #endif
