@@ -104,6 +104,12 @@ sdl2_putstr(winid window, int attr, const char *str)
 }
 
 static void
+sdl2_putmixed(winid window, int attr, const char *str)
+{
+    interface->sdl2_putmixed(window, attr, str);
+}
+
+static void
 sdl2_display_file(const char *filename, BOOLEAN_P complain)
 {
     interface->sdl2_display_file(filename, complain);
@@ -355,7 +361,7 @@ struct window_procs sdl2_procs = {
     sdl2_destroy_nhwindow,
     sdl2_curs,
     sdl2_putstr,
-    genl_putmixed,
+    sdl2_putmixed,
     sdl2_display_file,
     sdl2_start_menu,
     sdl2_add_menu,

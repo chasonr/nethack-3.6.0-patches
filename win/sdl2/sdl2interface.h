@@ -42,6 +42,7 @@ public:
     void  sdl2_destroy_nhwindow(winid window);
     void  sdl2_curs(winid window, int x, int y);
     void  sdl2_putstr(winid window, int attr, const std::string& str);
+    void  sdl2_putmixed(winid window, int attr, const std::string& str);
     void  sdl2_display_file(const char *filename, bool complain);
     void  sdl2_start_menu(winid window);
     void  sdl2_add_menu(winid window, int glyph, const anything* identifier,

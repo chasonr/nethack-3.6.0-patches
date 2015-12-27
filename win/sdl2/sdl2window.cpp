@@ -2,6 +2,7 @@
 
 extern "C" {
 #include "hack.h"
+#include "unicode.h"
 }
 #include "sdl2.h"
 #include "sdl2interface.h"
@@ -120,6 +121,58 @@ int SDL2Window::selectMenu(int, menu_item **)
 void SDL2Window::putStr(int, const std::string&)
 {
     // Place holder
+}
+
+void SDL2Window::putMixed(int attr, const std::string& str)
+{
+    StringContext ctx("SDL2Window::putMixed");
+
+    // Unless overridden, this will just convert any glyphs that are present
+    std::string out;
+
+    std::size_t i = 0;
+    while (i < str.size()) {
+        // Get literal part of string
+        std::size_t j = str.find("\\", i);
+        if (j == std::string::npos) {
+            out += str.substr(i);
+            break;
+        }
+        out += str.substr(i, j - i);
+        i = j;
+        // str[i] is a backslash
+        if (i + 10 <= str.size() && str[i + 1] == 'G') {
+            char rndchk_str[5];
+            char *end;
+            strncpy(rndchk_str, str.c_str() + i + 2, 4);
+            rndchk_str[4] = '\0';
+            int rndchk = strtol(rndchk_str, &end, 16);
+            if (rndchk == context.rndencode && *end == '\0') {
+                char gv_str[5];
+                strncpy(gv_str, str.c_str() + i + 6, 4);
+                gv_str[4] = '\0';
+                int gv = strtol(gv_str, &end, 16);
+                if (*end == '\0') {
+                    nhsym ch;
+                    int oc;
+                    unsigned os;
+                    utf32_t ch32[2];
+                    mapglyph(gv, &ch, &oc, &os, 0, 0);
+                    ch32[0] = chrConvert(ch);
+                    ch32[1] = 0;
+                    out += uni_32to8(ch32);
+                    i += 10;
+                    continue;
+                }
+            }
+        }
+        if (i + 2 <= str.size() && str[i + 1] == '\\') {
+            ++i;
+        }
+        out += "\\";
+        ++i;
+    }
+    putStr(attr, out);
 }
 
 void SDL2Window::clear(void)
