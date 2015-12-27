@@ -2,6 +2,7 @@
 
 extern "C" {
 #include "hack.h"
+#include "unicode.h"
 }
 #include "sdl2.h"
 #include "sdl2status.h"
@@ -27,6 +28,8 @@ SDL2StatusWindow::SDL2StatusWindow(SDL2Interface *interface) :
 
 void SDL2StatusWindow::redraw(void)
 {
+    StringContext ctx("SDL2StatusWindow::redraw");
+
     // Avoid segfaults if certain data structures are not ready
     if (youmonst.data == NULL) return;
 
@@ -125,9 +128,14 @@ void SDL2StatusWindow::redraw(void)
     x += rect.w;
 
     // Gold
-    snprintf(str2, SIZE(str2), " %s:%-2ld",
-            encglyph(objnum_to_glyph(GOLD_PIECE)), money_cnt(invent));
-    rect = render(str2, x, y, textColor(sc->gold_color()), textBG(ATR_NONE));
+    {
+        utf32_t ch32[2];
+        ch32[0] = chrConvert(showsyms[COIN_CLASS + SYM_OFF_O]);
+        ch32[1] = 0;
+        snprintf(str2, SIZE(str2), " %s:%-2ld",
+                uni_32to8(ch32), money_cnt(invent));
+        rect = render(str2, x, y, textColor(sc->gold_color()), textBG(ATR_NONE));
+    }
     x += rect.w;
 
     // Current hit points
@@ -157,7 +165,7 @@ void SDL2StatusWindow::redraw(void)
     if (Upolyd)
         snprintf(str2, SIZE(str2), " HD:%d", mons[u.umonnum].mlevel);
     else if (flags.showexp)
-        snprintf(str2, SIZE(str2), " Xp:%u/%-1d", u.ulevel, u.uexp);
+        snprintf(str2, SIZE(str2), " Xp:%u/%-1ld", u.ulevel, u.uexp);
     else
         snprintf(str2, SIZE(str2), " Exp:%u", u.ulevel);
     rect = render(str2, x, y, textColor(sc->lev_color()), textBG(ATR_NONE));
