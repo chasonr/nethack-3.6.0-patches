@@ -47,7 +47,7 @@ private:
     struct Glyph
     {
         // Text display
-        char32_t text_glyph;
+        utf32_t text_glyph;
         SDL_Color text_fg;
         SDL_Color text_bg;
 
@@ -68,7 +68,7 @@ private:
     SDL_Surface *m_map_image;
 
     void mapDraw(unsigned x, unsigned y, bool cursor);
-    bool wallDraw(char32_t ch, const SDL_Rect *rect, SDL_Color color);
+    bool wallDraw(utf32_t ch, const SDL_Rect *rect, SDL_Color color);
 
     enum ZoomMode {
         SDL2_ZOOMMODE_NORMAL,

@@ -33,9 +33,9 @@ private:
     {
         int glyph;
         anything identifier;
-        char32_t ch;
-        char32_t gch;
-        char32_t def_ch;
+        utf32_t ch;
+        utf32_t gch;
+        utf32_t def_ch;
         int attr;
         std::string str;
         bool selected;
@@ -51,8 +51,8 @@ private:
     unsigned long m_count;
 
     void setWindowSize(void);
-    bool selectEntry(char32_t ch, int hoh);
-    void doPage(char32_t ch);
+    bool selectEntry(utf32_t ch, int hoh);
+    void doPage(utf32_t ch);
 
     struct MenuColumn
     {

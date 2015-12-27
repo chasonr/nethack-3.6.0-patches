@@ -34,7 +34,7 @@ private:
     unsigned m_first_line;
     unsigned m_page_size;
 
-    void doPage(char32_t ch);
+    void doPage(utf32_t ch);
 };
 
 }

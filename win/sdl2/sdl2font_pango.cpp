@@ -119,7 +119,7 @@ int SDL2Font::fontHeight(void)
 
 // Text rendering
 // If no background is given, background is transparent
-SDL_Surface *SDL2Font::render(char32_t ch, SDL_Color foreground)
+SDL_Surface *SDL2Font::render(utf32_t ch, SDL_Color foreground)
 {
     char utf8[4];
     std::size_t size;
@@ -133,7 +133,7 @@ SDL_Surface *SDL2Font::render(const std::string& text, SDL_Color foreground)
     return render(text, foreground, (SDL_Color){ 0, 0, 0, 0 });
 }
 
-SDL_Surface *SDL2Font::render(char32_t ch, SDL_Color foreground, SDL_Color background)
+SDL_Surface *SDL2Font::render(utf32_t ch, SDL_Color foreground, SDL_Color background)
 {
     char utf8[4];
     std::size_t size;
@@ -216,7 +216,7 @@ SDL_Surface *SDL2Font::render(const std::string& text, SDL_Color foreground, SDL
 }
 
 // Text extent
-SDL_Rect SDL2Font::textSize(char32_t ch)
+SDL_Rect SDL2Font::textSize(utf32_t ch)
 {
     char utf8[4];
     std::size_t size;

@@ -45,7 +45,7 @@ struct FontData
 };
 
 std::basic_string<UniChar>
-singleChar(char32_t ch)
+singleChar(utf32_t ch)
 {
     if (ch > 0x10FFFF || (ch & 0xFFFFF800) == 0xD800) {
         ch = 0xFFFD;
@@ -148,7 +148,7 @@ int SDL2Font::fontHeight(void)
 
 // Text rendering
 // If no background is given, background is transparent
-SDL_Surface *SDL2Font::render(char32_t ch, SDL_Color foreground)
+SDL_Surface *SDL2Font::render(utf32_t ch, SDL_Color foreground)
 {
     return render(ch, foreground, transparent);
 }
@@ -252,7 +252,7 @@ static SDL_Surface *renderImpl(const std::basic_string<UniChar>& text,
     return surface;
 }
 
-SDL_Surface *SDL2Font::render(char32_t ch, SDL_Color foreground, SDL_Color background)
+SDL_Surface *SDL2Font::render(utf32_t ch, SDL_Color foreground, SDL_Color background)
 {
     FontData *mfont = reinterpret_cast<FontData *>(m_impl);
 
@@ -290,7 +290,7 @@ SDL_Rect textSizeImpl(const std::basic_string<UniChar>& text, FontData *mfont)
     return size;
 }
 
-SDL_Rect SDL2Font::textSize(char32_t ch)
+SDL_Rect SDL2Font::textSize(utf32_t ch)
 {
     FontData *mfont = reinterpret_cast<FontData *>(m_impl);
 

@@ -103,7 +103,7 @@ public:
     void fill(SDL2Window *window, const SDL_Rect& window_rect, SDL_Color color);
     void fill(SDL2Window *window, SDL_Color color);
 
-    char32_t getKey(bool cmd = false, int *x = NULL, int *y = NULL, int *mod = NULL);
+    utf32_t getKey(bool cmd = false, int *x = NULL, int *y = NULL, int *mod = NULL);
 
     SDL_PixelFormat *pixelFormat(void);
 
