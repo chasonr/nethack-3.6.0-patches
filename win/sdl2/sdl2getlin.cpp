@@ -103,7 +103,7 @@ bool SDL2GetLine::getLine(const std::string& prompt, std::string& line)
 
     // Accept keys
     while (true) {
-        char32_t ch = interface()->getKey();
+        utf32_t ch = interface()->getKey();
         if (ch == '\033') { return false; } // escape
         if (ch == '\n' || ch == '\r') { break; }
         addChar(ch);
@@ -115,7 +115,7 @@ bool SDL2GetLine::getLine(const std::string& prompt, std::string& line)
     return true;
 }
 
-void SDL2GetLine::addChar(char32_t ch)
+void SDL2GetLine::addChar(utf32_t ch)
 {
     // TODO:  process left and right arrows
     if (ch > 0x10FFFF) { return; }

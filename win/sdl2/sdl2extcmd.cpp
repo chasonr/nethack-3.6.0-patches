@@ -18,7 +18,7 @@ SDL2ExtCmd::SDL2ExtCmd(SDL2Interface *interface) :
 {
 }
 
-void SDL2ExtCmd::addChar(char32_t ch)
+void SDL2ExtCmd::addChar(utf32_t ch)
 {
     // Add the character the same way SDL2GetLine does
     SDL2GetLine::addChar(ch);
