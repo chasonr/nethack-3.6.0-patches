@@ -450,7 +450,7 @@ void SDL2MapWindow::mapDraw(unsigned x, unsigned y, bool cursor)
     }
 }
 
-bool SDL2MapWindow::wallDraw(char32_t ch, const SDL_Rect *rect, SDL_Color color)
+bool SDL2MapWindow::wallDraw(utf32_t ch, const SDL_Rect *rect, SDL_Color color)
 {
     enum
     {

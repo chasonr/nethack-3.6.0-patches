@@ -75,7 +75,7 @@ void SDL2Menu::redraw(void)
                     m_menu[j].color, textBG(attr));
         } else {
             if (m_menu[j].identifier.a_void != NULL) {
-                char32_t ch = m_menu[j].ch;
+                utf32_t ch = m_menu[j].ch;
                 char tag[BUFSZ];
                 if (ch == 0) { ch = m_menu[j].def_ch; }
                 snprintf(tag, SIZE(tag), "%1$c %2$c - ",
@@ -140,7 +140,7 @@ void SDL2Menu::endMenu(const std::string& prompt)
 
 int SDL2Menu::selectMenu(int how, menu_item ** menu_list)
 {
-    char32_t ch;
+    utf32_t ch;
     int count;
 
     // Now show the window
@@ -230,7 +230,7 @@ void SDL2Menu::setVisible(bool visible)
     setWindowSize();
     SDL2Window::setVisible(visible);
     if (m_text) {
-        char32_t ch;
+        utf32_t ch;
         do {
             interface()->redraw();
             ch = interface()->getKey();
@@ -363,7 +363,7 @@ int SDL2Menu::buildColumnTable(void)
     return width;
 }
 
-bool SDL2Menu::selectEntry(char32_t ch, int how)
+bool SDL2Menu::selectEntry(utf32_t ch, int how)
 {
     if (how == PICK_NONE) { return false; }
 
@@ -480,7 +480,7 @@ bool SDL2Menu::selectEntry(char32_t ch, int how)
     return selected;
 }
 
-void SDL2Menu::doPage(char32_t ch)
+void SDL2Menu::doPage(utf32_t ch)
 {
     switch (ch) {
     case MENU_FIRST_PAGE:

@@ -108,7 +108,7 @@ void SDL2Text::setVisible(bool visible)
     interface()->redraw();
 
     if (visible) {
-        char32_t ch;
+        utf32_t ch;
         do {
             ch = interface()->getKey();
             doPage(ch);
@@ -116,7 +116,7 @@ void SDL2Text::setVisible(bool visible)
     }
 }
 
-void SDL2Text::doPage(char32_t ch)
+void SDL2Text::doPage(utf32_t ch)
 {
     switch (ch) {
     case MENU_FIRST_PAGE:

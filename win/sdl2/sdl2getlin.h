@@ -22,7 +22,7 @@ public:
 
 protected:
     // SDL2ExtCmd overrides this for extended command processing
-    virtual void addChar(char32_t ch);
+    virtual void addChar(utf32_t ch);
 
     // SDL2ExtCmd modifies this
     std::string m_contents;

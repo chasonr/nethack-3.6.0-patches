@@ -12,7 +12,7 @@ class SDL2ExtCmd : public SDL2GetLine
 {
 public:
     SDL2ExtCmd(SDL2Interface *interface);
-    virtual void addChar(char32_t ch);
+    virtual void addChar(utf32_t ch);
 };
 
 }

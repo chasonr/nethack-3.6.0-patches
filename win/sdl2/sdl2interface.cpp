@@ -611,10 +611,10 @@ int SDL2Interface::sdl2_select_menu(winid window, int how,
     return winp->selectMenu(how, menu_list);
 }
 
-char32_t SDL2Interface::getKey(bool cmd, int *x, int *y, int *mod)
+utf32_t SDL2Interface::getKey(bool cmd, int *x, int *y, int *mod)
 {
     StringContext ctx("SDL2Interface::getKey");
-    char32_t ch;
+    utf32_t ch;
     bool shift;
 
     if (mod) {
@@ -960,7 +960,7 @@ void SDL2Interface::sdl2_raw_print_bold(const char *str)
 
 int SDL2Interface::sdl2_nhgetch(void)
 {
-    char32_t ch;
+    utf32_t ch;
 
     // For now, accept only ASCII
     do {
@@ -971,7 +971,7 @@ int SDL2Interface::sdl2_nhgetch(void)
 
 int SDL2Interface::sdl2_nh_poskey(int *x, int *y, int *mod)
 {
-    char32_t ch;
+    utf32_t ch;
 
     message_window->newTurn();
 
@@ -1014,7 +1014,7 @@ char SDL2Interface::sdl2_yn_function(const char *ques,
     };
 
     StringContext ctx("SDL2Interface::sdl2_yn_function");
-    char32_t ch;
+    utf32_t ch;
 
     // Develop the prompt
     char prompt[BUFSZ];
@@ -1044,7 +1044,7 @@ char SDL2Interface::sdl2_yn_function(const char *ques,
         std::basic_string<utf32_t> choices32 = uni_8to32(choices);
 
         // Determine the quit character
-        char32_t quitch = def;
+        utf32_t quitch = def;
         for (unsigned i = 0; quit_table[i].choices != NULL; ++i) {
             if (strcmp(quit_table[i].choices, choices) == 0) {
                 quitch = choices32[quit_table[i].quit];
@@ -1062,7 +1062,7 @@ char SDL2Interface::sdl2_yn_function(const char *ques,
                 ch = def;
                 break;
             }
-        } while (choices32.find(ch) == std::u32string::npos);
+        } while (choices32.find(ch) == std::basic_string<utf32_t>::npos);
     }
 
     return ch;

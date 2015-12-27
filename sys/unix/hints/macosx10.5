@@ -57,7 +57,7 @@ GAMEGRP  = games
 
 #CC=gcc -W -Wimplicit -Wreturn-type -Wunused -Wformat -Wswitch -Wshadow -Wcast-qual -Wwrite-strings -DGCC_WARN
 CC=clang
-CXX=clang++ -std=c++11
+CXX=clang++
 
 #
 # You shouldn't need to change anything below here.
@@ -106,7 +106,7 @@ endif	# WANT_WIN_X11
 ifdef WANT_WIN_QT
 QT_FRAMEWORKS_DIR = /Library/Frameworks
 CFLAGS += -DQT_GRAPHICS -DNOUSER_SOUNDS -DZLIB_COMP
-CFLAGS += -F$(QT_FRAMEWORKS_DIR) -mmacosx-version-min=10.4
+CFLAGS += -F$(QT_FRAMEWORKS_DIR) -mmacosx-version-min=10.5
 LINK=$(CXX)
 WINSRC += $(WINQT4SRC)
 WINLIB += $(LIBXPM) -F$(QT_FRAMEWORKS_DIR) -framework QtCore -framework QtGui
