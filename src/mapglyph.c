@@ -3,6 +3,7 @@
 /* NetHack may be freely redistributed.  See license for details. */
 
 #include "hack.h"
+#include "unicode.h"
 #if defined(TTY_GRAPHICS)
 #include "wintty.h" /* for prototype of has_color() only */
 #endif
@@ -235,38 +236,7 @@ int glyph;
 {
     static char encbuf[20];
 
-    if (SYMHANDLING(H_UNICODE)) {
-        nhsym in_ch;
-        int oc;
-        unsigned os;
-        mapglyph(glyph, &in_ch, &oc, &os, 0, 0);
-        /* Exclude invalid code points */
-        if ((in_ch & 0xFFFFFC00) == 0xD800 || glyph > 0x10FFFF) {
-            in_ch = 0xFFFD;
-        }
-        /* Convert to UTF-8 */
-        if (in_ch < 0x80) {
-            encbuf[0] = (char) in_ch;
-            encbuf[1] = '\0';
-        } else if (in_ch < 0x800) {
-            encbuf[0] = (char) (0xC0 |  (in_ch >>  6)        );
-            encbuf[1] = (char) (0x80 | ( in_ch        & 0x3F));
-            encbuf[2] = '\0';
-        } else if (in_ch < 0x10000) {
-            encbuf[0] = (char) (0xE0 |  (in_ch >> 12)        );
-            encbuf[1] = (char) (0x80 | ((in_ch >>  6) & 0x3F));
-            encbuf[2] = (char) (0x80 | ( in_ch        & 0x3F));
-            encbuf[3] = '\0';
-        } else {
-            encbuf[0] = (char) (0xF0 |  (in_ch >> 18)        );
-            encbuf[1] = (char) (0x80 | ((in_ch >> 12) & 0x3F));
-            encbuf[2] = (char) (0x80 | ((in_ch >>  6) & 0x3F));
-            encbuf[3] = (char) (0x80 | ( in_ch        & 0x3F));
-            encbuf[4] = '\0';
-        }
-    } else {
-        Sprintf(encbuf, "\\G%04X%04X", context.rndencode, glyph);
-    }
+    Sprintf(encbuf, "\\G%04X%04X", context.rndencode, glyph);
     return encbuf;
 }
 
@@ -289,6 +259,7 @@ int attr;
 const char *str;
 {
     static const char hex[] = "00112233445566778899aAbBcCdDeEfF";
+    str_context ctx = str_open_context("genl_putmixed");
     char buf[BUFSZ];
     const char *cp = str;
     char *put = buf;
@@ -317,7 +288,17 @@ const char *str;
                         else
                             break;
                     so = mapglyph(gv, &ch, &oc, &os, 0, 0);
-                    *put++ = showsyms[so];
+                    if (SYMHANDLING(H_UNICODE)) {
+                        utf32_t ch32[2];
+                        char *utf8;
+                        ch32[0] = showsyms[so];
+                        ch32[1] = '\0';
+                        utf8 = uni_32to8(ch32);
+                        strcpy(put, utf8);
+                        put += strlen(utf8);
+                    } else {
+                        *put++ = showsyms[so];
+                    }
                     /* 'cp' is ready for the next loop iteration and '*cp'
                        should not be copied at the end of this iteration */
                     continue;
@@ -354,6 +335,7 @@ const char *str;
     *put = '\0';
     /* now send it to the normal putstr */
     putstr(window, attr, buf);
+    str_close_context(ctx);
 }
 
 /*mapglyph.c*/
