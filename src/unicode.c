@@ -215,7 +215,7 @@ boolean utf16;
 
         for (; count != 0; --count) {
             byte = inp[i];
-            if ((byte & 0xC0) == 0x80) {
+            if ((byte & 0xC0) != 0x80) {
                 break;
             }
             ++i;
@@ -273,7 +273,7 @@ const char *inp;
 
         for (; count != 0; --count) {
             byte = inp[i];
-            if ((byte & 0xC0) == 0x80) {
+            if ((byte & 0xC0) != 0x80) {
                 break;
             }
             ++i;
@@ -334,7 +334,7 @@ const char *inp;
 
         for (; count != 0; --count) {
             byte = inp[i];
-            if ((byte & 0xC0) == 0x80) {
+            if ((byte & 0xC0) != 0x80) {
                 break;
             }
             ++i;
