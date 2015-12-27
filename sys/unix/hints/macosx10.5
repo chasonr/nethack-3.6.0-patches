@@ -125,6 +125,8 @@ endif	# QTDIR
 # XXX make sure QTDIR points to something reasonable
 else	# !WANT_WIN_QT
 VARDATND += x11tiles rip.xpm
+else	# !WANT_WIN_QT
+CFLAGS += -DCOMPRESS='"/usr/bin/gzip"' -DCOMPRESS_EXTENSION='".gz"'
 endif	# !WANT_WIN_QT
 
 ifdef WANT_WIN_SDL2
