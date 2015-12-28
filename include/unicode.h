@@ -35,6 +35,7 @@ utf16_t *FDECL(uni_normalize16, (const utf16_t *inp, const char *form));
 utf32_t *FDECL(uni_normalize32, (const utf32_t *inp, const char *form));
 
 /* String functions */
+utf32_t *uni_index32(const utf32_t *str, utf32_t ch);
 size_t uni_length16(const utf16_t *str);
 size_t uni_length32(const utf32_t *str);
 size_t uni_copy8(char *out, size_t out_size, const char *inp);
