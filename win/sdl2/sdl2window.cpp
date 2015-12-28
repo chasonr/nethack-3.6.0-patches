@@ -101,13 +101,12 @@ void SDL2Window::startMenu(void)
 }
 
 void
-SDL2Window::addMenu(int, const anything*, char, char, int, const std::string&,
-        bool)
+SDL2Window::addMenu(int, const anything*, char, char, int, const char *, bool)
 {
     // Place holder
 }
 
-void SDL2Window::endMenu(const std::string&)
+void SDL2Window::endMenu(const char *)
 {
     // Place holder
 }
@@ -118,41 +117,45 @@ int SDL2Window::selectMenu(int, menu_item **)
     return 0;
 }
 
-void SDL2Window::putStr(int, const std::string&)
+void SDL2Window::putStr(int, const char *)
 {
     // Place holder
 }
 
-void SDL2Window::putMixed(int attr, const std::string& str)
+void SDL2Window::putMixed(int attr, const char *str)
 {
-    StringContext ctx("SDL2Window::putMixed");
+    str_context ctx = str_open_context("SDL2Window::putMixed");
 
     // Unless overridden, this will just convert any glyphs that are present
-    std::string out;
+    // The converted string will never be longer than the input
+    char *out = str_alloc(strlen(str));
 
-    std::size_t i = 0;
-    while (i < str.size()) {
+    const char *p = str;
+    char *q = out;
+    while (*p != '\0') {
         // Get literal part of string
-        std::size_t j = str.find("\\", i);
-        if (j == std::string::npos) {
-            out += str.substr(i);
+        const char *end1 = index(p, '\\');
+        if (end1 == NULL) {
+            strcpy(q, p);
+            q += strlen(q);
             break;
         }
-        out += str.substr(i, j - i);
-        i = j;
-        // str[i] is a backslash
-        if (i + 10 <= str.size() && str[i + 1] == 'G') {
+        memcpy(q, p, (size_t) (end1 - p));
+        q += (size_t) (end1 - p);
+        p = end1;
+        // *p is a backslash
+        if (strlen(p) >= 10 && p[1] == 'G') {
             char rndchk_str[5];
-            char *end;
-            strncpy(rndchk_str, str.c_str() + i + 2, 4);
+            char *end2;
+            memcpy(rndchk_str, p + 2, 4);
             rndchk_str[4] = '\0';
-            int rndchk = strtol(rndchk_str, &end, 16);
-            if (rndchk == context.rndencode && *end == '\0') {
+            int rndchk = strtol(rndchk_str, &end2, 16);
+            if (rndchk == context.rndencode && *end2 == '\0') {
                 char gv_str[5];
-                strncpy(gv_str, str.c_str() + i + 6, 4);
+                memcpy(gv_str, p + 6, 4);
                 gv_str[4] = '\0';
-                int gv = strtol(gv_str, &end, 16);
-                if (*end == '\0') {
+                int gv = strtol(gv_str, &end2, 16);
+                if (*end2 == '\0') {
                     nhsym ch;
                     int oc;
                     unsigned os;
@@ -160,19 +163,22 @@ void SDL2Window::putMixed(int attr, const std::string& str)
                     mapglyph(gv, &ch, &oc, &os, 0, 0);
                     ch32[0] = chrConvert(ch);
                     ch32[1] = 0;
-                    out += uni_32to8(ch32);
-                    i += 10;
+                    strcpy(q, uni_32to8(ch32));
+                    q += strlen(q);
+                    p += 10;
                     continue;
                 }
             }
         }
-        if (i + 2 <= str.size() && str[i + 1] == '\\') {
-            ++i;
+        if (p[1] == '\\') {
+            ++p;
         }
-        out += "\\";
-        ++i;
+        *(q++) = '\\';
+        ++p;
     }
+    *q = '\0';
     putStr(attr, out);
+    str_close_context(ctx);
 }
 
 void SDL2Window::clear(void)
@@ -212,7 +218,7 @@ void SDL2Window::setFont(
 // Render text at given coordinates without stretching
 // Return rectangle in which the text was rendered
 SDL_Rect SDL2Window::render(
-        const std::string& str,
+        const char *str,
         int x, int y,
         SDL_Color fg, SDL_Color bg)
 {
@@ -224,7 +230,7 @@ SDL_Rect SDL2Window::render(
 }
 
 SDL_Rect SDL2Window::render(
-        const std::string& str,
+        const char *str,
         int x, int y,
         SDL_Color fg)
 {

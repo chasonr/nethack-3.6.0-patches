@@ -3,10 +3,6 @@
 #ifndef SDL2INTERFACE_H
 #define SDL2INTERFACE_H
 
-#include <list>
-#include <map>
-#include <string>
-#include <vector>
 #include "sdl2.h"
 
 class SDL2Font;
@@ -41,14 +37,14 @@ public:
     void  sdl2_display_nhwindow(winid window, bool blocking);
     void  sdl2_destroy_nhwindow(winid window);
     void  sdl2_curs(winid window, int x, int y);
-    void  sdl2_putstr(winid window, int attr, const std::string& str);
-    void  sdl2_putmixed(winid window, int attr, const std::string& str);
+    void  sdl2_putstr(winid window, int attr, const char *str);
+    void  sdl2_putmixed(winid window, int attr, const char *str);
     void  sdl2_display_file(const char *filename, bool complain);
     void  sdl2_start_menu(winid window);
     void  sdl2_add_menu(winid window, int glyph, const anything* identifier,
-                    char ch, char gch, int attr, const std::string& str,
+                    char ch, char gch, int attr, const char *str,
                     bool preselected);
-    void  sdl2_end_menu(winid window, const std::string& prompt);
+    void  sdl2_end_menu(winid window, const char *prompt);
     int   sdl2_select_menu(winid window, int how, menu_item ** menu_list);
     char  sdl2_message_menu(char let, int how, const char *mesg);
     void  sdl2_update_inventory(void);
@@ -107,18 +103,22 @@ public:
 
     SDL_PixelFormat *pixelFormat(void);
 
-    void setMessage(const std::string& message);
+    void setMessage(const char *message);
     void fadeMessage(void);
 
 private:
     // Given a winid, find the window
     winid next_winid;
-    std::map<winid, SDL2Window *> window_map;
+    SDL2Window *findWindow(winid id);
 
     SDL_Window *main_window;
 
-    // Last window in this vector appears on top
-    std::list<SDL2Window *> window_stack;
+    // Last window in this array appears on top
+    struct WindowRec {
+        winid id;
+        SDL2Window *window;
+    } window_stack[128];
+    unsigned window_top;
 
     // Windows in the main display
     // These pointers are not custodial; the windows are also in window_stack
@@ -134,14 +134,15 @@ private:
     void arrangeWindows(void);
 
     // Queue of characters previously typed
-    std::basic_string<utf32_t> key_queue;
-    std::size_t key_queue_index;
+    utf32_t key_queue[BUFSZ];
+    size_t key_queue_head;
+    size_t key_queue_tail;
 
     // For window manager events and other events besides keys
     void nonKeyEvent(const SDL_Event& event);
 
     // On-screen message
-    std::string m_message;
+    char *m_message;
     Uint32 m_message_time;
     SDL_TimerID m_timer_id;
     SDL2Font *m_font;

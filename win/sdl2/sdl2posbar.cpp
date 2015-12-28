@@ -15,6 +15,7 @@ namespace NH_SDL2
 SDL2PositionBar::SDL2PositionBar(SDL2Interface *interface, SDL2MapWindow *map_window) :
     SDL2Window(interface),
     m_text_w(0), m_text_h(0),
+    m_data(NULL),
     m_map_window(map_window)
 {
     // Map window font
@@ -26,11 +27,19 @@ SDL2PositionBar::SDL2PositionBar(SDL2Interface *interface, SDL2MapWindow *map_wi
     m_text_h = rect.h;
 }
 
+SDL2PositionBar::~SDL2PositionBar(void)
+{
+    delete[] m_data;
+}
+
 void SDL2PositionBar::redraw(void)
 {
     static const SDL_Color black = {   0,   0,   0, 255 };
     static const SDL_Color brown = {  96,  32,   0, 255 };
     static const SDL_Color white = { 255, 255, 255, 255 };
+
+    if (m_data == NULL) { return; }
+
     StringContext ctx("SDL2PositionBar::redraw");
 
     // Position of window with respect to map
@@ -63,7 +72,7 @@ void SDL2PositionBar::redraw(void)
         interface()->fill(this, rect, black);
     }
 
-    for (unsigned i = 0; i + 2 <= m_data.size(); i += 2) {
+    for (unsigned i = 0; m_data[i + 0] != '\0' && m_data[i + 1] != '\0'; i += 2) {
         utf32_t glyph[2];
         glyph[0] = static_cast<unsigned char>(m_data[i + 0]);
         glyph[1] = 0;
@@ -81,7 +90,9 @@ int SDL2PositionBar::heightHint(void)
 
 void SDL2PositionBar::updatePositionBar(const char *data)
 {
-    m_data = data;
+    delete[] m_data;
+    m_data = new char[strlen(data) + 1];
+    strcpy(m_data, data);
 }
 #endif // POSITIONBAR
 

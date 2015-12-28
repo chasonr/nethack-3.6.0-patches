@@ -20,13 +20,13 @@ public:
     // Text rendering
     // If no background is given, background is transparent
     SDL_Surface *render(utf32_t ch, SDL_Color foreground);
-    SDL_Surface *render(const std::string& text, SDL_Color foreground);
+    SDL_Surface *render(const char *text, SDL_Color foreground);
     SDL_Surface *render(utf32_t ch, SDL_Color foreground, SDL_Color background);
-    SDL_Surface *render(const std::string& text, SDL_Color foreground, SDL_Color background);
+    SDL_Surface *render(const char *text, SDL_Color foreground, SDL_Color background);
 
     // Text extent
     SDL_Rect textSize(utf32_t ch);
-    SDL_Rect textSize(const std::string& text);
+    SDL_Rect textSize(const char *text);
 
     // Default font names
     static const char *defaultMonoFont(void);

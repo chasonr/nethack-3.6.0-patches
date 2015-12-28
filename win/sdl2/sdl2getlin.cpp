@@ -17,13 +17,23 @@ const int min_width = 400;
 
 SDL2GetLine::SDL2GetLine(SDL2Interface *interface) :
     SDL2Window(interface),
-    m_box_width(0)
+    m_contents(new char[BUFSZ]),
+    m_contents_size(0),
+    m_contents_alloc(BUFSZ),
+    m_box_width(0),
+    m_prompt(NULL)
 {
     setVisible(false);
 
     // Message window font
     setFont(iflags.wc_font_message, iflags.wc_fontsiz_message,
             SDL2Font::defaultSerifFont(), 20);
+}
+
+SDL2GetLine::~SDL2GetLine(void)
+{
+    delete[] m_prompt;
+    delete[] m_contents;
 }
 
 void SDL2GetLine::redraw(void)
@@ -74,12 +84,12 @@ void SDL2GetLine::redraw(void)
 }
 
 
-bool SDL2GetLine::getLine(const std::string& prompt, std::string& line)
+char *SDL2GetLine::getLine(const char *prompt)
 {
-    StringContext ctx("SDL2GetLine::getLine");
-
     // Set the prompt
-    m_prompt = prompt;
+    delete[] m_prompt;
+    m_prompt = new char[strlen(prompt) + 1];
+    strcpy(m_prompt, prompt);
 
     // Height is a margin, a line, two margins, a line and two margins
     int h = margin * 5 + lineHeight() * 2;
@@ -104,15 +114,14 @@ bool SDL2GetLine::getLine(const std::string& prompt, std::string& line)
     // Accept keys
     while (true) {
         utf32_t ch = interface()->getKey();
-        if (ch == '\033') { return false; } // escape
+        if (ch == '\033') { return NULL; } // escape
         if (ch == '\n' || ch == '\r') { break; }
         addChar(ch);
     }
 
     // Returned false above if escape
 
-    line = std::string(uni_normalize8(m_contents.c_str(), "NFC"));
-    return true;
+    return uni_normalize8(m_contents, "NFC");
 }
 
 void SDL2GetLine::addChar(utf32_t ch)
@@ -120,14 +129,36 @@ void SDL2GetLine::addChar(utf32_t ch)
     // TODO:  process left and right arrows
     if (ch > 0x10FFFF) { return; }
 
-    if ((ch == '\b' || ch == '\177') && !m_contents.empty()) {
-        m_contents = m_contents.substr(0, m_contents.size() - 1);
+    if ((ch == '\b' || ch == '\177') && m_contents_size != 0) {
+        size_t i = m_contents_size - 1;
+        while (i != 0 && (m_contents[i] & 0xC0) == 0x80) {
+            --i;
+        }
+        m_contents_size = i;
+        m_contents[i] = '\0';
     } else {
         // Don't include control characters in the string
         if (ch < 0x20 || (0x7F <= ch && ch <= 0x9F)) { return; }
 
         // Add this character
-        m_contents += ch;
+        str_context ctx = str_open_context("SDL2GetLine::addChar");
+        utf32_t ch32[2];
+        char *utf8;
+        size_t len;
+
+        ch32[0] = ch;
+        ch32[1] = 0;
+        utf8 = uni_32to8(ch32);
+        len = strlen(utf8);
+        if (m_contents_size + len + 1 >= m_contents_alloc) {
+            m_contents_alloc += BUFSZ;
+            char *new_contents = new char[m_contents_alloc];
+            strcpy(new_contents, m_contents);
+            delete[] m_contents;
+            m_contents = new_contents;
+        }
+        strcpy(m_contents + m_contents_size, utf8);
+        m_contents_size += len;
     }
 
     interface()->redraw();

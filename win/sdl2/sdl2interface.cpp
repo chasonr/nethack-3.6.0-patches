@@ -32,13 +32,16 @@ namespace NH_SDL2
 SDL2Interface::SDL2Interface(void) :
     next_winid(0),
     main_window(NULL),
+    window_top(0),
     message_window(NULL),
     map_window(NULL),
 #ifdef POSITIONBAR
     posbar_window(NULL),
 #endif
     status_window(NULL),
-    key_queue_index(0),
+    key_queue_head(0),
+    key_queue_tail(0),
+    m_message(NULL),
     m_message_time(0),
     m_timer_id(0),
     m_font(NULL),
@@ -71,11 +74,12 @@ SDL2Interface::~SDL2Interface(void)
 {
     SDL_RemoveTimer(m_timer_id);
     delete m_font;
+    delete[] m_message;
     SDL_DestroyWindow(main_window);
     // The SDL2Window destructor calls closeNotify, which removes the window
     // from window_stack
-    while (!window_stack.empty()) {
-        delete *window_stack.begin();
+    while (window_top != 0) {
+        delete window_stack[window_top - 1].window;
     }
 }
 
@@ -97,18 +101,23 @@ int SDL2Interface::height(void)
 
 void SDL2Interface::createNotify(SDL2Window *window)
 {
-    window_stack.push_back(window);
+    if (window_top >= SIZE(window_stack)) {
+        panic("Too many windows created\n");
+    }
+    window_stack[window_top].window = window;
+    window_stack[window_top].id = -1;
+    ++window_top;
 }
 
 void SDL2Interface::closeNotify(SDL2Window *window)
 {
-    for (std::list<SDL2Window *>::iterator p = window_stack.begin();
-            p != window_stack.end(); ++p) {
-        if (*p == window) {
-            window_stack.erase(p);
-            break;
-        }
+    size_t i;
+
+    for (i = 0; i < window_top && window_stack[i].window != window; ++i) {}
+    for (; i + 1 < window_top; ++i) {
+        window_stack[i] = window_stack[i + 1];
     }
+    --window_top;
 
     if (window == message_window) { message_window = NULL; }
     if (window == map_window    ) { map_window     = NULL; }
@@ -192,15 +201,14 @@ void SDL2Interface::redraw(void)
     SDL_FillRect(main_surface, NULL, background);
 
     // Draw each window; the blit method will perform any clipping
-    for (std::list<SDL2Window *>::iterator p = window_stack.begin();
-            p != window_stack.end(); ++p) {
-        if ((*p)->isVisible()) {
-            (*p)->redraw();
+    for (std::size_t i = 0; i < window_top; ++i) {
+        if (window_stack[i].window->isVisible()) {
+            window_stack[i].window->redraw();
         }
     }
 
     // If a message is present, alpha blend it on top of the screen
-    if (!m_message.empty()) {
+    if (m_message != NULL) {
         SDL_SetClipRect(main_surface, NULL);
         Uint32 ticks = SDL_GetTicks();
         unsigned alpha;
@@ -426,14 +434,17 @@ void SDL2Interface::sdl2_player_selection(void)
 
 void SDL2Interface::sdl2_askname(void)
 {
+    str_context ctx = str_open_context("SDL2Interface::sdl2_askname");
     SDL2GetLine window(this);
-    std::string str;
+    char *str;
 
-    if (window.getLine("What is your name?", str)) {
-        uni_copy8(plname, SIZE(plname), str.c_str());
+    str = window.getLine("What is your name?");
+    if (str != NULL) {
+        uni_copy8(plname, SIZE(plname), str);
     } else {
         plname[0] = '\0';
     }
+    str_close_context(ctx);
 }
 
 void SDL2Interface::sdl2_get_nh_event(void)
@@ -487,28 +498,44 @@ winid SDL2Interface::sdl2_create_nhwindow(int type)
         break;
     }
 
+    /* Window is already pushed on the stack */
     /* Return an unused window ID */
-    while (window_map.find(next_winid) != window_map.end()) {
+    while (findWindow(next_winid) != NULL) {
         if (next_winid == std::numeric_limits<winid>::max()) {
             next_winid = 0;
         } else {
             ++next_winid;
         }
     }
-    window_map[next_winid] = window;
+    for (std::size_t i = window_top; i-- != 0; ) {
+        if (window_stack[i].window == window) {
+            window_stack[i].id = next_winid;
+            break;
+        }
+    }
     return next_winid;
+}
+
+SDL2Window *SDL2Interface::findWindow(winid id)
+{
+    for (size_t i = 0; i < window_top; ++i) {
+        if (id == window_stack[i].id) {
+            return window_stack[i].window;
+        }
+    }
+    return NULL;
 }
 
 void SDL2Interface::sdl2_clear_nhwindow(winid window)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     winp->clear();
 }
 
 void SDL2Interface::sdl2_display_nhwindow(winid window, bool blocking)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     winp->setVisible(true);
     redraw();
@@ -522,29 +549,28 @@ void SDL2Interface::sdl2_display_nhwindow(winid window, bool blocking)
 
 void SDL2Interface::sdl2_destroy_nhwindow(winid window)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
-    window_map.erase(window);
     delete winp; // calls closeNotify, which removes the window from window_stack
 }
 
 void SDL2Interface::sdl2_curs(winid window, int x, int y)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     winp->setCursor(x, y);
 }
 
-void SDL2Interface::sdl2_putstr(winid window, int attr, const std::string& str)
+void SDL2Interface::sdl2_putstr(winid window, int attr, const char *str)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     winp->putStr(attr, str);
 }
 
-void SDL2Interface::sdl2_putmixed(winid window, int attr, const std::string& str)
+void SDL2Interface::sdl2_putmixed(winid window, int attr, const char *str)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     winp->putMixed(attr, str);
 }
@@ -582,23 +608,23 @@ void SDL2Interface::sdl2_display_file(const char *filename, bool complain)
 
 void SDL2Interface::sdl2_start_menu(winid window)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     winp->startMenu();
 }
 
 void SDL2Interface::sdl2_add_menu(winid window, int glyph,
         const anything* identifier, char ch, char gch, int attr,
-        const std::string& str, bool preselected)
+        const char *str, bool preselected)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     winp->addMenu(glyph, identifier, ch, gch, attr, str, preselected);
 }
 
-void SDL2Interface::sdl2_end_menu(winid window, const std::string& prompt)
+void SDL2Interface::sdl2_end_menu(winid window, const char *prompt)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     winp->endMenu(prompt);
 }
@@ -606,7 +632,7 @@ void SDL2Interface::sdl2_end_menu(winid window, const std::string& prompt)
 int SDL2Interface::sdl2_select_menu(winid window, int how,
         menu_item **menu_list)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     return winp->selectMenu(how, menu_list);
 }
@@ -624,12 +650,8 @@ utf32_t SDL2Interface::getKey(bool cmd, int *x, int *y, int *mod)
     }
 
     // Return characters queued from a previous event
-    if (!key_queue.empty()) {
-        ch = key_queue[key_queue_index++];
-        if (key_queue_index >= key_queue.size()) {
-            key_queue.clear();
-        }
-        return ch;
+    if (key_queue_head != key_queue_tail) {
+        return key_queue[key_queue_head++];
     }
 
     redraw();
@@ -782,7 +804,12 @@ utf32_t SDL2Interface::getKey(bool cmd, int *x, int *y, int *mod)
                 utf32_t *text = uni_8to32(event.text.text);
                 if (text[0] != 0) {
                     ch = text[0];
-                    key_queue = text + 1;
+                    key_queue_head = 0;
+                    key_queue_tail = uni_length32(text + 1);
+                    if (key_queue_tail > SIZE(key_queue)) {
+                        key_queue_tail = SIZE(key_queue);
+                    }
+                    memcpy(key_queue, text + 1, key_queue_tail * sizeof(text[0]));
                     return ch;
                 }
             }
@@ -869,11 +896,12 @@ Uint32 SDL2Interface::timerCallback(Uint32 interval, void * /*param*/)
 
 void SDL2Interface::doMessageFade(void)
 {
-    if (m_message_time != 0 && !m_message.empty()) {
+    if (m_message_time != 0 && m_message != NULL) {
         // Message is present and it is being faded
         if (SDL_GetTicks() - m_message_time > 2000) {
             // Message has timed out
-            m_message.clear();
+            delete[] m_message;
+            m_message = NULL;
             m_message_time = 0;
         }
 
@@ -881,15 +909,17 @@ void SDL2Interface::doMessageFade(void)
     }
 }
 
-void SDL2Interface::setMessage(const std::string& message)
+void SDL2Interface::setMessage(const char *message)
 {
-    m_message = message;
+    delete[] m_message;
+    m_message = new char[strlen(message) + 1];
+    strcpy(m_message, message);
     m_message_time = 0; // Not fading yet
 }
 
 void SDL2Interface::fadeMessage(void)
 {
-    if (m_message_time == 0 && !m_message.empty()) {
+    if (m_message_time == 0 && m_message != NULL) {
         m_message_time = SDL_GetTicks();
         if (m_message_time == 0) {
             m_message_time = 1;
@@ -935,7 +965,7 @@ void SDL2Interface::sdl2_update_positionbar(char *features)
 void SDL2Interface::sdl2_print_glyph(winid window, xchar x, xchar y,
         int glyph, int /*bkglyph*/)
 {
-    SDL2Window *winp = window_map[window];
+    SDL2Window *winp = findWindow(window);
 
     winp->printGlyph(x, y, glyph);
 }
@@ -1013,7 +1043,7 @@ char SDL2Interface::sdl2_yn_function(const char *ques,
         { NULL, 0 }
     };
 
-    StringContext ctx("SDL2Interface::sdl2_yn_function");
+    str_context ctx = str_open_context("SDL2Interface::sdl2_yn_function");
     utf32_t ch;
 
     // Develop the prompt
@@ -1041,7 +1071,7 @@ char SDL2Interface::sdl2_yn_function(const char *ques,
         } while (ch <= 0 || 0x10FFFF < ch);
     } else {
         // Choices are these
-        std::basic_string<utf32_t> choices32 = uni_8to32(choices);
+        utf32_t *choices32 = uni_8to32(choices);
 
         // Determine the quit character
         utf32_t quitch = def;
@@ -1062,38 +1092,47 @@ char SDL2Interface::sdl2_yn_function(const char *ques,
                 ch = def;
                 break;
             }
-        } while (choices32.find(ch) == std::basic_string<utf32_t>::npos);
+        } while (uni_index32(choices32, ch) == NULL);
     }
 
+    str_close_context(ctx);
     return ch;
 }
 
 void SDL2Interface::sdl2_getlin(const char *ques, char *input)
 {
+    str_context ctx = str_open_context("SDL2Interface::sdl2_getlin");
     SDL2GetLine window(this);
-    std::string str;
+    char *str;
 
-    if (window.getLine(ques, str)) {
-        uni_copy8(input, BUFSZ, str.c_str());
+    str = window.getLine(ques);
+    if (str != NULL) {
+        uni_copy8(input, BUFSZ, str);
     } else {
         input[0] = '\0';
     }
+    str_close_context(ctx);
 }
 
 int SDL2Interface::sdl2_get_ext_cmd(void)
 {
+    str_context ctx = str_open_context("SDL2Interface::sdl2_get_ext_cmd");
     SDL2ExtCmd window(this);
-    std::string str;
+    char *str;
+    int cmd = -1;
 
-    if (window.getLine("Enter extended command:", str)) {
+    str = window.getLine("Enter extended command:");
+    if (str != NULL) {
         for (int i = 0; extcmdlist[i].ef_txt != NULL; ++i) {
-            if (strcmp(extcmdlist[i].ef_txt, str.c_str()) == 0) {
-                return i;
+            if (strcmp(extcmdlist[i].ef_txt, str) == 0) {
+                cmd = i;
+                break;
             }
         }
     }
 
-    return -1;
+    str_close_context(ctx);
+    return cmd;
 }
 
 void SDL2Interface::sdl2_number_pad(int /*state*/)

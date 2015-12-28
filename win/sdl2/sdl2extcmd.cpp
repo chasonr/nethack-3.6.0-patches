@@ -31,7 +31,7 @@ void SDL2ExtCmd::addChar(utf32_t ch)
 
     for (unsigned i = 0; extcmdlist[i].ef_txt != NULL; ++i) {
         const char *text8 = extcmdlist[i].ef_txt;
-        if (strncmp(text8, m_contents.c_str(), m_contents.size()) == 0) {
+        if (strncmp(text8, m_contents, m_contents_size) == 0) {
             ++matches;
             if (matches > 1) { break; }
             cmd = text8;
@@ -39,7 +39,9 @@ void SDL2ExtCmd::addChar(utf32_t ch)
     }
 
     if (matches == 1) {
-        m_contents = cmd;
+        /* Assumes no command is longer than BUFSZ */
+        strcpy(m_contents, cmd);
+        m_contents_size = strlen(cmd);
         interface()->redraw();
     }
 }

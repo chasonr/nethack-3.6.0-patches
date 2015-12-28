@@ -112,7 +112,7 @@ static bool selectRace(SDL2Interface *interface)
     id.a_void = 0;
     for (int i = 0; races[i].noun != NULL; ++i) {
         if (validSelection(flags.initrole, i, flags.initgend, flags.initalign)) {
-            std::string text = races[i].noun;
+            const char *text = races[i].noun;
 
             race = i;
             ++count;
@@ -170,7 +170,7 @@ static bool selectGender(SDL2Interface *interface)
     id.a_void = NULL;
     for (int i = 0; genders[i].adj != NULL; ++i) {
         if (validSelection(flags.initrole, flags.initrace, i, flags.initalign)) {
-            std::string text = genders[i].adj;
+            const char *text = genders[i].adj;
 
             gend = i;
             ++count;
@@ -228,7 +228,7 @@ static bool selectAlignment(SDL2Interface *interface)
     id.a_void = NULL;
     for (int i = 0; aligns[i].adj != NULL; ++i) {
         if (validSelection(flags.initrole, flags.initrace, flags.initgend, i)) {
-            std::string text = aligns[i].adj;
+            const char *text = aligns[i].adj;
 
             align = i;
             ++count;

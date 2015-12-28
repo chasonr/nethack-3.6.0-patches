@@ -3,7 +3,6 @@
 #ifndef SDL2STATUS_H
 #define SDL2STATUS_H
 
-#include <string>
 #include "sdl2.h"
 #include "sdl2window.h"
 
@@ -21,7 +20,7 @@ public:
 
     int heightHint(void);
 
-    virtual void putStr(int attr, const std::string& str);
+    virtual void putStr(int attr, const char *str);
     virtual void clear(void);
     virtual void setCursor(int x, int y);
 };
