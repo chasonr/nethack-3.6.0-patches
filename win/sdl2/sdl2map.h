@@ -4,7 +4,6 @@
 #define SDL2MAP_H
 
 #include <list>
-#include <string>
 #include "sdl2.h"
 #include "unicode.h"
 #include "sdl2window.h"

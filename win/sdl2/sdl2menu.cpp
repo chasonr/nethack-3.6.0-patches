@@ -3,7 +3,6 @@
 extern "C" {
 #include "hack.h"
 }
-#include <vector>
 #include "unicode.h"
 #include "sdl2.h"
 #include "sdl2menu.h"
@@ -13,14 +12,22 @@ extern "C" {
 namespace NH_SDL2
 {
 
-static std::vector<std::string> tabSplit(const std::string& str);
+static char **tabSplit(const char *str);
+static size_t numColumns(char **columns);
+static size_t numColumnsInStr(const char *str);
 
 SDL2Menu::SDL2Menu(SDL2Interface *interface) :
         SDL2Window(interface),
         m_text(false),
+        m_menu(NULL),
+        m_menu_size(0),
+        m_menu_alloc(0),
         m_first_line(0),
+        m_prompt(NULL),
         m_page_size(0),
-        m_count(0)
+        m_count(0),
+        m_columns(NULL),
+        m_num_columns(0)
 {
     // We won't show the window until all entries are present
     setVisible(false);
@@ -28,13 +35,29 @@ SDL2Menu::SDL2Menu(SDL2Interface *interface) :
     // Menu window font
     setFont(iflags.wc_font_menu, iflags.wc_fontsiz_menu,
             SDL2Font::defaultSerifFont(), 20);
+
+    clear();
+}
+
+SDL2Menu::~SDL2Menu(void)
+{
+    size_t i;
+
+    for (i = 0; i < m_menu_size; ++i) {
+        delete[] m_menu[i].str;
+    }
+    delete[] m_menu;
+    delete[] m_prompt;
+    delete[] m_columns;
 }
 
 void SDL2Menu::clear(void)
 {
-    m_menu.clear();
+    m_menu_size = 0;
     m_first_line = 0;
-    m_prompt.clear();
+    delete[] m_prompt;
+    m_prompt = new char[1];
+    m_prompt[0] = '\0';
     m_count = 0;
 }
 
@@ -42,6 +65,8 @@ void SDL2Menu::redraw(void)
 {
     static const SDL_Color white  = { 255, 255, 255, 255 };
     static const SDL_Color black  = {   0,   0,   0, 160 };
+
+    str_context ctx = str_open_context("SDL2Menu::redraw");
 
     interface()->fill(this, black);
 
@@ -65,10 +90,11 @@ void SDL2Menu::redraw(void)
     // Display the text for this page
     for (std::size_t i = 0; i < m_page_size; ++i) {
         std::size_t j = i + m_first_line;
-        if (j >= m_menu.size()) { break; }
-        std::vector<std::string> columns = tabSplit(m_menu[j].str);
+        if (j >= m_menu_size) { break; }
+        char **columns = tabSplit(m_menu[j].str);
+        size_t num_columns = numColumns(columns);
         int attr = m_menu[j].attr;
-        if (m_menu[j].identifier.a_void == NULL && columns.size() == 1) {
+        if (m_menu[j].identifier.a_void == NULL && num_columns == 1) {
             // Nonselectable line with no column dividers
             // Assume this is a section header
             render(columns[0], 1, y + i*lineHeight(),
@@ -84,11 +110,11 @@ void SDL2Menu::redraw(void)
                 render(tag, 1, y + i*lineHeight(),
                         m_menu[j].color, textBG(attr));
             } else {
-                if (columns[0].substr(0, 6) == "      ") {
-                    columns[0] = columns[0].substr(6);
+                if (strncmp(columns[0], "      ", 6) == 0) {
+                    columns[0] += 6;
                 }
             }
-            for (std::size_t k = 0; k < columns.size(); ++k) {
+            for (std::size_t k = 0; k < num_columns; ++k) {
                 render(columns[k],
                         m_columns[k].x, y + i*lineHeight(),
                         m_menu[j].color, textBG(attr));
@@ -96,15 +122,16 @@ void SDL2Menu::redraw(void)
         }
     }
 
-    if (m_page_size < m_menu.size()) {
+    if (m_page_size < m_menu_size) {
         // Display the page indicator
         char page[BUFSZ];
         snprintf(page, SIZE(page), "Page %u of %u",
                 (unsigned) (m_first_line / m_page_size + 1),
-                (unsigned) ((m_menu.size() + m_page_size - 1) / m_page_size));
+                (unsigned) ((m_menu_size + m_page_size - 1) / m_page_size));
         render(page, 1, y + m_page_size*lineHeight(),
                 textFG(ATR_NONE), textBG(ATR_NONE));
     }
+    str_close_context(ctx);
 }
 
 void SDL2Menu::startMenu(void)
@@ -113,29 +140,33 @@ void SDL2Menu::startMenu(void)
 }
 
 void SDL2Menu::addMenu(int glyph, const anything* identifier, char ch,
-        char gch, int attr, const std::string& str, bool preselected)
+        char gch, int attr, const char *str, bool preselected)
 {
-    MenuEntry entry;
+    MenuEntry *entry;
+
+    expandMenu();
 
     // Add the entry to m_menu
-    entry.glyph = glyph;
-    entry.identifier = *identifier;
-    entry.ch = ch;
-    entry.gch = gch;
-    entry.def_ch = 0;
-    entry.attr = attr;
-    entry.str = str;
-    entry.selected = preselected;
+    entry = &m_menu[m_menu_size++];
+    entry->glyph = glyph;
+    entry->identifier = *identifier;
+    entry->ch = ch;
+    entry->gch = gch;
+    entry->def_ch = 0;
+    entry->attr = attr;
+    entry->str = new char[strlen(str) + 1];
+    strcpy(entry->str, str);
+    entry->selected = preselected;
     // TODO: implement menucolors here
-    entry.color = textFG(attr);
-    entry.count = 0;
-
-    m_menu.push_back(entry);
+    entry->color = textFG(attr);
+    entry->count = 0;
 }
 
-void SDL2Menu::endMenu(const std::string& prompt)
+void SDL2Menu::endMenu(const char *prompt)
 {
-    m_prompt = prompt;
+    delete[] m_prompt;
+    m_prompt = new char[strlen(prompt) + 1];
+    strcpy(m_prompt, prompt);
 }
 
 int SDL2Menu::selectMenu(int how, menu_item ** menu_list)
@@ -163,34 +194,31 @@ int SDL2Menu::selectMenu(int how, menu_item ** menu_list)
     } else if (how == PICK_ONE) {
         *menu_list = NULL;
         count = 0;
-        for (std::vector<MenuEntry>::iterator p = m_menu.begin();
-                p != m_menu.end(); ++p) {
-            if (p->selected) {
+        for (std::size_t i = 0; i < m_menu_size; ++i) {
+            if (m_menu[i].selected) {
                 *menu_list = (menu_item *) alloc(sizeof(menu_item) * 1);
-                (*menu_list)[0].item = p->identifier;
-                (*menu_list)[0].count = p->count ? p->count : -1;
+                (*menu_list)[0].item = m_menu[i].identifier;
+                (*menu_list)[0].count = m_menu[i].count ? m_menu[i].count : -1;
                 count = 1;
                 break;
             }
         }
     } else if (how == PICK_ANY) {
-        int i;
+        size_t i, j;
 
-        for (std::vector<MenuEntry>::iterator p = m_menu.begin();
-                p != m_menu.end(); ++p) {
-            if (p->selected) {
+        for (i = 0; i < m_menu_size; ++i) {
+            if (m_menu[i].selected) {
                 ++count;
             }
         }
         if (count != 0) {
             *menu_list = (menu_item *) alloc(sizeof(menu_item) * count);
-            i = 0;
-            for (std::vector<MenuEntry>::iterator p = m_menu.begin();
-                    p != m_menu.end(); ++p) {
-                if (p->selected) {
-                    (*menu_list)[i].item = p->identifier;
-                    (*menu_list)[i].count = p->count ? p->count : -1;
-                    ++i;
+            j = 0;
+            for (i = 0; i < m_menu_size; ++i) {
+                if (m_menu[i].selected) {
+                    (*menu_list)[j].item = m_menu[i].identifier;
+                    (*menu_list)[j].count = m_menu[i].count ? m_menu[i].count : -1;
+                    ++j;
                 }
             }
         }
@@ -201,28 +229,29 @@ int SDL2Menu::selectMenu(int how, menu_item ** menu_list)
 }
 
 // For text windows
-void SDL2Menu::putStr(int attr, const std::string& str)
+void SDL2Menu::putStr(int attr, const char *str)
 {
+    MenuEntry *entry;
+
+    expandMenu();
     m_text = true;
 
-    MenuEntry entry;
-
     // Add the entry to m_menu
-    entry.glyph = 0;
-    entry.identifier.a_void = NULL;
-    entry.ch = 0;
-    entry.gch = 0;
-    entry.def_ch = 0;
-    entry.attr = attr;
-    entry.str = str;
-    entry.selected = false;
-    entry.color.r = 176;
-    entry.color.g = 176;
-    entry.color.b = 176;
-    entry.color.a = 255;
-    entry.count = 0;
-
-    m_menu.push_back(entry);
+    entry = &m_menu[m_menu_size++];
+    entry->glyph = 0;
+    entry->identifier.a_void = NULL;
+    entry->ch = 0;
+    entry->gch = 0;
+    entry->def_ch = 0;
+    entry->attr = attr;
+    entry->str = new char[strlen(str) + 1];
+    strcpy(entry->str, str);
+    entry->selected = false;
+    entry->color.r = 176;
+    entry->color.g = 176;
+    entry->color.b = 176;
+    entry->color.a = 255;
+    entry->count = 0;
 }
 
 void SDL2Menu::setVisible(bool visible)
@@ -250,7 +279,7 @@ void SDL2Menu::setWindowSize(void)
     if (font() == NULL) { return; } // Not completely set up
 
     // Height is the sum of all line heights, plus two for borders
-    h = m_menu.size() * lineHeight() + 2;
+    h = m_menu_size * lineHeight() + 2;
     // ...plus one more border and one more line if this is a menu
     if (!m_text) {
         h += lineHeight() + 1;
@@ -266,7 +295,7 @@ void SDL2Menu::setWindowSize(void)
 
     if (h <= interface()->height()) {
         // The height fits within the main window
-        m_page_size = m_menu.size();
+        m_page_size = m_menu_size;
         if (m_page_size > 52) { m_page_size = 52; }
     } else if (m_text) {
         // We need to break the menu into pages
@@ -286,10 +315,10 @@ void SDL2Menu::setWindowSize(void)
     resize(x0, y0, x0 + w - 1, y0 + h - 1);
 
     // Assign default letters to entries without a letter
-    for (std::size_t i = 0; i < m_menu.size(); i += m_page_size) {
+    for (std::size_t i = 0; i < m_menu_size; i += m_page_size) {
         unsigned l = 0;
         for (std::size_t j = 0; j < m_page_size; ++j) {
-            if (i+j >= m_menu.size()) { break; }
+            if (i+j >= m_menu_size) { break; }
             if (m_menu[i+j].identifier.a_void != NULL) {
                 // l never overflows because the page size is limited to 52
                 m_menu[i+j].def_ch = letters[l++];
@@ -309,27 +338,35 @@ int SDL2Menu::buildColumnTable(void)
     }
 
     // Clear column table
-    m_columns.clear();
+    m_num_columns = 0;
+    for (size_t i = 0; i < m_menu_size; ++i) {
+        size_t ncols = numColumnsInStr(m_menu[i].str);
+        if (m_num_columns < ncols) {
+            m_num_columns = ncols;
+        }
+    }
+    m_num_columns = m_num_columns;
+    delete[] m_columns;
+    m_columns = new MenuColumn[m_num_columns];
+    for (size_t i = 0; i < m_num_columns; ++i) {
+        m_columns[i].x = 0;
+        m_columns[i].width = 0;
+    }
 
     // Add and extend columns
-    for (std::vector<MenuEntry>::iterator p = m_menu.begin();
-            p != m_menu.end(); ++p) {
-        std::vector<std::string> columns = tabSplit(p->str);
-        if (p->identifier.a_void == NULL && columns.size() == 1) {
+    for (size_t i = 0; i < m_menu_size; ++i) {
+        char **columns = tabSplit(m_menu[i].str);
+        size_t num_columns = numColumns(columns);
+        if (m_menu[i].identifier.a_void == NULL && num_columns == 1) {
             // Nonselectable line with no column dividers
             // Assume this is a section header
-            int w2 = (font()->textSize(p->str)).w;
+            int w2 = (font()->textSize(m_menu[i].str)).w;
             if (width < w2) {
                 width = w2;
             }
         } else {
-            // Extend m_columns to have at least as many columns as the line
-            while (m_columns.size() < columns.size()) {
-                static const MenuColumn zero = { 0, 0 };
-                m_columns.push_back(zero);
-            }
             // Widen each column to fit the line
-            for (std::size_t i = 0; i < columns.size(); ++i) {
+            for (std::size_t i = 0; columns[i] != NULL; ++i) {
                 int w2 = (font()->textSize(columns[i])).w;
                 if (m_columns[i].width < w2) {
                     m_columns[i].width = w2;
@@ -338,7 +375,7 @@ int SDL2Menu::buildColumnTable(void)
         }
     }
 
-    if (m_columns.empty()) {
+    if (m_num_columns == 0) {
         return width;
     }
 
@@ -347,13 +384,13 @@ int SDL2Menu::buildColumnTable(void)
     if (!m_text) {
         m_columns[0].x = font()->textSize("# A -").w;
     }
-    for (std::size_t i = 1; i < m_columns.size(); ++i) {
+    for (std::size_t i = 1; i < m_num_columns; ++i) {
         m_columns[i].x = m_columns[i-1].x + m_columns[i-1].width + pad;
     }
 
     // Extend overall width for widest columned line
-    int w2 = m_columns[m_columns.size() - 1].x
-           + m_columns[m_columns.size() - 1].width
+    int w2 = m_columns[m_num_columns - 1].x
+           + m_columns[m_num_columns - 1].width
            + pad;
     if (width < w2) {
         width = w2;
@@ -386,33 +423,30 @@ bool SDL2Menu::selectEntry(utf32_t ch, int how)
         switch (ch) {
         case MENU_SELECT_ALL:
             m_count = 0;
-            for (std::vector<MenuEntry>::iterator p = m_menu.begin();
-                    p != m_menu.end(); ++p) {
-                if (p->identifier.a_void == NULL) { continue; }
-                p->selected = true;
-                p->count = 0;
+            for (std::size_t i = 0; i < m_menu_size; ++i) {
+                if (m_menu[i].identifier.a_void == NULL) { continue; }
+                m_menu[i].selected = true;
+                m_menu[i].count = 0;
             }
             interface()->redraw();
             return true;
 
         case MENU_UNSELECT_ALL:
             m_count = 0;
-            for (std::vector<MenuEntry>::iterator p = m_menu.begin();
-                    p != m_menu.end(); ++p) {
-                if (p->identifier.a_void == NULL) { continue; }
-                p->selected = false;
-                p->count = 0;
+            for (std::size_t i = 0; i < m_menu_size; ++i) {
+                if (m_menu[i].identifier.a_void == NULL) { continue; }
+                m_menu[i].selected = false;
+                m_menu[i].count = 0;
             }
             interface()->redraw();
             return true;
 
         case MENU_INVERT_ALL:
             m_count = 0;
-            for (std::vector<MenuEntry>::iterator p = m_menu.begin();
-                    p != m_menu.end(); ++p) {
-                if (p->identifier.a_void == NULL) { continue; }
-                p->selected = !p->selected;
-                p->count = 0;
+            for (std::size_t i = 0; i < m_menu_size; ++i) {
+                if (m_menu[i].identifier.a_void == NULL) { continue; }
+                m_menu[i].selected = !m_menu[i].selected;
+                m_menu[i].count = 0;
             }
             interface()->redraw();
             return true;
@@ -421,7 +455,7 @@ bool SDL2Menu::selectEntry(utf32_t ch, int how)
             m_count = 0;
             for (std::size_t i = 0; i < m_page_size; ++i) {
                 std::size_t j = i + m_first_line;
-                if (j >= m_menu.size()) { break; }
+                if (j >= m_menu_size) { break; }
                 if (m_menu[j].identifier.a_void == NULL) { continue; }
                 m_menu[j].selected = true;
                 m_menu[j].count = 0;
@@ -433,7 +467,7 @@ bool SDL2Menu::selectEntry(utf32_t ch, int how)
             m_count = 0;
             for (std::size_t i = 0; i < m_page_size; ++i) {
                 std::size_t j = i + m_first_line;
-                if (j >= m_menu.size()) { break; }
+                if (j >= m_menu_size) { break; }
                 if (m_menu[j].identifier.a_void == NULL) { continue; }
                 m_menu[j].selected = false;
                 m_menu[j].count = 0;
@@ -445,7 +479,7 @@ bool SDL2Menu::selectEntry(utf32_t ch, int how)
             m_count = 0;
             for (std::size_t i = 0; i < m_page_size; ++i) {
                 std::size_t j = i + m_first_line;
-                if (j >= m_menu.size()) { break; }
+                if (j >= m_menu_size) { break; }
                 if (m_menu[j].identifier.a_void == NULL) { continue; }
                 m_menu[j].selected = !m_menu[i].selected;
                 m_menu[j].count = 0;
@@ -457,7 +491,7 @@ bool SDL2Menu::selectEntry(utf32_t ch, int how)
 
     bool selected = false;
 
-    for (std::size_t i = 0; i < m_menu.size(); ++i) {
+    for (std::size_t i = 0; i < m_menu_size; ++i) {
         if (m_menu[i].identifier.a_void == NULL) { continue; }
         if (ch == m_menu[i].ch || ch == m_menu[i].gch
         ||  (m_menu[i].ch == 0 && ch == m_menu[i].def_ch && m_first_line <= i && i < m_first_line + m_page_size)) {
@@ -491,8 +525,8 @@ void SDL2Menu::doPage(utf32_t ch)
         break;
 
     case MENU_LAST_PAGE:
-        if (m_page_size < m_menu.size()) {
-            int pagenum = (m_menu.size() - 1) / m_page_size;
+        if (m_page_size < m_menu_size) {
+            int pagenum = (m_menu_size - 1) / m_page_size;
             int first_line = pagenum * m_page_size;
             if (m_first_line != first_line) {
                 m_first_line = first_line;
@@ -509,7 +543,7 @@ void SDL2Menu::doPage(utf32_t ch)
         break;
 
     case MENU_NEXT_PAGE:
-        if (m_first_line + m_page_size < m_menu.size()) {
+        if (m_first_line + m_page_size < m_menu_size) {
             m_first_line += m_page_size;
             interface()->redraw();
         }
@@ -517,23 +551,73 @@ void SDL2Menu::doPage(utf32_t ch)
     }
 }
 
-static std::vector<std::string>
-tabSplit(const std::string& str)
+void SDL2Menu::expandMenu(void)
 {
-    std::size_t i, j;
-    std::vector<std::string> columns;
+    if (m_menu_size >= m_menu_alloc) {
+        MenuEntry *new_menu;
+        size_t i;
 
-    i = 0;
-    do {
-        j = str.find('\t', i);
-        if (j == std::string::npos) {
-            j = str.size();
+        m_menu_alloc += 64;
+        new_menu = new MenuEntry[m_menu_alloc];
+        for (i = 0; i < m_menu_size; ++i) {
+            new_menu[i] = m_menu[i];
         }
-        columns.push_back(str.substr(i, j - i));
-        i = j + 1;
-    } while (i < str.size());
+        delete[] m_menu;
+        m_menu = new_menu;
+    }
+}
 
+static char **
+tabSplit(const char *str)
+{
+    const char *p, *q;
+    char **columns;
+    size_t num_columns, col, len;
+
+    num_columns = numColumnsInStr(str);
+    columns = (char **) str_mem_alloc((num_columns + 1) * sizeof(columns[0]));
+
+    col = 0;
+    p = str;
+    while (1) {
+        q = index(p, '\t');
+        if (q == NULL) {
+            columns[col++] = str_copy(p);
+            break;
+        }
+        len = q - p;
+        columns[col] = str_alloc(len);
+        memcpy(columns[col], p, len);
+        columns[col][len] = '\0';
+        ++col;
+        p = q + 1;
+    }
+
+    columns[col] = 0;
     return columns;
+}
+
+static size_t
+numColumns(char **columns)
+{
+    size_t cols;
+
+    for (cols = 0; columns[cols] != NULL; ++cols) {}
+    return cols;
+}
+
+/* Count the columns in the string */
+static size_t
+numColumnsInStr(const char *str)
+{
+    size_t num_columns = 1;
+    size_t i;
+    for (i = 0; str[i] != 0; ++i) {
+        if (str[i] == '\t') {
+            ++num_columns;
+        }
+    }
+    return num_columns;
 }
 
 }

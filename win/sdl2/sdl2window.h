@@ -42,11 +42,11 @@ public:
 
     virtual void startMenu(void);
     virtual void addMenu(int glyph, const anything* identifier, char ch,
-            char gch, int attr, const std::string& str, bool preselected);
-    virtual void endMenu(const std::string& prompt);
+            char gch, int attr, const char *str, bool preselected);
+    virtual void endMenu(const char *prompt);
     virtual int  selectMenu(int how, menu_item ** menu_list);
-    virtual void putStr(int attr, const std::string& str);
-    virtual void putMixed(int attr, const std::string& str);
+    virtual void putStr(int attr, const char *str);
+    virtual void putMixed(int attr, const char *str);
     virtual void clear(void);
     virtual void printGlyph(xchar x, xchar y, int glyph);
     virtual void setCursor(int x, int y);
@@ -59,11 +59,11 @@ protected:
     int lineHeight(void) { return m_line_height; }
 
     SDL_Rect render(
-            const std::string& str,
+            const char *str,
             int x, int y,
             SDL_Color fg);
     SDL_Rect render(
-            const std::string& str,
+            const char *str,
             int x, int y,
             SDL_Color fg, SDL_Color bg);
 
