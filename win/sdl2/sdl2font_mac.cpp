@@ -7,7 +7,6 @@ extern "C" {
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
-#include <string>
 #include "unicode.h"
 
 #include "sdl2font.h"
@@ -44,41 +43,58 @@ struct FontData
     RefWrapper<CFDictionaryRef> attributes;
 };
 
-std::basic_string<UniChar>
+UniChar *
 singleChar(utf32_t ch)
 {
+    UniChar *str16;
+
     if (ch > 0x10FFFF || (ch & 0xFFFFF800) == 0xD800) {
         ch = 0xFFFD;
     }
 
     if (ch < 0x10000) {
-        return std::basic_string<UniChar>(1, (UniChar) ch);
+        str16 = (UniChar *) str_mem_alloc(2 * sizeof(UniChar));
+        str16[0] = (UniChar) ch;
+        str16[1] = 0;
     } else {
-        UniChar str16[2];
-
+        str16 = (UniChar *) str_mem_alloc(3 * sizeof(UniChar));
         str16[0] = 0xD7C0 + (ch >> 10);
         str16[1] = 0xDC00 + (ch & 0x3FF);
-        return std::basic_string<UniChar>(str16, 2);
+        str16[2] = 0;
     }
+    return str16;
 }
 
-std::basic_string<UniChar>
-appleString(const std::string& str)
+/* UTF-8 to UTF-16 conversion; but don't depend on UniChar being the same type
+   as utf16_t */
+UniChar *
+appleString(const char *str)
 {
-    StringContext ctx("appleString");
+    str_context ctx = str_open_context("appleString");
 
     utf16_t *str16;
     UniChar *astr16;
-    std::size_t size16, i;
-    std::basic_string<UniChar> out;
+    size_t size16, i;
 
-    str16 = uni_8to16(str.c_str());
+    str16 = uni_8to16(str);
     size16 = uni_length16(str16);
     astr16 = (UniChar *) str_mem_alloc((size16 + 1) * sizeof(astr16[0]));
     for (i = 0; str16[i] != 0; ++i) {
         astr16[i] = str16[i];
     }
-    return std::basic_string<UniChar>(astr16, i);
+    astr16[i] = 0;
+    str_export(ctx, astr16);
+    str_close_context(ctx);
+    return astr16;
+}
+
+size_t
+appleLength(const UniChar *str)
+{
+    size_t len;
+
+    for (len = 0; str[len] != 0; ++len) {}
+    return len;
 }
 
 }
@@ -153,17 +169,17 @@ SDL_Surface *SDL2Font::render(utf32_t ch, SDL_Color foreground)
     return render(ch, foreground, transparent);
 }
 
-SDL_Surface *SDL2Font::render(const std::string& text, SDL_Color foreground)
+SDL_Surface *SDL2Font::render(const char *text, SDL_Color foreground)
 {
     return render(text, foreground, transparent);
 }
 
-static SDL_Surface *renderImpl(const std::basic_string<UniChar>& text,
+static SDL_Surface *renderImpl(const UniChar *text,
         SDL_Color foreground, SDL_Color background,
         FontData *mfont)
 {
     RefWrapper<CFStringRef> string(
-            CFStringCreateWithCharacters(NULL, text.c_str(), text.size()));
+            CFStringCreateWithCharacters(NULL, text, appleLength(text)));
 
     RefWrapper<CFAttributedStringRef> attrstring(
             CFAttributedStringCreate(NULL, string.get(), mfont->attributes.get()));
@@ -259,18 +275,22 @@ SDL_Surface *SDL2Font::render(utf32_t ch, SDL_Color foreground, SDL_Color backgr
     return renderImpl(singleChar(ch), foreground, background, mfont);
 }
 
-SDL_Surface *SDL2Font::render(const std::string& text, SDL_Color foreground, SDL_Color background)
+SDL_Surface *SDL2Font::render(const char *text, SDL_Color foreground, SDL_Color background)
 {
+    str_context ctx = str_open_context("SDL2Font::render");
     FontData *mfont = reinterpret_cast<FontData *>(m_impl);
 
-    return renderImpl(appleString(text), foreground, background, mfont);
+    SDL_Surface *surface = renderImpl(appleString(text), foreground, background, mfont);
+
+    str_close_context(ctx);
+    return surface;
 }
 
 // Text extent
-SDL_Rect textSizeImpl(const std::basic_string<UniChar>& text, FontData *mfont)
+SDL_Rect textSizeImpl(const UniChar *text, FontData *mfont)
 {
     RefWrapper<CFStringRef> string(
-            CFStringCreateWithCharacters(NULL, text.c_str(), text.size()));
+            CFStringCreateWithCharacters(NULL, text, appleLength(text)));
 
     RefWrapper<CFAttributedStringRef> attrstring(
             CFAttributedStringCreate(NULL, string.get(), mfont->attributes.get()));
@@ -297,11 +317,14 @@ SDL_Rect SDL2Font::textSize(utf32_t ch)
     return textSizeImpl(singleChar(ch), mfont);
 }
 
-SDL_Rect SDL2Font::textSize(const std::string& text)
+SDL_Rect SDL2Font::textSize(const char *text)
 {
+    str_context ctx = str_open_context("SDL2Font::textSize");
     FontData *mfont = reinterpret_cast<FontData *>(m_impl);
 
-    return textSizeImpl(appleString(text), mfont);
+    SDL_Rect size = textSizeImpl(appleString(text), mfont);
+    str_close_context(ctx);
+    return size;
 }
 
 // Default font names

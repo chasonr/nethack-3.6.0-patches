@@ -3,8 +3,7 @@
 #ifndef SDL2MENU_H
 #define SDL2MENU_H
 
-#include <string>
-#include <vector>
+#include <cstddef>
 #include "sdl2window.h"
 
 namespace NH_SDL2
@@ -16,16 +15,17 @@ class SDL2Menu : public SDL2Window
 {
 public:
     SDL2Menu(SDL2Interface *interface);
+    ~SDL2Menu(void);
 
     virtual void redraw(void);
 
     virtual void clear(void);
     virtual void startMenu(void);
     virtual void addMenu(int glyph, const anything* identifier, char ch,
-            char gch, int attr, const std::string& str, bool preselected);
-    virtual void endMenu(const std::string& prompt);
+            char gch, int attr, const char *str, bool preselected);
+    virtual void endMenu(const char *prompt);
     virtual int  selectMenu(int how, menu_item ** menu_list);
-    virtual void putStr(int attr, const std::string& str);
+    virtual void putStr(int attr, const char *str);
     virtual void setVisible(bool visible);
 
 private:
@@ -37,16 +37,18 @@ private:
         utf32_t gch;
         utf32_t def_ch;
         int attr;
-        std::string str;
+        char *str;
         bool selected;
         SDL_Color color;
         unsigned long count;
     };
 
     bool m_text;
-    std::vector<MenuEntry> m_menu;
+    MenuEntry *m_menu;
+    std::size_t m_menu_size;
+    std::size_t m_menu_alloc;
     std::size_t m_first_line;
-    std::string m_prompt;
+    char *m_prompt;
     int m_page_size;
     unsigned long m_count;
 
@@ -60,8 +62,10 @@ private:
         int width;
     };
 
-    std::vector<MenuColumn> m_columns;
+    MenuColumn *m_columns;
+    std::size_t m_num_columns;
     int buildColumnTable(void);
+    void expandMenu(void);
 };
 
 }

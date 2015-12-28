@@ -37,8 +37,7 @@ void SDL2StatusWindow::redraw(void)
     // TODO:  implement status colors here
     static const SDL_Color black = { 0, 0, 0, 255 };
     int x, y;
-    std::string str;
-    char str2[BUFSZ];
+    char str[BUFSZ];
     int cap, hp, hpmax;
     SDL_Rect rect;
 
@@ -49,65 +48,65 @@ void SDL2StatusWindow::redraw(void)
     y = 0;
     // Name and rank or monster
     {
-        std::string rankstr;
+        const char *rankstr;
 
         if (Upolyd)
             rankstr = mons[u.umonnum].mname;
         else
             rankstr = rank_of(u.ulevel, Role_switch, flags.female);
-        snprintf(str2, SIZE(str2), "%s the %s", plname, rankstr.c_str());
+        snprintf(str, SIZE(str), "%s the %s", plname, rankstr);
     }
-    rect = render(str2, x, y, textColor(sc->lev_color()), textBG(ATR_NONE));
+    rect = render(str, x, y, textColor(sc->lev_color()), textBG(ATR_NONE));
     x += rect.w;
 
     // Format the strength score as nn or 18/nn
     if (ACURR(A_STR) > 18) {
         if (ACURR(A_STR) > STR18(100))
-            snprintf(str2, SIZE(str2), " St:%d", ACURR(A_STR)-100);
+            snprintf(str, SIZE(str), " St:%d", ACURR(A_STR)-100);
         else if (ACURR(A_STR) < STR18(100))
-            snprintf(str2, SIZE(str2), " St:18/%02d", ACURR(A_STR)-18);
+            snprintf(str, SIZE(str), " St:18/%02d", ACURR(A_STR)-18);
         else
-            snprintf(str2, SIZE(str2), " St:18/**");
+            snprintf(str, SIZE(str), " St:18/**");
     } else {
-        snprintf(str2, SIZE(str2), " St:%d", ACURR(A_STR));
+        snprintf(str, SIZE(str), " St:%d", ACURR(A_STR));
     }
-    rect = render(str2, x, y, textColor(sc->str_color()), textBG(ATR_NONE));
+    rect = render(str, x, y, textColor(sc->str_color()), textBG(ATR_NONE));
     x += rect.w;
 
     // Other attributes
-    snprintf(str2, SIZE(str2), " Dx:%d", ACURR(A_DEX));
-    rect = render(str2, x, y, textColor(sc->dex_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), " Dx:%d", ACURR(A_DEX));
+    rect = render(str, x, y, textColor(sc->dex_color()), textBG(ATR_NONE));
     x += rect.w;
 
-    snprintf(str2, SIZE(str2), " Co:%d", ACURR(A_CON));
-    rect = render(str2, x, y, textColor(sc->con_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), " Co:%d", ACURR(A_CON));
+    rect = render(str, x, y, textColor(sc->con_color()), textBG(ATR_NONE));
     x += rect.w;
 
-    snprintf(str2, SIZE(str2), " In:%d", ACURR(A_INT));
-    rect = render(str2, x, y, textColor(sc->int_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), " In:%d", ACURR(A_INT));
+    rect = render(str, x, y, textColor(sc->int_color()), textBG(ATR_NONE));
     x += rect.w;
 
-    snprintf(str2, SIZE(str2), " Wi:%d", ACURR(A_WIS));
-    rect = render(str2, x, y, textColor(sc->wis_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), " Wi:%d", ACURR(A_WIS));
+    rect = render(str, x, y, textColor(sc->wis_color()), textBG(ATR_NONE));
     x += rect.w;
 
-    snprintf(str2, SIZE(str2), " Ch:%d", ACURR(A_CHA));
-    rect = render(str2, x, y, textColor(sc->cha_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), " Ch:%d", ACURR(A_CHA));
+    rect = render(str, x, y, textColor(sc->cha_color()), textBG(ATR_NONE));
     x += rect.w;
 
     // Alignment
-    snprintf(str2, SIZE(str2), "  %s",
+    snprintf(str, SIZE(str), "  %s",
             (u.ualign.type == A_CHAOTIC) ? "Chaotic" :
             (u.ualign.type == A_NEUTRAL) ? "Neutral" : "Lawful");
-    rect = render(str2, x, y, textColor(sc->align_color()), textBG(ATR_NONE));
+    rect = render(str, x, y, textColor(sc->align_color()), textBG(ATR_NONE));
     x += rect.w;
 
 #ifdef SCORE_ON_BOTL
     // Score
     if (flags.showscore)
     {
-        snprintf(str2, SIZE(str2), "  S:%1$d", botl_score());
-        rect = render(str2, x, y, textFG(ATR_NONE), textBG(ATR_NONE));
+        snprintf(str, SIZE(str), "  S:%1$d", botl_score());
+        rect = render(str, x, y, textFG(ATR_NONE), textBG(ATR_NONE));
         x += rect.w;
     }
 #endif
@@ -123,8 +122,8 @@ void SDL2StatusWindow::redraw(void)
 
     // Current level
     if (hp < 0) hp = 0;
-    describe_level(str2);
-    rect = render(str2, x, y, textFG(ATR_NONE), textBG(ATR_NONE));
+    describe_level(str);
+    rect = render(str, x, y, textFG(ATR_NONE), textBG(ATR_NONE));
     x += rect.w;
 
     // Gold
@@ -132,81 +131,74 @@ void SDL2StatusWindow::redraw(void)
         utf32_t ch32[2];
         ch32[0] = chrConvert(showsyms[COIN_CLASS + SYM_OFF_O]);
         ch32[1] = 0;
-        snprintf(str2, SIZE(str2), " %s:%-2ld",
+        snprintf(str, SIZE(str), " %s:%-2ld",
                 uni_32to8(ch32), money_cnt(invent));
-        rect = render(str2, x, y, textColor(sc->gold_color()), textBG(ATR_NONE));
+        rect = render(str, x, y, textColor(sc->gold_color()), textBG(ATR_NONE));
     }
     x += rect.w;
 
     // Current hit points
-    snprintf(str2, SIZE(str2), " HP:%1$d", hp);
-    rect = render(str2, x, y, textColor(sc->hp_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), " HP:%1$d", hp);
+    rect = render(str, x, y, textColor(sc->hp_color()), textBG(ATR_NONE));
     x += rect.w;
     // Maximum hit points
-    snprintf(str2, SIZE(str2), "(%d)", hpmax);
-    rect = render(str2, x, y, textColor(sc->hpmax_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), "(%d)", hpmax);
+    rect = render(str, x, y, textColor(sc->hpmax_color()), textBG(ATR_NONE));
     x += rect.w;
 
     // Current energy points
-    snprintf(str2, SIZE(str2), " Pw:%d", u.uen);
-    rect = render(str2, x, y, textColor(sc->en_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), " Pw:%d", u.uen);
+    rect = render(str, x, y, textColor(sc->en_color()), textBG(ATR_NONE));
     x += rect.w;
     // Maximum energy points
-    snprintf(str2, SIZE(str2), "(%d)", u.uenmax);
-    rect = render(str2, x, y, textColor(sc->enmax_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), "(%d)", u.uenmax);
+    rect = render(str, x, y, textColor(sc->enmax_color()), textBG(ATR_NONE));
     x += rect.w;
 
     // Armor class
-    snprintf(str2, SIZE(str2), " AC:%-2d", u.uac);
-    rect = render(str2, x, y, textColor(sc->ac_color()), textBG(ATR_NONE));
+    snprintf(str, SIZE(str), " AC:%-2d", u.uac);
+    rect = render(str, x, y, textColor(sc->ac_color()), textBG(ATR_NONE));
     x += rect.w;
 
     // Experience
     if (Upolyd)
-        snprintf(str2, SIZE(str2), " HD:%d", mons[u.umonnum].mlevel);
+        snprintf(str, SIZE(str), " HD:%d", mons[u.umonnum].mlevel);
     else if (flags.showexp)
-        snprintf(str2, SIZE(str2), " Xp:%u/%-1ld", u.ulevel, u.uexp);
+        snprintf(str, SIZE(str), " Xp:%u/%-1ld", u.ulevel, u.uexp);
     else
-        snprintf(str2, SIZE(str2), " Exp:%u", u.ulevel);
-    rect = render(str2, x, y, textColor(sc->lev_color()), textBG(ATR_NONE));
+        snprintf(str, SIZE(str), " Exp:%u", u.ulevel);
+    rect = render(str, x, y, textColor(sc->lev_color()), textBG(ATR_NONE));
     x += rect.w;
 
     // Time
     if (flags.time) {
-        snprintf(str2, SIZE(str2), " T:%ld", moves);
-        rect = render(str2, x, y, textFG(ATR_NONE), textBG(ATR_NONE));
+        snprintf(str, SIZE(str), " T:%ld", moves);
+        rect = render(str, x, y, textFG(ATR_NONE), textBG(ATR_NONE));
         x += rect.w;
     }
 
     // Hunger
     if (strcmp(hu_stat[u.uhs], "        ") != 0) {
-        str = std::string(" ") + hu_stat[u.uhs];
+        snprintf(str, SIZE(str), " %s", hu_stat[u.uhs]);
         rect = render(str, x, y, textColor(sc->hunger_color()), textBG(ATR_NONE));
         x += rect.w;
     }
 
     // Flags
-    str = "";
-    if (Confusion)
-        str += " Conf";
-    if (u.usick_type & SICK_VOMITABLE)
-        str += " FoodPois";
-    if (u.usick_type & SICK_NONVOMITABLE)
-        str += " Ill";
-    if (Blind)
-        str += " Blind";
-    if (Stunned)
-        str += " Stun";
-    if (Hallucination)
-        str += " Hallu";
-    if (Slimed)
-        str += " Slime";
+    snprintf(str, SIZE(str), "%s%s%s%s%s%s%s",
+            (Confusion) ? " Conf" : "",
+            (u.usick_type & SICK_VOMITABLE) ? " FoodPois" : "",
+            (u.usick_type & SICK_NONVOMITABLE) ?  " Ill" : "",
+            (Blind) ? " Blind" : "",
+            (Stunned) ? " Stun" : "",
+            (Hallucination) ? " Hallu" : "",
+            (Slimed) ? " Slime" : "");
     rect = render(str, x, y, textFG(ATR_NONE), textBG(ATR_NONE));
     x += rect.w;
 
     // Encumbrance
     if (cap > UNENCUMBERED) {
-        str = std::string(" ") + enc_stat[cap];
+        snprintf(str, SIZE(str), " %s", enc_stat[cap]);
         rect = render(str, x, y, textColor(sc->encumb_color()), textBG(ATR_NONE));
         x += rect.w;
     }
@@ -217,7 +209,7 @@ int SDL2StatusWindow::heightHint(void)
     return lineHeight() * 2;
 }
 
-void SDL2StatusWindow::putStr(int /*attr*/, const std::string& /*str*/)
+void SDL2StatusWindow::putStr(int /*attr*/, const char * /*str*/)
 {
 }
 

@@ -727,6 +727,19 @@ const char *form;
     return norm;
 }
 
+utf32_t *
+uni_index32(const utf32_t *str, utf32_t ch)
+{
+    size_t i;
+
+    for (i = 0; str[i] != 0; ++i) {
+        if (str[i] == ch) {
+            return (utf32_t *) (str + i);
+        }
+    }
+    return NULL;
+}
+
 size_t
 uni_length16(str)
 const utf16_t *str;
