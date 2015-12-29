@@ -6,6 +6,7 @@ extern "C" {
 }
 #include "func_tab.h"
 #include <algorithm>
+#include <limits>
 #include <stdexcept>
 #include "sdl2.h"
 #include "sdl2interface.h"
