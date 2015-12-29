@@ -1,6 +1,10 @@
 // sdl2font_pango.cpp
 
 #ifndef __APPLE__
+extern "C" {
+#include "hack.h"
+}
+#include "unicode.h"
 #include <pango/pangoft2.h>
 #include <cstring>
 #include <stdint.h>
@@ -121,32 +125,36 @@ int SDL2Font::fontHeight(void)
 // If no background is given, background is transparent
 SDL_Surface *SDL2Font::render(utf32_t ch, SDL_Color foreground)
 {
-    char utf8[4];
-    std::size_t size;
-
-    size = unicode::put_next_cp(utf8, ch);
-    return render(std::string(utf8, size), foreground);
+    static const SDL_Color transparent = { 0, 0, 0, 0 };
+    return render(ch, foreground, transparent);
 }
 
-SDL_Surface *SDL2Font::render(const std::string& text, SDL_Color foreground)
+SDL_Surface *SDL2Font::render(const char *text, SDL_Color foreground)
 {
-    return render(text, foreground, (SDL_Color){ 0, 0, 0, 0 });
+    static const SDL_Color transparent = { 0, 0, 0, 0 };
+    return render(text, foreground, transparent);
 }
 
 SDL_Surface *SDL2Font::render(utf32_t ch, SDL_Color foreground, SDL_Color background)
 {
-    char utf8[4];
-    std::size_t size;
+    str_context ctx = str_open_context("SDL2Font::render");
+    utf32_t ch32[2];
+    char *utf8;
+    SDL_Surface *surface;
 
-    size = unicode::put_next_cp(utf8, ch);
-    return render(std::string(utf8, size), foreground, background);
+    ch32[0] = ch;
+    ch32[1] = 0;
+    utf8 = uni_32to8(ch32);
+    surface = render(utf8, foreground, background);
+    str_close_context(ctx);
+    return surface;
 }
 
-SDL_Surface *SDL2Font::render(const std::string& text, SDL_Color foreground, SDL_Color background)
+SDL_Surface *SDL2Font::render(const char *text, SDL_Color foreground, SDL_Color background)
 {
     SDL_TTF_FontImpl *fdata = reinterpret_cast<SDL_TTF_FontImpl *>(m_impl);
 
-    pango_layout_set_text(fdata->layout, text.c_str(), text.size());
+    pango_layout_set_text(fdata->layout, text, strlen(text));
 
     int width, height;
     pango_layout_get_pixel_size(fdata->layout, &width, &height);
@@ -218,18 +226,24 @@ SDL_Surface *SDL2Font::render(const std::string& text, SDL_Color foreground, SDL
 // Text extent
 SDL_Rect SDL2Font::textSize(utf32_t ch)
 {
-    char utf8[4];
-    std::size_t size;
+    str_context ctx = str_open_context("SDL2Font::textSize");
+    utf32_t ch32[2];
+    char *utf8;
+    SDL_Rect rect;
 
-    size = unicode::put_next_cp(utf8, ch);
-    return textSize(std::string(utf8, size));
+    ch32[0] = ch;
+    ch32[1] = 0;
+    utf8 = uni_32to8(ch32);
+    rect = textSize(utf8);
+    str_close_context(ctx);
+    return rect;
 }
 
-SDL_Rect SDL2Font::textSize(const std::string& text)
+SDL_Rect SDL2Font::textSize(const char *text)
 {
     SDL_TTF_FontImpl *fdata = reinterpret_cast<SDL_TTF_FontImpl *>(m_impl);
 
-    pango_layout_set_text(fdata->layout, text.c_str(), text.size());
+    pango_layout_set_text(fdata->layout, text, strlen(text));
 
     SDL_Rect rect;
     rect.x = 0;
