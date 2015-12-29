@@ -23,6 +23,7 @@ SDL2GetLine::SDL2GetLine(SDL2Interface *interface) :
     m_box_width(0),
     m_prompt(NULL)
 {
+    m_contents[0] = 0;
     setVisible(false);
 
     // Message window font
