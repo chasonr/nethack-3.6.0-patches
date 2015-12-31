@@ -1,6 +1,6 @@
 #include "curses.h"
 #include "hack.h"
-#ifdef NHSTDC
+#ifndef NO_WIDE_CURSES
 #include <locale.h>
 #endif
 #include "patchlevel.h"
@@ -134,7 +134,7 @@ char** argv;
     char window_title[BUFSZ];
 #endif
 
-#ifdef NHSTDC
+#ifndef NO_WIDE_CURSES
     setlocale(LC_ALL, "");
 #endif
 
