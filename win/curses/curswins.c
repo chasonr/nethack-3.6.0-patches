@@ -565,7 +565,7 @@ nethack_char nch;
 #ifdef PDCURSES
     mvwaddrawch(win, y, x, nch.ch);
 #else
-#ifdef NHSTDC
+#ifndef NO_WIDE_CURSES
     if (SYMHANDLING(H_IBM) || SYMHANDLING(H_UNICODE)) {
         wchar_t wch[2];
         wch[0] = nch.ch;
