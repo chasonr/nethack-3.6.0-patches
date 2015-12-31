@@ -83,15 +83,6 @@
 #endif
 
 #ifdef USER_SOUNDS
-#if QT_VERSION >= 0x050000
-#  include <QtMultimedia/QSound>
-# else
-#  include <QtGui/QSound>
-# endif
-#endif
-
-
-#ifdef USER_SOUNDS
 extern void play_sound_for_message(const std::string& str);
 #endif
 

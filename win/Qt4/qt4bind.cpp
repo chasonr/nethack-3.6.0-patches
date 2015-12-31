@@ -18,9 +18,13 @@ extern "C" {
 #include <QtGui/QtGui>
 #if QT_VERSION >= 0x050000
 #include <QtWidgets/QtWidgets>
+#if defined(USER_SOUNDS) && !defined(QT_NO_SOUND)
 #include <QtMultimedia/QSound>
+#endif
 #else
+#if defined(USER_SOUNDS) && !defined(QT_NO_SOUND)
 #include <QtGui/QSound>
+#endif
 #endif
 #include "qt4bind.h"
 #include "qt4click.h"
