@@ -66,9 +66,28 @@ typedef xchar boolean; /* 0 or 1 */
 #endif
 
 /*
+ * Unicode character types
+ * Improvise a bit
+ */
+typedef unsigned short utf16_t;
+#if defined(MSDOS) || defined(OS2)
+    /* Possible 16 bit build; ensure 32 bit */
+    typedef unsigned long utf32_t;
+#else
+    /* Most things have 32 bit int */
+    typedef unsigned utf32_t;
+#endif
+
+/*
  * type nhsym: loadable symbols go into this type
  */
-typedef uchar nhsym;
+typedef utf32_t nhsym;
+
+/*
+ * opaque type for string allocation
+ */
+struct str_context_rec;
+typedef struct str_context_rec *str_context;
 
 #ifndef STRNCMPI
 #ifndef __SASC_60 /* SAS/C already shifts to stricmp */

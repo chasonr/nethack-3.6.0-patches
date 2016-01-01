@@ -305,11 +305,13 @@
 #include <memory.h>
 #endif
 #else         /* therefore SYSV */
+#ifndef __cplusplus
 #ifndef index /* some systems seem to do this for you */
 #define index strchr
 #endif
 #ifndef rindex
 #define rindex strrchr
+#endif
 #endif
 #endif
 
