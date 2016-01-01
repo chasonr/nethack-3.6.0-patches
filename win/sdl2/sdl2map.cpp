@@ -70,6 +70,7 @@ SDL2MapWindow::SDL2MapWindow(SDL2Interface *interface) :
     // Tile map file
     const char *tilemap = iflags.wc_tile_file;
     SDL_Surface *tilemap_img;
+    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG | IMG_INIT_TIF | IMG_INIT_WEBP);
 #ifdef WIN32
     // On Win32, if no tilemap given, load the resource from the executable
     if (tilemap == NULL || tilemap[0] == '\0') {
@@ -127,7 +128,9 @@ SDL_Surface *loadDefaultBitmap(void)
     memory_dc = CreateCompatibleDC(NULL);
 
     // Load the bitmap
-    hbitmap = LoadBitmap(GetNHApp()->hApp, MAKEINTRESOURCE(IDB_TILES));
+    hbitmap = (HBITMAP) LoadImage(GetNHApp()->hApp,
+            MAKEINTRESOURCE(IDB_TILES), IMAGE_BITMAP,
+            0, 0, LR_DEFAULTSIZE);
     if (hbitmap == NULL) goto error;
 
     // Render in the device context
