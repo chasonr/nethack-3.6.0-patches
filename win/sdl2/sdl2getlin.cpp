@@ -160,6 +160,7 @@ void SDL2GetLine::addChar(utf32_t ch)
         }
         strcpy(m_contents + m_contents_size, utf8);
         m_contents_size += len;
+	str_close_context(ctx);
     }
 
     interface()->redraw();
