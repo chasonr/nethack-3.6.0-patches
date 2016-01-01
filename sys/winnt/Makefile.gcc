@@ -243,6 +243,17 @@ endif
 guilibs += -lwinmm
 
 #==========================================
+# Extra files needed for some ports
+#==========================================
+DLLS =
+ifdef WANT_WIN_SDL2
+    DLLS += $(GAMEDIR)/libjpeg-9.dll
+    DLLS += $(GAMEDIR)/libpng16-16.dll
+    DLLS += $(GAMEDIR)/libtiff-5.dll
+    DLLS += $(GAMEDIR)/libwebp-4.dll
+endif
+
+#==========================================
 # Util builds
 #==========================================
 
@@ -543,7 +554,7 @@ default : install
 
 all :   install
 
-install: graphicschk $(O)obj.tag $(GAMEDIR)/NetHack.exe $(GAMEDIR)/NetHackW.exe $(O)install.tag
+install: graphicschk $(O)obj.tag $(GAMEDIR)/NetHack.exe $(GAMEDIR)/NetHackW.exe $(O)install.tag $(DLLS)
 	@echo NetHack is up to date.
 	@echo Done.
 
@@ -1127,6 +1138,19 @@ clean:
 #===================================================================
 # OTHER DEPENDENCIES
 #===================================================================
+
+# DLLs needed by some ports
+$(GAMEDIR)/libjpeg-9.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libjpeg-9.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/libpng16-16.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libpng16-16.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/libtiff-5.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libtiff-5.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/libwebp-4.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libwebp-4.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
 
 #
 # dat dependencies
