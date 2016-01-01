@@ -31,10 +31,15 @@
 #==============================================================================
 # BUILD DECISIONS SECTION
 #
-# There are currently only 3 decisions that you have to make.
+# There are currently only 4 decisions that you have to make.
 #	1. 32-bit or 64-bit?
 #	2. Where do you want your build to end up?
 #	3. Do you want debug information in the executable?
+#	4. Do you want additional GUI interfaces in the executable?
+#
+# Note that additional GUI interfaces may require external libraries.
+# These libraries are placed in a subdirectory of your home directory, either
+# x86libs or x64libs depending on whether you're building for 64 bits.
 #
 #==============================================================================
 # 1. 32-bit or 64-bit?
@@ -59,6 +64,25 @@ GAMEDIR = ../binary
 #
 
 DEBUGINFO = Y
+
+#
+#---------------------------------------------------------------
+# 4. Do you want additional GUI interfaces in the executable?
+#
+
+#WANT_WIN_QT4=1
+#WANT_WIN_QT5=1
+WANT_WIN_SDL2=1
+#WANT_WIN_CURSES=1
+
+# External include and library files go under x86libs or x64libs in your
+# home directory:
+LIBRARIES = $(subst \,/,$(USERPROFILE))/$(TARGET_CPU)libs
+# WANT_WIN_SDL2 requires SDL2 and SDL2_image
+# SDL2 under SDL2-2.0.3
+SDL2_DIRECTORY = $(LIBRARIES)/SDL2-2.0.3
+# SDL2_image under SDL2_image-2.0.0
+SDL2_IMAGE_DIRECTORY = $(LIBRARIES)/SDL2_image-2.0.0
 
 # This marks the end of the BUILD DECISIONS section.
 #==============================================================================
@@ -95,8 +119,17 @@ MSWSYS = ../sys/winnt
 TTY   = ../win/tty
 # window port files (WIN32)
 MSWIN = ../win/win32
+# window port files (SDL2)
+SDL2 = ../win/sdl2
 # Tile support files
 WSHR  = ../win/share
+
+# Need this to build include and library paths for SDL2 and SDL2_image
+ifeq "$(TARGET_CPU)" "x86"
+    SDL2_ARCH = i686-w64-mingw32
+else
+    SDL2_ARCH = x86_64-w64-mingw32
+endif
 
 #
 #  Object directory.
@@ -105,8 +138,18 @@ WSHR  = ../win/share
 OBJ = o
 
 cc     = gcc
+cxx    = g++
 rc     = windres
 link   = gcc
+ifdef WANT_WIN_QT4
+    link = g++
+endif
+ifdef WANT_WIN_QT5
+    link = g++
+endif
+ifdef WANT_WIN_SDL2
+    link = g++
+endif
 
 #
 #==========================================
@@ -157,6 +200,9 @@ RANDOM  = $(OBJ)/random.o
 #RANDOM =
 
 WINPFLAG   = -DTILES -DMSWIN_GRAPHICS -DWIN32CON -D_WIN32_IE=0x0400 -D_WIN32_WINNT=0x0501
+ifdef WANT_WIN_SDL2
+    WINPFLAG += -DSDL2_GRAPHICS
+endif
 # To store all the level files,
 # help files, etc. in a single library file.
 # USE_DLB = Y is left uncommented
@@ -183,14 +229,18 @@ cdebug =
 linkdebug =
 endif
 
-
-
 CFLAGSBASE  = -c $(cflags) -I$(INCL) $(WINPINC) $(cdebug)
 #LFLAGSBASEC = $(linkdebug)
 #LFLAGSBASEG = $(linkdebug) -mwindows
 
 conlibs = -lwinmm
-guilibs = -lcomctl32 -lwinmm
+guilibs = -lcomctl32
+ifdef WANT_WIN_SDL2
+    guilibs += $(SDL2_DIRECTORY)/$(SDL2_ARCH)/lib/libSDL2.a
+    guilibs += $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/lib/libSDL2_image.a
+    guilibs +=-limm32 -lole32 -loleaut32 -lversion
+endif
+guilibs += -lwinmm
 
 #==========================================
 # Util builds
@@ -205,6 +255,8 @@ LFLAGSU = $(LFLAGSBASEC)
 
 CFLAGS   = $(CFLAGSBASE) $(WINPFLAG) $(DLBFLG)
 lflags  = $(LFLAGSBASEC) $(linkdebuf)
+
+CXXFLAGS = $(CFLAGS)
 
 ifeq  "$(USE_DLB)" "Y"
 DLB = nhdat
@@ -319,12 +371,25 @@ GUIOBJ  = $(O)mhaskyn.o $(O)mhdlg.o \
 	$(O)mhfont.o $(O)mhinput.o $(O)mhmain.o $(O)mhmap.o \
 	$(O)mhmenu.o $(O)mhmsgwnd.o $(O)mhrip.o $(O)mhsplash.o \
 	$(O)mhstatus.o $(O)mhtext.o $(O)mswproc.o $(O)winhack.o
+ifdef WANT_WIN_SDL2
+    GUIOBJ += $(O)sdl2bind.o $(O)sdl2extcmd.o $(O)sdl2font_windows.o \
+	$(O)sdl2getlin.o $(O)sdl2interface.o $(O)sdl2map.o $(O)sdl2menu.o \
+	$(O)sdl2message.o $(O)sdl2plsel.o $(O)sdl2posbar.o $(O)sdl2status.o \
+	$(O)sdl2text.o $(O)sdl2window.o
+endif
 
 GUIHDR = $(MSWIN)/mhaskyn.h $(MSWIN)/mhdlg.h $(MSWIN)/mhfont.h \
 	$(MSWIN)/mhinput.h $(MSWIN)/mhmain.h $(MSWIN)/mhmap.h \
 	$(MSWIN)/mhmenu.h $(MSWIN)/mhmsg.h $(MSWIN)/mhmsgwnd.h \
 	$(MSWIN)/mhrip.h $(MSWIN)/mhstatus.h \
 	$(MSWIN)/mhtext.h $(MSWIN)/resource.h $(MSWIN)/winMS.h
+ifdef WANT_WIN_SDL2
+    GUIHDR += $(SDL2)/sdl2.h $(SDL2)/sdl2extcmd.h $(SDL2)/sdl2font.h \
+	$(SDL2)/sdl2getlin.h $(SDL2)/sdl2interface.h $(SDL2)/sdl2map.h \
+	$(SDL2)/sdl2menu.h $(SDL2)/sdl2message.h $(SDL2)/sdl2plsel.h \
+	$(SDL2)/sdl2posbar.h $(SDL2)/sdl2status.h $(SDL2)/sdl2text.h \
+	$(SDL2)/sdl2window.h
+endif
 
 KEYDLLS = $(GAMEDIR)/nhdefkey.dll $(GAMEDIR)/nh340key.dll $(GAMEDIR)/nhraykey.dll
 
@@ -404,7 +469,7 @@ $(OBJ)/%.o : $(SSYS)/%.c
 	$(cc) $(CFLAGS)  -o$@  $<
 
 $(OBJ)/%.o : $(SSYS)/%.cpp
-	g++ $(CFLAGS) -std=c++11  -o$@  $<
+	$(cxx) $(CXXFLAGS) -std=c++11  -o$@  $<
 
 #==========================================
 # Rules for files in sys/winnt
@@ -449,6 +514,13 @@ $(OBJ)/%.o : $(TTY)/%.c
 
 $(OBJ)/%.o : $(MSWIN)/%.c
 	$(cc) $(CFLAGS)  -o$@  $<
+
+#==========================================
+# Rules for files in win/sdl2
+#==========================================
+
+$(OBJ)/%.o : $(SDL2)/%.cpp
+	$(cxx) $(CXXFLAGS) -I$(MSWIN) -I$(SDL2_DIRECTORY)/include -I$(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/include -o$@  $<
 
 #==========================================
 #=============== TARGETS ==================

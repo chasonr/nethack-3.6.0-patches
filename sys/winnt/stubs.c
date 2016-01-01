@@ -7,6 +7,9 @@
 
 int GUILaunched;
 struct window_procs mswin_procs = { "guistubs" };
+struct window_procs sdl2_procs = { "guistubs" };
+struct window_procs qt_procs = { "guistubs" };
+struct window_procs curses_procs = { "guistubs" };
 void
 mswin_destroy_reg()
 {

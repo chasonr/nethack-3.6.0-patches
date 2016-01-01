@@ -104,7 +104,7 @@ void SDL2Menu::redraw(void)
                 utf32_t ch = m_menu[j].ch;
                 char tag[BUFSZ];
                 if (ch == 0) { ch = m_menu[j].def_ch; }
-                snprintf(tag, SIZE(tag), "%1$c %2$c - ",
+                snprintf(tag, SIZE(tag), "%c %c - ",
                         !m_menu[j].selected ? ' ' : m_menu[j].count == 0 ? '*' : '#',
                         ch);
                 render(tag, 1, y + i*lineHeight(),

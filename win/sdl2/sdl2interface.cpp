@@ -601,7 +601,7 @@ void SDL2Interface::sdl2_display_file(const char *filename, bool complain)
     } else if (complain) {
         char msg[BUFSZ];
 
-        snprintf(msg, SIZE(msg), "Could not open file %1$s", filename);
+        snprintf(msg, SIZE(msg), "Could not open file %s", filename);
         message_window->putStr(0, msg);
         redraw();
     }
@@ -1169,13 +1169,6 @@ void SDL2Interface::sdl2_preference_update(const char * /*pref*/)
     // Place holder
     // TODO:  change fonts on request
 }
-
-#ifdef USER_SOUNDS
-void SDL2Interface::sdl2_play_usersound(const char *filename, int volume)
-{
-    // Place holder
-}
-#endif
 
 nhsym chrConvert(nhsym ch)
 {
