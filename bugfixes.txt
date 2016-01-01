@@ -16,4 +16,6 @@ List of bugs fixed in this repository:
             Author: Ray Chason
 
 Bugs not mentioned on the DevTeam's website:
-None to report at this time.
+* W343-4:   Keyboard may stop responding after locking or unlocking a door when
+            using altkeyhandler=nhraykey.dll 
+            Author: Ray Chason
