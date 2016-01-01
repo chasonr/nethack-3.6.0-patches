@@ -105,7 +105,7 @@ void SDL2StatusWindow::redraw(void)
     // Score
     if (flags.showscore)
     {
-        snprintf(str, SIZE(str), "  S:%1$d", botl_score());
+        snprintf(str, SIZE(str), "  S:%d", botl_score());
         rect = render(str, x, y, textFG(ATR_NONE), textBG(ATR_NONE));
         x += rect.w;
     }
@@ -138,7 +138,7 @@ void SDL2StatusWindow::redraw(void)
     x += rect.w;
 
     // Current hit points
-    snprintf(str, SIZE(str), " HP:%1$d", hp);
+    snprintf(str, SIZE(str), " HP:%d", hp);
     rect = render(str, x, y, textColor(sc->hp_color()), textBG(ATR_NONE));
     x += rect.w;
     // Maximum hit points

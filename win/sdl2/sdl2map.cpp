@@ -3,6 +3,16 @@
 extern "C" {
 #include "hack.h"
 }
+#ifdef WIN32
+// Need Windows APIs to load the default bitmap
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <stdint.h>
+extern "C" {
+#include "winMS.h"
+#include "resource.h"
+}
+#endif
 #include "sdl2.h"
 #include "sdl2map.h"
 #include "sdl2interface.h"
@@ -33,6 +43,10 @@ const SDL_Color SDL2MapWindow::colors[] =
     { 255, 255, 255, 255 }  // white
 };
 
+#ifdef WIN32
+SDL_Surface *loadDefaultBitmap(void);
+#endif
+
 SDL2MapWindow::SDL2MapWindow(SDL2Interface *interface) :
     SDL2Window(interface),
     m_tile_mode(iflags.wc_tiled_map),
@@ -55,10 +69,20 @@ SDL2MapWindow::SDL2MapWindow(SDL2Interface *interface) :
 
     // Tile map file
     const char *tilemap = iflags.wc_tile_file;
+    SDL_Surface *tilemap_img;
+#ifdef WIN32
+    // On Win32, if no tilemap given, load the resource from the executable
+    if (tilemap == NULL || tilemap[0] == '\0') {
+        tilemap_img = loadDefaultBitmap();
+    } else {
+        tilemap_img = IMG_Load(tilemap);
+    }
+#else
     if (tilemap == NULL || tilemap[0] == '\0') {
         tilemap = "nhtiles.bmp";
     }
-    SDL_Surface *tilemap_img = IMG_Load(tilemap);
+    tilemap_img = IMG_Load(tilemap);
+#endif
     if (tilemap_img != NULL) {
         // We need to convert the tile map if it uses a palette;
         // it doesn't hurt to convert the tile map anyway
@@ -90,6 +114,64 @@ SDL2MapWindow::SDL2MapWindow(SDL2Interface *interface) :
 
     clear();
 }
+
+#ifdef WIN32
+SDL_Surface *loadDefaultBitmap(void)
+{
+    HDC memory_dc = NULL; // custodial
+    HBITMAP hbitmap = NULL; // custodial
+    BITMAP bm;
+    SDL_Surface *surface = NULL; // custodial, returned
+
+    // We'll render to this device context
+    memory_dc = CreateCompatibleDC(NULL);
+
+    // Load the bitmap
+    hbitmap = LoadBitmap(GetNHApp()->hApp, MAKEINTRESOURCE(IDB_TILES));
+    if (hbitmap == NULL) goto error;
+
+    // Render in the device context
+    if (!SelectObject(memory_dc, (HGDIOBJ)hbitmap)) goto error;
+
+    // Get the size of the bitmap
+    GetObject(hbitmap, sizeof(BITMAP), &bm);
+
+    // Create the SDL2 surface
+    surface = SDL_CreateRGBSurface(
+            SDL_SWSURFACE,
+            bm.bmWidth, bm.bmHeight, 32,
+            0x000000FF,  // red
+            0x0000FF00,  // green
+            0x00FF0000,  // blue
+            0xFF000000); // alpha
+    if (surface == NULL) goto error;
+
+    for (LONG y = 0; y < bm.bmHeight; ++y) {
+        uint32_t *row2 = (uint32_t *) surface->pixels
+                       + bm.bmWidth * y;
+        for (LONG x = 0; x < bm.bmWidth; ++x) {
+            COLORREF color = GetPixel(memory_dc, x, y);
+            unsigned r = GetRValue(color);
+            unsigned g = GetGValue(color);
+            unsigned b = GetBValue(color);
+            row2[x] = (static_cast<uint32_t>(r) <<  0)
+                    | (static_cast<uint32_t>(g) <<  8)
+                    | (static_cast<uint32_t>(b) << 16)
+                    | (static_cast<uint32_t>(0xFF) << 24);
+        }
+    }
+
+    DeleteDC(memory_dc);
+    DeleteObject(hbitmap);
+    return surface;
+
+error:
+    DeleteDC(memory_dc);
+    DeleteObject(hbitmap);
+    if (surface) SDL_FreeSurface(surface);
+    return NULL;
+}
+#endif
 
 SDL2MapWindow::~SDL2MapWindow(void)
 {
@@ -172,7 +254,7 @@ void SDL2MapWindow::redraw(void)
 
 void SDL2MapWindow::clear(void)
 {
-    int background_glyph = cmap_to_glyph(S_room);
+    int background_glyph = cmap_to_glyph(S_stone);
 
     for (unsigned y = 0; y < ROWNO; ++y) {
         for (unsigned x = 0; x < COLNO; ++x) {
@@ -185,7 +267,7 @@ void SDL2MapWindow::clear(void)
             m_map[y][x].text_bg.g =   0;
             m_map[y][x].text_bg.b =   0;
             m_map[y][x].text_bg.a = 255;
-            m_map[y][x].tile_glyph = background_glyph;
+            m_map[y][x].tile_glyph = glyph2tile[background_glyph];
         }
     }
 
