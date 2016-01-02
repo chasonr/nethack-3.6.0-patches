@@ -35,7 +35,6 @@ NetHackQtSavedGameSelector::NetHackQtSavedGameSelector(const char** saved) :
     QLabel* attr = new QLabel("by the NetHack DevTeam",this);
     attr->setAlignment(Qt::AlignCenter);
     vbl->addWidget(attr);
-    vbl->addStretch(2);
     /*
     QLabel* logo = new QLabel(hb);
     hb = new QHBox(this);
@@ -58,11 +57,13 @@ NetHackQtSavedGameSelector::NetHackQtSavedGameSelector(const char** saved) :
     QGroupBox* box = new QGroupBox("Saved Characters",this);
     QButtonGroup *bg = new QButtonGroup(this);
     vbl->addWidget(box);
+    vbl->setStretchFactor(box, 1);
     QVBoxLayout *bgl = new QVBoxLayout(box);
     connect(bg, SIGNAL(buttonPressed(int)), this, SLOT(done(int)));
     for (int i=0; saved[i]; i++) {
-	QPushButton* b = new QPushButton(saved[i],box);
-	bg->addButton(b, i+2);
+        QPushButton* b = new QPushButton(saved[i],box);
+        bgl->addWidget(b);
+        bg->addButton(b, i+2);
     }
 }
 
