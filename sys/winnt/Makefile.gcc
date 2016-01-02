@@ -72,17 +72,22 @@ DEBUGINFO = Y
 
 #WANT_WIN_QT4=1
 #WANT_WIN_QT5=1
-WANT_WIN_SDL2=1
-#WANT_WIN_CURSES=1
+#WANT_WIN_SDL2=1
+WANT_WIN_CURSES=1
 
 # External include and library files go under x86libs or x64libs in your
 # home directory:
 LIBRARIES = $(subst \,/,$(USERPROFILE))/$(TARGET_CPU)libs
+
 # WANT_WIN_SDL2 requires SDL2 and SDL2_image
 # SDL2 under SDL2-2.0.3
 SDL2_DIRECTORY = $(LIBRARIES)/SDL2-2.0.3
 # SDL2_image under SDL2_image-2.0.0
 SDL2_IMAGE_DIRECTORY = $(LIBRARIES)/SDL2_image-2.0.0
+
+# WANT_WIN_CURSES requires win32a (a fork of PDCurses, see
+# http://www.projectpluto.com/win32a.htm).
+WIN32A_DIRECTORY = $(LIBRARIES)/win32a
 
 # This marks the end of the BUILD DECISIONS section.
 #==============================================================================
@@ -121,6 +126,8 @@ TTY   = ../win/tty
 MSWIN = ../win/win32
 # window port files (SDL2)
 SDL2 = ../win/sdl2
+# window port files (Curses)
+CURSES = ../win/curses
 # Tile support files
 WSHR  = ../win/share
 
@@ -203,6 +210,9 @@ WINPFLAG   = -DTILES -DMSWIN_GRAPHICS -DWIN32CON -D_WIN32_IE=0x0400 -D_WIN32_WIN
 ifdef WANT_WIN_SDL2
     WINPFLAG += -DSDL2_GRAPHICS
 endif
+ifdef WANT_WIN_CURSES
+    WINPFLAG += -DCURSES_GRAPHICS
+endif
 # To store all the level files,
 # help files, etc. in a single library file.
 # USE_DLB = Y is left uncommented
@@ -239,6 +249,9 @@ ifdef WANT_WIN_SDL2
     guilibs += $(SDL2_DIRECTORY)/$(SDL2_ARCH)/lib/libSDL2.a
     guilibs += $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/lib/libSDL2_image.a
     guilibs +=-limm32 -lole32 -loleaut32 -lversion
+endif
+ifdef WANT_WIN_CURSES
+    guilibs += $(WIN32A_DIRECTORY)/win32a/pdcurses.a
 endif
 guilibs += -lwinmm
 
@@ -388,6 +401,10 @@ ifdef WANT_WIN_SDL2
 	$(O)sdl2message.o $(O)sdl2plsel.o $(O)sdl2posbar.o $(O)sdl2status.o \
 	$(O)sdl2text.o $(O)sdl2window.o
 endif
+ifdef WANT_WIN_CURSES
+    GUIOBJ += $(O)cursdial.o $(O)cursinit.o $(O)cursmain.o $(O)cursmesg.o \
+	$(O)cursmisc.o $(O)cursstat.o $(O)curswins.o
+endif
 
 GUIHDR = $(MSWIN)/mhaskyn.h $(MSWIN)/mhdlg.h $(MSWIN)/mhfont.h \
 	$(MSWIN)/mhinput.h $(MSWIN)/mhmain.h $(MSWIN)/mhmap.h \
@@ -400,6 +417,11 @@ ifdef WANT_WIN_SDL2
 	$(SDL2)/sdl2menu.h $(SDL2)/sdl2message.h $(SDL2)/sdl2plsel.h \
 	$(SDL2)/sdl2posbar.h $(SDL2)/sdl2status.h $(SDL2)/sdl2text.h \
 	$(SDL2)/sdl2window.h
+endif
+ifdef WANT_WIN_CURSES
+    GUIHDR += $(CURSES)/cursdial.h $(CURSES)/cursinit.h $(CURSES)/cursmesg.h \
+	$(CURSES)/cursmisc.h $(CURSES)/cursstat.h $(CURSES)/curswins.h \
+	$(CURSES)/wincurs.h
 endif
 
 KEYDLLS = $(GAMEDIR)/nhdefkey.dll $(GAMEDIR)/nh340key.dll $(GAMEDIR)/nhraykey.dll
@@ -532,6 +554,13 @@ $(OBJ)/%.o : $(MSWIN)/%.c
 
 $(OBJ)/%.o : $(SDL2)/%.cpp
 	$(cxx) $(CXXFLAGS) -I$(MSWIN) -I$(SDL2_DIRECTORY)/include -I$(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/include -o$@  $<
+
+#==========================================
+# Rules for files in win/curses
+#==========================================
+
+$(OBJ)/%.o : $(CURSES)/%.c
+	$(cc) $(CFLAGS) -I$(WIN32A_DIRECTORY) -o$@  $<
 
 #==========================================
 #=============== TARGETS ==================
