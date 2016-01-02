@@ -1,4 +1,5 @@
 #include "curses.h"
+#undef getch
 #include "hack.h"
 #include "wincurs.h"
 #include "cursdial.h"
@@ -228,7 +229,7 @@ char def;
     }
 
     while (1) {
-        answer = getch();
+        answer = wgetch(stdscr);
         answer = curses_convert_keys(answer);
 
         if (answer==KEY_ESC) {
@@ -356,7 +357,7 @@ curses_ext_cmd()
         }
 
         wrefresh(extwin);
-        letter = getch();
+        letter = wgetch(stdscr);
         prompt_width = strlen(cur_choice);
         matches = 0;
 
@@ -1056,7 +1057,7 @@ int how;
     menu_display_page(menu, win, 1);
 
     while (!dismiss) {
-        curletter = getch();
+        curletter = wgetch(stdscr);
 
         if (curletter == '\033') {
             curletter = curses_convert_keys(curletter);
@@ -1066,7 +1067,7 @@ int how;
             count = curses_get_count(curletter - '0');
             touchwin(win);
             refresh();
-            curletter = getch();
+            curletter = wgetch(stdscr);
 
             if (count > 0) {
                 count_letter = curletter;

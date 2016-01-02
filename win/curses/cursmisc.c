@@ -1,4 +1,5 @@
 #include "curses.h"
+#undef getch
 #include "hack.h"
 #include "wincurs.h"
 #include "cursmisc.h"
@@ -37,7 +38,7 @@ curses_read_char()
 {
     int ch, tmpch;
 
-    ch = getch();
+    ch = wgetch(stdscr);
     tmpch = ch;
     ch = curses_convert_keys(ch);
 
@@ -929,14 +930,14 @@ parse_escape_sequence()
 
     timeout(10);
 
-    ret = getch();
+    ret = wgetch(stdscr);
 
     if (ret != ERR) { /* Likely an escape sequence */
         if (((ret >= 'a') && (ret <= 'z')) ||
                 ((ret >= '0') && (ret <= '9'))) {
             ret |= 0x80; /* Meta key support for most terminals */
         } else if (ret == 'O') { /* Numeric keypad */
-            ret = getch();
+            ret = wgetch(stdscr);
             if ((ret != ERR) && (ret >= 112) && (ret <= 121)) {
                 ret = ret - 112 + '0';  /* Convert to number */
             } else {
