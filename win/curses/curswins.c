@@ -1,4 +1,5 @@
 #include "curses.h"
+#undef getch
 #include "hack.h"
 #include "wincurs.h"
 #include "curswins.h"

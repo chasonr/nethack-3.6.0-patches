@@ -1,4 +1,5 @@
 #include "curses.h"
+#undef getch
 #include "hack.h"
 #include "wincurs.h"
 #include "cursinit.h"
@@ -943,6 +944,7 @@ curses_init_options()
     set_option_mod_status("eight_bit_tty", SET_IN_FILE);
 
 #ifdef PDCURSES
+#if 0 /*RLC unused*/
     /* PDCurses for SDL, win32 and OS/2 has the ability to set the
      terminal size programatically.  If the user does not specify a
      size in the config file, we will set it to a nice big 110x32 to
@@ -967,6 +969,10 @@ curses_init_options()
     } else {
         switch_graphics(ASCII_GRAPHICS);
     }
+#else
+    resize_term(32, 110);
+    getmaxyx(base_term, term_rows, term_cols);
+#endif
 #endif  /* PDCURSES */
 #if 0 /*RLC unused*/
     if (!iflags.wc2_windowborders) {

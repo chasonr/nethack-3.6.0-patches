@@ -1,4 +1,5 @@
 #include "curses.h"
+#undef getch
 #include "hack.h"
 #ifndef NO_WIDE_CURSES
 #include <locale.h>
@@ -138,6 +139,9 @@ char** argv;
     setlocale(LC_ALL, "");
 #endif
 
+#if defined(WIN32) && defined(PDCURSES)
+    PDC_set_resize_limits(15, 255, 40, 255);
+#endif
 #ifdef XCURSES
     base_term = Xinitscr(*argcp, argv);
 #else
@@ -190,7 +194,7 @@ char** argv;
     PDC_set_title(window_title);
     PDC_set_blink(TRUE);    /* Only if the user asks for it! */
     timeout(1);
-    (void)getch();
+    (void)wgetch(stdscr);
     timeout(-1);
 #endif  /* PDCURSES */
     getmaxyx(base_term, term_rows, term_cols);
