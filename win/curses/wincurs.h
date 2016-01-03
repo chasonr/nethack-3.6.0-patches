@@ -203,7 +203,7 @@ extern void NDECL(curses_display_splash_window);
 
 /* cursmesg.c */
 
-extern void FDECL(curses_message_win_puts, (const char *message, BOOLEAN_P recursed));
+extern void FDECL(curses_message_win_puts, (const char *message, int glyph, BOOLEAN_P recursed));
 
 extern int NDECL(curses_more);
 

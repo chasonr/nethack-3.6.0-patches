@@ -9,7 +9,8 @@
 /* Private declatations */
 
 typedef struct nhpm {
-    char *str;  /* Message text */
+    int glyph;  /* Glyph to be displayed, for / command */
+    char *str_;  /* Message text */
     long turn;  /* Turn number for message */
     struct nhpm *prev_mesg;    /* Pointer to previous message */
     struct nhpm *next_mesg;    /* Pointer to next message */
@@ -17,7 +18,7 @@ typedef struct nhpm {
 
 static void FDECL(scroll_window, (winid wid));
 
-static void FDECL(mesg_add_line, (char *mline));
+static void FDECL(mesg_add_line, (int glyph, const char *mline));
 
 static nhprev_mesg *FDECL(get_msg_line, (BOOLEAN_P reverse, int mindex));
 
@@ -34,8 +35,9 @@ static int num_messages = 0;
 /* Write a string to the message window.  Attributes set by calling function. */
 
 void
-curses_message_win_puts(message, recursed)
+curses_message_win_puts(message, glyph, recursed)
 const char *message;
+int glyph;
 boolean recursed;
 {
     int height, width, linespace;
@@ -82,7 +84,7 @@ boolean recursed;
 
     if (!recursed) {
         strcpy(toplines, message);
-        mesg_add_line((char *) message);
+        mesg_add_line(glyph, message);
     }
 
     if (linespace < message_length) {
@@ -123,8 +125,29 @@ boolean recursed;
         }
         wrefresh(win);
         curses_message_win_puts(curses_str_remainder(message, (width - 2), 1),
-                                TRUE);
+                                glyph, TRUE);
     } else {
+        if (glyph != NO_GLYPH) {
+            nhsym ch;
+            int color;
+            unsigned int special;
+            mapglyph(glyph, &ch, &color, &special, 0, 0);
+            ch = curses_convert_glyph(ch);
+            curses_toggle_color_attr(win, color, NONE, ON);
+#ifndef NO_WIDE_CURSES
+            if (SYMHANDLING(H_IBM) || SYMHANDLING(H_UNICODE)) {
+                wchar_t wch[2];
+                wch[0] = ch;
+                wch[1] = 0;
+                mvwaddwstr(win, my, mx, wch);
+            } else
+#endif
+            {
+                mvwaddch(win, my, mx, ch);
+            }
+            curses_toggle_color_attr(win, color, NONE, OFF);
+            ++mx;
+        }
         mvwprintw(win, my, mx, "%s", message);
         curses_toggle_color_attr(win, NONE, A_BOLD, OFF);
         mx += message_length + 1;
@@ -257,8 +280,8 @@ curses_prev_mesg()
             curses_add_menu(wid, NO_GLYPH, identifier, 0, 0, A_NORMAL,
                             "---", FALSE);
         }
-        curses_add_menu(wid, NO_GLYPH, identifier, 0, 0, A_NORMAL,
-                        mesg->str, FALSE);
+        curses_add_menu(wid, mesg->glyph, identifier, 0, 0, A_NORMAL,
+                        mesg->str_, FALSE);
         turn = mesg->turn;
     }
 
@@ -370,13 +393,15 @@ winid wid;
 /* Add given line to message history */
 
 static void
-mesg_add_line(mline)
-char *mline;
+mesg_add_line(glyph, mline)
+int glyph;
+const char *mline;
 {
     nhprev_mesg *tmp_mesg = NULL;
     nhprev_mesg *current_mesg = malloc(sizeof(nhprev_mesg));
 
-    current_mesg->str = curses_copy_of(mline);
+    current_mesg->glyph = glyph;
+    current_mesg->str_ = curses_copy_of(mline);
     current_mesg->turn = moves;
     current_mesg->next_mesg = NULL;
 

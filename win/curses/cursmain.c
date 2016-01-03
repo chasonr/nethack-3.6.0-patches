@@ -22,6 +22,7 @@ static void FDECL(curses_display_nhwindow, (winid wid, BOOLEAN_P block));
 static void FDECL(curses_destroy_nhwindow, (winid wid));
 static void FDECL(curses_curs, (winid wid, int x, int y));
 static void FDECL(curses_putstr, (winid wid, int attr, const char *text));
+static void FDECL(curses_putmixed, (winid wid, int attr, const char *text));
 static void FDECL(curses_display_file, (const char *filename,BOOLEAN_P must_exist));
 static void NDECL(curses_update_inventory);
 static void NDECL(curses_mark_synch);
@@ -62,7 +63,7 @@ struct window_procs curses_procs = {
     curses_destroy_nhwindow,
     curses_curs,
     curses_putstr,
-    genl_putmixed,
+    curses_putmixed,
     curses_display_file,
     curses_start_menu,
     curses_add_menu,
@@ -405,6 +406,39 @@ const char *text;
 
     /* We need to convert NetHack attributes to curses attributes */
     curses_puts(wid, curses_attr, text);
+}
+
+/* As curses_putstr, but the text may contain a glyph escape */
+static void
+curses_putmixed(wid, attr, text)
+winid wid;
+int attr;
+const char *text;
+{
+    if (wid != MESSAGE_WIN) {
+        genl_putmixed(wid, attr, text);
+        return;
+    }
+
+    if (text[0] == '\\' && text[1] == 'G' && strlen(text) >= 10) {
+        char rndchk_str[5];
+        char *end;
+        strncpy(rndchk_str, text + 2, 4);
+        rndchk_str[4] = '\0';
+        int rndchk = strtol(rndchk_str, &end, 16);
+        if (rndchk == context.rndencode && *end == '\0') {
+            char gv_str[5];
+            strncpy(gv_str, text + 6, 4);
+            gv_str[4] = '\0';
+            int gv = strtol(gv_str, &end, 16);
+            if (*end == '\0') {
+                curses_message_win_puts(text + 10, gv, FALSE);
+                return;
+            }
+        }
+    }
+
+    curses_message_win_puts(text, NO_GLYPH, FALSE);
 }
 
 /* Display the file named str.  Complain about missing files

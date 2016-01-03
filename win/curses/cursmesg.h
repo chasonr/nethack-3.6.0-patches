@@ -4,7 +4,7 @@
 
 /* Global declarations */
 
-void FDECL(curses_message_win_puts, (const char *message, BOOLEAN_P recursed));
+void FDECL(curses_message_win_puts, (const char *message, int glyph, BOOLEAN_P recursed));
 
 int NDECL(curses_more);
 
