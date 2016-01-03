@@ -491,7 +491,7 @@ const char *text;
     }
 
     if (wid == MESSAGE_WIN) {
-        curses_message_win_puts(text, FALSE);
+        curses_message_win_puts(text, NO_GLYPH, FALSE);
         return;
     }
 
