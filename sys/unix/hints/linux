@@ -11,14 +11,15 @@
 # 1. Which window system(s) should be included in this binary?
 #WANT_WIN_TTY=1
 #WANT_WIN_X11=1
-WANT_WIN_QT4=1
+#WANT_WIN_QT3=1  # Qt 3
+#WANT_WIN_QT4=1  # Qt 4 or 5
 WANT_WIN_SDL2=1
 WANT_WIN_CURSES=1
 
 # 1a. What is the default window system?
 #WANT_DEFAULT=tty
 #WANT_DEFAULT=x11
-#WANT_DEFAULT=Qt
+#WANT_DEFAULT=Qt    # 3, 4 or 5
 #WANT_DEFAULT=sdl2
 WANT_DEFAULT=curses
 #WANT_DEFAULT=curses
@@ -26,7 +27,7 @@ WANT_DEFAULT=curses
 # For Qt, define this if linking to Qt 5
 #HAVE_QT5=1
 
-# For Qt:
+# For Qt 3, 4 or 5:
 # If pkg-config correctly locates the Qt installation, and the correct moc
 # is in /usr/bin, this can probably be left as is; otherwise this should point
 # to the root of the Qt installation
@@ -77,6 +78,15 @@ else
     CFLAGS += -DCURSES_GRAPHICS
 endif
 endif	# !WANT_WIN_CURSES
+
+ifdef WANT_WIN_QT3
+    CFLAGS += -DQT_GRAPHICS -DQT_NO_SOUND -fPIC `pkg-config --cflags qt`
+    WINSRC += $(WINQTSRC)
+    WINOBJ0 += $(WINQTOBJ)
+    WINLIB += `pkg-config --libs qt` -fPIC
+    LINK=$(CXX)
+    VARDATND += nhtiles.bmp rip.xpm
+endif
 
 ifdef WANT_WIN_QT4
     ifdef HAVE_QT5
