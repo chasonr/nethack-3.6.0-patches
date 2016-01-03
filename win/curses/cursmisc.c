@@ -92,14 +92,14 @@ int onoff;
         return;
     }
 
+#if 0 /*RLC unused*/
     /* GUI color disabled */
     if (
-#if 0 /*RLC unused*/
         (!iflags.wc2_guicolor) &&
-#endif
         (win != mapwin)) {
         return;
     }
+#endif
 
     if (color == 0) { /* make black fg visible */
 #ifdef USE_DARKGRAY
