@@ -71,16 +71,19 @@ DEBUGINFO = Y
 #
 
 WANT_WIN_QT4=1
-#WANT_WIN_SDL2=1
-#WANT_WIN_CURSES=1
+WANT_WIN_SDL2=1
+WANT_WIN_CURSES=1
 
 # WANT_WIN_QT4 requires Qt 4 or Qt 5, see
 # https://www.qt.io/download-open-source/
 # Earlier versions of Qt are not compatible with Windows
+# For Qt 5, use:
 QT4_DIRECTORY = c:/Qt/Qt5.5.1/5.5/mingw492_32
-
-# For WANT_WIN_QT4, enable this if your Qt is Qt 5; comment out if Qt 4
 HAVE_QT5 = Y
+
+# For Qt 4, comment out the above two lines and use:
+#QT4_DIRECTORY = c:/Qt/4.8.6
+#HAVE_QT5 = N
 
 # Other external include and library files go under x86libs or x64libs in your
 # home directory:
@@ -218,7 +221,7 @@ ifdef WANT_WIN_QT4
     WINPFLAG += -DQT_GRAPHICS
 endif
 ifdef WANT_WIN_SDL2
-    WINPFLAG += -DSDL2_GRAPHICS
+    WINPFLAG += -DSDL2_GRAPHICS -DPOSITIONBAR
 endif
 ifdef WANT_WIN_CURSES
     WINPFLAG += -DCURSES_GRAPHICS
@@ -261,8 +264,12 @@ ifdef WANT_WIN_QT4
         guilibs += $(QT4_DIRECTORY)/lib/libQt5Core.a
         guilibs += $(QT4_DIRECTORY)/lib/libQt5Gui.a
         guilibs += $(QT4_DIRECTORY)/lib/libQt5Widgets.a
+        conlibs += $(QT4_DIRECTORY)/lib/libQt5Core.a
     else
     	# TODO: specify QT 4 libraries here
+        guilibs += $(QT4_DIRECTORY)/lib/libQtCore4.a
+        guilibs += $(QT4_DIRECTORY)/lib/libQtGui4.a
+        conlibs += $(QT4_DIRECTORY)/lib/libQtCore4.a
     endif
 endif
 ifdef WANT_WIN_SDL2
@@ -286,7 +293,10 @@ ifdef WANT_WIN_QT4
         DLLS += $(GAMEDIR)/Qt5Widgets.dll
     else
     # TODO: define QT 4 DLLs here
+        DLLS += $(GAMEDIR)/QtCore4.dll
+        DLLS += $(GAMEDIR)/QtGui4.dll
     endif
+    DLLS += $(GAMEDIR)/rip.xpm
 endif
 ifdef WANT_WIN_SDL2
     DLLS += $(GAMEDIR)/libjpeg-9.dll
@@ -406,7 +416,11 @@ VOBJ28 = $(O)string.o   $(O)unicode.o
 
 DLBOBJ = $(O)dlb.o
 
+ifdef WANT_WIN_QT4
+REGEX  = $(O)qt4regex.o
+else
 REGEX  = $(O)cppregex.o
+endif
 
 TTYOBJ = $(O)topl.o     $(O)getline.o  $(O)wintty.o
 
@@ -1232,6 +1246,15 @@ $(GAMEDIR)/Qt5Gui.dll : $(QT4_DIRECTORY)/bin/Qt5Gui.dll
 	copy $(subst /,\,$<) $(subst /,\,$@)
 
 $(GAMEDIR)/Qt5Widgets.dll : $(QT4_DIRECTORY)/bin/Qt5Widgets.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/QtCore4.dll : $(QT4_DIRECTORY)/bin/QtCore4.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/QtGui4.dll : $(QT4_DIRECTORY)/bin/QtGui4.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/rip.xpm : ../win/X11/rip.xpm
 	copy $(subst /,\,$<) $(subst /,\,$@)
 
 $(GAMEDIR)/libjpeg-9.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libjpeg-9.dll
