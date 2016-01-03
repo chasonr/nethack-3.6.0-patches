@@ -11,9 +11,8 @@
 # 1. Which window system(s) should be included in this binary?
 #WANT_WIN_TTY=1
 #WANT_WIN_X11=1
-#WANT_WIN_QT4=1
-#WANT_WIN_QT5=1
-#WANT_WIN_SDL2=1
+WANT_WIN_QT4=1
+WANT_WIN_SDL2=1
 WANT_WIN_CURSES=1
 
 # 1a. What is the default window system?
@@ -23,6 +22,15 @@ WANT_WIN_CURSES=1
 #WANT_DEFAULT=sdl2
 WANT_DEFAULT=curses
 #WANT_DEFAULT=curses
+
+# For Qt, define this if linking to Qt 5
+#HAVE_QT5=1
+
+# For Qt:
+# If pkg-config correctly locates the Qt installation, and the correct moc
+# is in /usr/bin, this can probably be left as is; otherwise this should point
+# to the root of the Qt installation
+QTDIR = /usr
 
 # For curses, define this if a wide ncurses is not installed
 #NO_WIDE_CURSES=1
@@ -70,26 +78,18 @@ else
 endif
 endif	# !WANT_WIN_CURSES
 
-ifdef WANT_WIN_QT5
-    QT_PACKAGES = Qt5Gui Qt5Widgets
-    QTDIR = /usr
-    CFLAGS += -DQT_GRAPHICS -DQT_NO_SOUND -fPIC `pkg-config --cflags $(QT_PACKAGES)`
-    WINSRC += $(WINQT4SRC)
-    WINOBJ0 += $(WINQT4OBJ)
-    WINLIB += `pkg-config --libs $(QT_PACKAGES)` -fPIC
-    LINK=$(CXX)
-    VARDATND += nhtiles.bmp rip.xpm
-else
 ifdef WANT_WIN_QT4
-    QT_PACKAGES = QtGui
-    QTDIR = /usr
+    ifdef HAVE_QT5
+        QT_PACKAGES = Qt5Gui Qt5Widgets
+    else
+        QT_PACKAGES = QtGui
+    endif
     CFLAGS += -DQT_GRAPHICS -DQT_NO_SOUND -fPIC `pkg-config --cflags $(QT_PACKAGES)`
     WINSRC += $(WINQT4SRC)
     WINOBJ0 += $(WINQT4OBJ)
     WINLIB += `pkg-config --libs $(QT_PACKAGES)` -fPIC
     LINK=$(CXX)
     VARDATND += nhtiles.bmp rip.xpm
-endif # WANT_WIN_QT5
 endif # WANT_WIN_QT4
 
 ifdef WANT_WIN_SDL2
