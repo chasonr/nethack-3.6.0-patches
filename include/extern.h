@@ -1650,7 +1650,7 @@ E void NDECL(set_playmode);
 E int FDECL(sym_val, (char *));
 E const char *FDECL(clr2colorname, (int));
 E boolean FDECL(add_menu_coloring, (char *));
-E boolean FDECL(get_menu_coloring, (char *, int *, int *));
+E boolean FDECL(get_menu_coloring, (const char *, int *, int *));
 E void NDECL(free_menu_coloring);
 E boolean FDECL(msgtype_parse_add, (char *));
 E int FDECL(msgtype_type, (const char *));

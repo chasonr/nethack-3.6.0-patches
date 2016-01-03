@@ -1594,7 +1594,7 @@ char *str;
 
 boolean
 get_menu_coloring(str, color, attr)
-char *str;
+const char *str;
 int *color, *attr;
 {
     struct menucoloring *tmpmc;
