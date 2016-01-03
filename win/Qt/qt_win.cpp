@@ -4828,6 +4828,12 @@ void NetHackQtBind::qt_cliparound(int x, int y)
     qt_cliparound_window(WIN_MAP,x,y);
 }
 
+#ifdef POSITIONBAR
+void NetHackQtBind::qt_positionbar(char *)
+{
+}
+#endif
+
 void NetHackQtBind::qt_cliparound_window(winid wid, int x, int y)
 {
     NetHackQtWindow* window=id_to_window[wid];
@@ -5225,7 +5231,7 @@ struct window_procs Qt_procs = {
     NetHackQtBind::qt_cliparound,
 #endif
 #ifdef POSITIONBAR
-    donull,
+    NetHackQtBind::qt_positionbar,
 #endif
     NetHackQtBind::qt_print_glyph,
     //NetHackQtBind::qt_print_glyph_compose,
