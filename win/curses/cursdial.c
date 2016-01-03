@@ -47,10 +47,6 @@ typedef enum menu_op_type {
     INVERT
 } menu_op;
 
-#ifdef MENU_COLOR
-extern struct menucoloring *menu_colorings;
-#endif
-
 static nhmenu *FDECL(get_menu, (winid wid));
 
 static char FDECL(menu_get_accel, (BOOLEAN_P first));
@@ -909,11 +905,9 @@ int page_num;
     nhmenu_item *menu_item_ptr;
     int count, curletter, entry_cols, start_col, num_lines, footer_x;
     boolean first_accel = TRUE;
-#ifdef MENU_COLOR
     int color = NO_COLOR;
     int attr = A_NORMAL;
     boolean menu_color = FALSE;
-#endif /* MENU_COLOR */
 
     /* Cycle through entries until we are on the correct page */
 
@@ -976,7 +970,6 @@ int page_num;
                 mvwprintw(win, menu_item_ptr->line_num + 1, 3, ") ");
             }
         }
-#ifdef MENU_COLOR
         if (iflags.use_menu_color && (menu_color = get_menu_coloring
                                       ((char *)menu_item_ptr->str, &color, &attr))) {
             if (color != NO_COLOR) {
@@ -986,7 +979,6 @@ int page_num;
                 menu_item_ptr->attr = menu_item_ptr->attr|attr;
             }
         }
-#endif /* MENU_COLOR */
         curses_toggle_color_attr(win, NONE, menu_item_ptr->attr, ON);
         entry_cols = menu->width;
         start_col = 1;
@@ -1005,11 +997,9 @@ int page_num;
                                   entry_cols, count + 1));
             }
         }
-#ifdef MENU_COLOR
         if (menu_color && (color != NO_COLOR)) {
             curses_toggle_color_attr(win, color, NONE, OFF);
         }
-#endif /* MENU_COLOR */
         curses_toggle_color_attr(win, NONE, menu_item_ptr->attr, OFF);
         menu_item_ptr = menu_item_ptr->next_item;
     }
