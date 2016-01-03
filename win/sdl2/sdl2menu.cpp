@@ -5,6 +5,7 @@ extern "C" {
 }
 #include "unicode.h"
 #include "sdl2.h"
+#include "sdl2map.h"
 #include "sdl2menu.h"
 #include "sdl2font.h"
 #include "sdl2interface.h"
@@ -143,6 +144,7 @@ void SDL2Menu::addMenu(int glyph, const anything* identifier, char ch,
         char gch, int attr, const char *str, bool preselected)
 {
     MenuEntry *entry;
+    int mcolor, mattr;
 
     expandMenu();
 
@@ -160,6 +162,12 @@ void SDL2Menu::addMenu(int glyph, const anything* identifier, char ch,
     // TODO: implement menucolors here
     entry->color = textFG(attr);
     entry->count = 0;
+
+    if (attr == 0
+    &&  get_menu_coloring(str, &mcolor, &mattr)) {
+        entry->attr = mattr;
+        entry->color = SDL2MapWindow::colors[mcolor];
+    }
 }
 
 void SDL2Menu::endMenu(const char *prompt)
