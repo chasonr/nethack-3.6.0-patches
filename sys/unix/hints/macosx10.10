@@ -34,6 +34,9 @@ ifdef WANT_WIN_QT
 QTDIR=/usr
 endif	# WANT_WIN_QT
 
+# 1c. Was SDL2 installed in /Library/Frameworks (default) or via Homebrew?
+#WANT_SDL2_FROM_HOMEBREW=1
+
 # 2. Is this a build for a binary that will be shared among different users
 #    or will it be private to you?
 #    If it is shared:
@@ -143,11 +146,18 @@ CFLAGS += -DCOMPRESS='"/usr/bin/gzip"' -DCOMPRESS_EXTENSION='".gz"'
 endif	# !WANT_WIN_QT
 
 ifdef WANT_WIN_SDL2
+CFLAGS += -DSDL2_GRAPHICS -DPOSITIONBAR
+ifdef WANT_SDL2_FROM_HOMEBREW
+CFLAGS += -DSDL2_FROM_HOMEBREW `sdl2-config --cflags` `pkg-config --cflags SDL2_image`
+WINLIB += `sdl2-config --static-libs` `pkg-config --libs SDL2_image`
+else # !WANT_SDL2_FROM_HOMEBREW
 SDL_FRAMEWORKS_DIR = /Library/Frameworks
-CFLAGS += -DSDL2_GRAPHICS -DPOSITIONBAR -F$(SDL_FRAMEWORKS_DIR)
+CFLAGS += -F$(SDL_FRAMEWORKS_DIR)
+WINLIB += -F$(SDL_FRAMEWORKS_DIR) -framework SDL2 -framework SDL2_image -framework CoreFoundation -framework CoreGraphics -framework CoreText
+endif # !WANT_SDL2_FROM_HOMEBREW
 WINSRC += $(WINSDL2SRC)
 WINOBJ0 += $(WINSDL2OBJ)
-WINLIB += $(WINSDL2LIB) -F$(SDL_FRAMEWORKS_DIR) -framework SDL2 -framework SDL2_image -framework CoreFoundation -framework CoreGraphics -framework CoreText
+WINLIB += $(WINSDL2LIB)
 LINK=$(CXX)
 VARDATND += nhtiles.bmp
 endif	# WANT_WIN_SDL2
