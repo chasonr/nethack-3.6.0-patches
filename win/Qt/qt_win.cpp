@@ -53,6 +53,7 @@ extern "C" {
 #define NHSTDC
 #endif
 #include "hack.h"
+#include "unicode.h"
 #include "func_tab.h"
 #include "dlb.h"
 #include "patchlevel.h"
@@ -1630,6 +1631,7 @@ const QPen& nhcolor_to_pen(int c)
 
 void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 {
+    StringContext ctx("NetHackQtMapWindow::paintEvent");
     QRect area=event->rect();
     QRect garea;
     garea.setCoords(
@@ -1654,7 +1656,7 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 	    // Find font...
 	    int pts = 5;
 	    QString fontfamily = iflags.wc_font_map
-		? iflags.wc_font_map : "Courier";
+		? iflags.wc_font_map : "DejaVu Sans Mono";
 	    bool bold = FALSE;
 	    if ( fontfamily.right(5).lower() == "-bold" ) {
 		fontfamily.truncate(fontfamily.length()-5);
@@ -1677,7 +1679,8 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 	for (int j=garea.top(); j<=garea.bottom(); j++) {
 	    for (int i=garea.left(); i<=garea.right(); i++) {
 		unsigned short g=Glyph(i,j);
-		uchar ch;
+		utf32_t ch[2];
+                char *utf8;
 		int color;
         nhsym och;
 		unsigned special;
@@ -1685,7 +1688,9 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 		painter.setPen( green );
 		/* map glyph to character and color */
     		(void)mapglyph(g, &och, &color, &special, i, j);
-		ch = (uchar)och;
+		ch[0] = (utf32_t)och;
+                ch[1] = 0;
+                utf8 = uni_32to8(ch);
 #ifdef TEXTCOLOR
 		painter.setPen( nhcolor_to_pen(color) );
 #endif
@@ -1695,7 +1700,7 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 		    qt_settings->glyphs().width(),
 		    qt_settings->glyphs().height(),
 		    AlignCenter,
-		    (const char*)&ch, 1
+		    QString::fromUtf8(utf8)
 		);
 		if (glyph_is_pet(g)
 #ifdef TEXTCOLOR
