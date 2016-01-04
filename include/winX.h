@@ -38,7 +38,7 @@ struct text_buffer {
  * Information specific to a map window.
  */
 struct text_map_info_t {
-    unsigned char text[ROWNO][COLNO]; /* Actual displayed screen. */
+    XChar2b text[ROWNO][COLNO]; /* Actual displayed screen. */
 #ifdef TEXTCOLOR
     unsigned char colors[ROWNO][COLNO]; /* Color of each character. */
     GC color_gcs[CLR_MAX],              /* GC for each color */
