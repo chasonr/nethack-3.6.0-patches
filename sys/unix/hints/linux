@@ -10,7 +10,7 @@
 
 # 1. Which window system(s) should be included in this binary?
 #WANT_WIN_TTY=1
-#WANT_WIN_X11=1
+WANT_WIN_X11=1
 #WANT_WIN_QT3=1  # Qt 3
 #WANT_WIN_QT4=1  # Qt 4 or 5
 WANT_WIN_SDL2=1
@@ -78,6 +78,15 @@ else
     CFLAGS += -DCURSES_GRAPHICS
 endif
 endif	# !WANT_WIN_CURSES
+
+ifdef WANT_WIN_X11
+    POSTINSTALL+= bdftopcf win/X11/nh10.bdf > $(INSTDIR)/nh10.pcf; (cd $(INSTDIR); mkfontdir);
+    CFLAGS += -DX11_GRAPHICS
+    WINSRC += $(WINX11SRC)
+    WINOBJ0 += $(WINX11OBJ)
+    WINLIB += $(WINX11LIB)
+    VARDATND = x11tiles NetHack.ad pet_mark.xbm pilemark.xbm
+endif
 
 ifdef WANT_WIN_QT3
     CFLAGS += -DQT_GRAPHICS -DQT_NO_SOUND -fPIC `pkg-config --cflags qt`
