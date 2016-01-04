@@ -37,6 +37,9 @@ endif	# WANT_WIN_QT
 # 1c. Was SDL2 installed in /Library/Frameworks (default) or via Homebrew?
 #WANT_SDL2_FROM_HOMEBREW=1
 
+# 1d. Was QT installed via Homebrew?
+#WANT_QT_FROM_HOMEBREW=1
+
 # 2. Is this a build for a binary that will be shared among different users
 #    or will it be private to you?
 #    If it is shared:
@@ -122,11 +125,17 @@ endif	# WANT_WIN_X11
 
 ifdef WANT_WIN_QT
 QT_FRAMEWORKS_DIR = /Library/Frameworks
-CFLAGS += -DQT_GRAPHICS -DNOUSER_SOUNDS -DZLIB_COMP
-CFLAGS += -F$(QT_FRAMEWORKS_DIR) -mmacosx-version-min=10.5
+CFLAGS += -DQT_GRAPHICS -DNOUSER_SOUNDS -DZLIB_COMP -mmacosx-version-min=10.5
+ifdef WANT_QT_FROM_HOMEBREW
+CFLAGS += `pkg-config --cflags QtCore` `pkg-config --cflags QtGui`
+WINLIB += `pkg-config --libs QtCore` `pkg-config --libs QtGui`
+QTDIR = `pkg-config --variable=prefix QtCore`
+else # !WANT_QT_FROM_HOMEBREW
+CFLAGS += -F$(QT_FRAMEWORKS_DIR)
+WINLIB += -F$(QT_FRAMEWORKS_DIR) -framework QtCore -framework QtGui
+endif # !WANT_QT_FROM_HOMEBREW
 LINK=$(CXX)
 WINSRC += $(WINQT4SRC)
-WINLIB += -F$(QT_FRAMEWORKS_DIR) -framework QtCore -framework QtGui
 ifdef WANT_WIN_X11
 ifdef WANT_WIN_TTY
 WINOBJ0 += $(WINTTYOBJ)
