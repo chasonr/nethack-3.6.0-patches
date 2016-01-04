@@ -10,7 +10,7 @@
 
 # 1. Which window system(s) should be included in this binary?
 #WANT_WIN_TTY=1
-WANT_WIN_X11=1
+#WANT_WIN_X11=1
 #WANT_WIN_QT3=1  # Qt 3
 WANT_WIN_QT4=1  # Qt 4 or 5
 WANT_WIN_SDL2=1
