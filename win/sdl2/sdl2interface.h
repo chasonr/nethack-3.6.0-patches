@@ -81,6 +81,7 @@ public:
     void  sdl2_status_threshold(int, int, anything, int, int, int);
 #endif
 #endif
+    void  sdl2_shieldeff(int, int);
 
     // For use by windows
     int width(void);

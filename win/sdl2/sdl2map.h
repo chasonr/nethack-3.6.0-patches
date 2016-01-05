@@ -40,6 +40,8 @@ public:
 
     bool mapMouse(int x_in, int y_in, int *x_out, int *y_out);
 
+    void shieldEffect(int x, int y);
+
     static const SDL_Color colors[];
 
 private:
@@ -52,6 +54,13 @@ private:
 
         // Tile display
         unsigned tile_glyph;
+
+        // Per-tile timed effects. Currently only supports shieldeff.
+        enum {
+            effect_none,
+            effect_shield
+        } effect;
+        unsigned timer;
     };
 
     Glyph m_map[ROWNO][COLNO];

@@ -193,6 +193,15 @@ void SDL2MapWindow::redraw(void)
     static const SDL_Color background = {  96,  32,   0, 255 };
     SDL_Rect srect, drect;
 
+    // Effects may spontaneously change the map. Update them here.
+    for (unsigned y = 0; y < ROWNO; ++y) {
+        for (unsigned x = 0; x < COLNO; ++x) {
+            if (m_map[y][x].effect != Glyph::effect_none) {
+                mapDraw(x, y, true);
+            }
+        }
+    }
+
     // Draw the map image
     if (m_scroll_x < 0) {
         srect.x = -m_scroll_x;
@@ -271,6 +280,8 @@ void SDL2MapWindow::clear(void)
             m_map[y][x].text_bg.b =   0;
             m_map[y][x].text_bg.a = 255;
             m_map[y][x].tile_glyph = glyph2tile[background_glyph];
+            m_map[y][x].effect    = Glyph::effect_none;
+            m_map[y][x].timer     =   0;
         }
     }
 
@@ -472,14 +483,42 @@ void SDL2MapWindow::setupMap(void)
 void SDL2MapWindow::mapDraw(unsigned x, unsigned y, bool cursor)
 {
     SDL_Rect tile, cell;
+    int effect;
+
     cell.x = x * m_tile_w;
     cell.y = y * m_tile_h;
     cell.w = m_tile_w;
     cell.h = m_tile_h;
+
+    if (m_map[y][x].timer == 0) {
+        m_map[y][x].effect = Glyph::effect_none;
+    }
+    switch (m_map[y][x].effect) {
+    case Glyph::effect_shield:
+        effect = cmap_to_glyph(shield_static[SHIELD_COUNT - m_map[y][x].timer]);
+        break;
+
+    case Glyph::effect_none:
+    default:
+        effect = NO_GLYPH;
+        m_map[y][x].effect = Glyph::effect_none;
+        break;
+    }
+    if (m_map[y][x].timer != 0) {
+        --m_map[y][x].timer;
+    }
+
     if (m_tile_mode) {
         int tile_cols = m_tilemap->w / m_tilemap_w;
-        unsigned tx = m_map[y][x].tile_glyph % tile_cols;
-        unsigned ty = m_map[y][x].tile_glyph / tile_cols;
+        unsigned tile_glyph, tx, ty;
+
+        if (effect == NO_GLYPH) {
+            tile_glyph = m_map[y][x].tile_glyph;
+        } else {
+            tile_glyph = glyph2tile[effect];
+        }
+        tx = tile_glyph % tile_cols;
+        ty = tile_glyph / tile_cols;
         tile.x = tx * m_tilemap_w;
         tile.y = ty * m_tilemap_h;
         tile.w = m_tilemap_w;
@@ -488,17 +527,29 @@ void SDL2MapWindow::mapDraw(unsigned x, unsigned y, bool cursor)
         SDL_FillRect(m_map_image, &cell, bg);
         SDL_BlitScaled(m_tilemap, &tile, m_map_image, &cell);
     } else {
+        utf32_t text_glyph;
+        SDL_Color text_fg;
+
+        if (effect == NO_GLYPH) {
+            text_glyph = m_map[y][x].text_glyph;
+            text_fg = m_map[y][x].text_fg;
+        } else {
+            nhsym ochar;
+            int ocolor;
+            unsigned ospecial;
+            mapglyph(effect, &text_glyph, &ocolor, &ospecial, x, y);
+            text_glyph = chrConvert(text_glyph);
+            text_fg = SDL2MapWindow::colors[ocolor];
+        }
+
         Uint32 bg = SDL_MapRGBA(m_map_image->format,
                 m_map[y][x].text_bg.r,
                 m_map[y][x].text_bg.g,
                 m_map[y][x].text_bg.b,
                 m_map[y][x].text_bg.a);
         SDL_FillRect(m_map_image, &cell, bg);
-        if (!wallDraw(m_map[y][x].text_glyph, &cell,
-                m_map[y][x].text_fg)) {
-            SDL_Surface *text = font()->render(
-                    m_map[y][x].text_glyph,
-                    m_map[y][x].text_fg);
+        if (!wallDraw(text_glyph, &cell, text_fg)) {
+            SDL_Surface *text = font()->render(text_glyph, text_fg);
             tile.x = 0;
             tile.y = 0;
             tile.w = text->w;
@@ -825,6 +876,14 @@ bool SDL2MapWindow::mapMouse(int x_in, int y_in, int *x_out, int *y_out)
     *x_out = x_in / m_tile_w;
     *y_out = y_in / m_tile_h;
     return (*x_out < COLNO && *y_out < ROWNO);
+}
+
+void SDL2MapWindow::shieldEffect(int x, int y)
+{
+    if (0 <= y && y < SIZE(m_map) && 0 <= x && x < SIZE(m_map[0])) {
+        m_map[y][x].effect = Glyph::effect_shield;
+        m_map[y][x].timer = SHIELD_COUNT;
+    }
 }
 
 }
