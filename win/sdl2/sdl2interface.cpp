@@ -872,6 +872,9 @@ void SDL2Interface::nonKeyEvent(const SDL_Event& event)
 
             // Fade the screen message out
             doMessageFade();
+
+            // Redraw the message fade, map effects, etc.
+            redraw();
         }
         break;
     }
@@ -905,8 +908,6 @@ void SDL2Interface::doMessageFade(void)
             m_message = NULL;
             m_message_time = 0;
         }
-
-        redraw();
     }
 }
 
@@ -1168,6 +1169,11 @@ void SDL2Interface::sdl2_preference_update(const char * /*pref*/)
 {
     // Place holder
     // TODO:  change fonts on request
+}
+
+void SDL2Interface::sdl2_shieldeff(int x, int y)
+{
+    map_window->shieldEffect(x, y);
 }
 
 nhsym chrConvert(nhsym ch)

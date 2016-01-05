@@ -324,6 +324,12 @@ sdl2_status_threshold(int fldidx, int thresholdtype, anything threshold,
 #endif
 #endif
 
+static void
+sdl2_shieldeff(int x, int y)
+{
+    interface->sdl2_shieldeff(x, y);
+}
+
 struct window_procs sdl2_procs = {
     "sdl2",
     WC_COLOR |
@@ -405,4 +411,7 @@ struct window_procs sdl2_procs = {
 #endif
 #endif
     genl_can_suspend_no,
+
+    /* Optional functions begin here */
+    sdl2_shieldeff,
 };
