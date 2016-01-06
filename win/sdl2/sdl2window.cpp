@@ -186,7 +186,7 @@ void SDL2Window::clear(void)
     // Place holder
 }
 
-void SDL2Window::printGlyph(xchar, xchar, int)
+void SDL2Window::printGlyph(xchar, xchar, int, int)
 {
     // Place holder
 }
