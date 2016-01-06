@@ -19,6 +19,7 @@ sdl2_win_init(void)
         IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG | IMG_INIT_TIF | IMG_INIT_WEBP);
         interface = new NH_SDL2::SDL2Interface;
         iflags.menu_tab_sep = TRUE;
+        iflags.use_background_glyph = TRUE;
     }
 }
 
