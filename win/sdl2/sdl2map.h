@@ -47,20 +47,15 @@ public:
 private:
     struct Glyph
     {
-        // Text display
-        utf32_t text_glyph;
-        SDL_Color text_fg;
-        SDL_Color text_bg;
+        // The permanent glyph for this tile
+        int glyph;
 
-        // Tile display
-        unsigned tile_glyph;
+        // Explosion effect
+        int expl_glyph;
+        clock_t expl_timer;
 
-        // Per-tile timed effects. Currently only supports shieldeff.
-        enum {
-            effect_none,
-            effect_shield
-        } effect;
-        unsigned timer;
+        // Shield effect
+        unsigned shield_count;
     };
 
     Glyph m_map[ROWNO][COLNO];
