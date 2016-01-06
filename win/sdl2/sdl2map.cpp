@@ -199,6 +199,7 @@ void SDL2MapWindow::redraw(void)
     for (unsigned y = 0; y < ROWNO; ++y) {
         for (unsigned x = 0; x < COLNO; ++x) {
             if (m_map[y][x].shield_count != 0
+            ||  m_map[y][x].zap_glyph != NO_GLYPH
             ||  m_map[y][x].expl_timer != 0) {
                 mapDraw(x, y, true);
             }
@@ -273,7 +274,9 @@ void SDL2MapWindow::clear(void)
 
     for (unsigned y = 0; y < ROWNO; ++y) {
         for (unsigned x = 0; x < COLNO; ++x) {
+            m_map[y][x].bkglyph = background_glyph;
             m_map[y][x].glyph = background_glyph;
+            m_map[y][x].zap_glyph = NO_GLYPH;
             m_map[y][x].expl_glyph = NO_GLYPH;
             m_map[y][x].expl_timer = 0;
             m_map[y][x].shield_count = 0;
@@ -300,16 +303,21 @@ void SDL2MapWindow::clear(void)
     if (isVisible()) { redraw(); }
 }
 
-void SDL2MapWindow::printGlyph(xchar x, xchar y, int glyph)
+void SDL2MapWindow::printGlyph(xchar x, xchar y, int glyph, int bkglyph)
 {
     if (x < 0 || COLNO <= x || y < 0 || ROWNO <= y) { return; }
 
-    // Handle explosions specially
+    // Handle zaps and explosions specially
     if (GLYPH_EXPLODE_OFF <= glyph
     &&  glyph <= GLYPH_EXPLODE_OFF + MAXEXPCHARS * EXPL_MAX) {
         m_map[y][x].expl_glyph = glyph;
         m_map[y][x].expl_timer = clock() + 1 * CLOCKS_PER_SEC;
+    } else if (GLYPH_ZAP_OFF <= glyph
+    &&  glyph <= GLYPH_ZAP_OFF + 4 * NUM_ZAP) {
+        m_map[y][x].zap_glyph = glyph;
     } else {
+        m_map[y][x].zap_glyph = NO_GLYPH;
+        m_map[y][x].bkglyph = bkglyph;
         m_map[y][x].glyph = glyph;
         mapDraw(x, y, true);
     }
@@ -471,7 +479,7 @@ void SDL2MapWindow::setupMap(void)
 void SDL2MapWindow::mapDraw(unsigned x, unsigned y, bool cursor)
 {
     SDL_Rect tile, cell;
-    int glyphs[3]; // map, explosion, shield
+    int glyphs[5]; // background, map, zap, explosion, shield
     unsigned i;
     Uint32 bg;
 
@@ -480,11 +488,13 @@ void SDL2MapWindow::mapDraw(unsigned x, unsigned y, bool cursor)
     cell.w = m_tile_w;
     cell.h = m_tile_h;
 
-    glyphs[0] = m_map[y][x].glyph;
-    glyphs[1] = NO_GLYPH;
+    glyphs[0] = m_map[y][x].bkglyph;
+    glyphs[1] = m_map[y][x].glyph;
     glyphs[2] = NO_GLYPH;
+    glyphs[3] = m_map[y][x].zap_glyph;
+    glyphs[4] = NO_GLYPH;
     if (clock() < m_map[y][x].expl_timer) {
-        glyphs[1] = m_map[y][x].expl_glyph;
+        glyphs[2] = m_map[y][x].expl_glyph;
     } else {
         m_map[y][x].expl_timer = 0;
     }
@@ -493,7 +503,7 @@ void SDL2MapWindow::mapDraw(unsigned x, unsigned y, bool cursor)
         if (m_map[y][x].shield_count != 0) {
             unsigned c = SHIELD_COUNT - m_map[y][x].shield_count;
             if (c >= SHIELD_COUNT) { c = SHIELD_COUNT - 1; }
-            glyphs[2] = cmap_to_glyph(shield_static[c]);
+            glyphs[4] = cmap_to_glyph(shield_static[c]);
         }
     }
 
@@ -593,6 +603,7 @@ bool SDL2MapWindow::wallDraw(utf32_t ch, const SDL_Rect *rect, SDL_Color color)
     unsigned linewidth;
     Uint32 c = SDL_MapRGBA(m_map_image->format,
             color.r, color.g, color.b, color.a);
+    Uint32 bg = SDL_MapRGBA(m_map_image->format, 0, 0, 0, 255);
 
     linewidth = ((rect->w < rect->h) ? rect->w : rect->h)/8;
     if (linewidth == 0) linewidth = 1;
@@ -648,6 +659,7 @@ bool SDL2MapWindow::wallDraw(utf32_t ch, const SDL_Rect *rect, SDL_Color color)
 
     if (walls != 0)
     {
+        SDL_FillRect(m_map_image, rect, bg);
         linerect.x = rect->x + (rect->w - linewidth)/2;
         linerect.w = linewidth;
         switch (walls & (w_up | w_down))

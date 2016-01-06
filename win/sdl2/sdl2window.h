@@ -48,7 +48,7 @@ public:
     virtual void putStr(int attr, const char *str);
     virtual void putMixed(int attr, const char *str);
     virtual void clear(void);
-    virtual void printGlyph(xchar x, xchar y, int glyph);
+    virtual void printGlyph(xchar x, xchar y, int glyph, int bkglyph);
     virtual void setCursor(int x, int y);
 
 protected:

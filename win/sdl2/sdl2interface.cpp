@@ -965,11 +965,11 @@ void SDL2Interface::sdl2_update_positionbar(char *features)
 #endif
 
 void SDL2Interface::sdl2_print_glyph(winid window, xchar x, xchar y,
-        int glyph, int /*bkglyph*/)
+        int glyph, int bkglyph)
 {
     SDL2Window *winp = findWindow(window);
 
-    winp->printGlyph(x, y, glyph);
+    winp->printGlyph(x, y, glyph, bkglyph);
 }
 
 void SDL2Interface::sdl2_raw_print(const char *str)

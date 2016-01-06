@@ -27,7 +27,7 @@ public:
     void clipAround(int x, int y);
     void clipAround(void) { clipAround(m_cursor_x, m_cursor_y); }
     virtual void clear(void);
-    virtual void printGlyph(xchar x, xchar y, int glyph);
+    virtual void printGlyph(xchar x, xchar y, int glyph, int bkglyph);
     virtual void setCursor(int x, int y);
 
     void toggleTileMode(void);
@@ -47,8 +47,14 @@ public:
 private:
     struct Glyph
     {
-        // The permanent glyph for this tile
+        // The background glyph for this position
+        int bkglyph;
+
+        // The foreground glyph for this position
         int glyph;
+
+        // Zap effect
+        int zap_glyph;
 
         // Explosion effect
         int expl_glyph;
