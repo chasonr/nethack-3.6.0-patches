@@ -11,7 +11,8 @@ NetHack*tombstone*font:			fixed
 NetHack*text*rip*font:			-*-times-medium-r-*-*-12-*-*-*-*-*-*-*
 NetHack*menu*font:			fixed
 NetHack*text*font:			fixed
-NetHack*map*font:			nh10
+!NetHack*map*font:			nh10
+NetHack*map*font:			fixed
 
 ! tile_file names a file containing full-color tiles for the map.
 ! If you use a 100dpi (or greater) monitor you may wish to double the
