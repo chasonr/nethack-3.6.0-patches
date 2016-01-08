@@ -58,7 +58,6 @@ binary
 build
 dat/dlb.lst
 dat/porthelp
-defaults.nh
 include/win32api.h
 src/Makefile.gcc
 src/graphicschk
