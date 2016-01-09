@@ -3141,6 +3141,8 @@ struct obj *obj;
         pline(nothing_else_happens);
         goto discard_broken_wand;
     case WAN_DEATH:
+        expltype = EXPL_DARK;
+        /* fall through */
     case WAN_LIGHTNING:
         dmg *= 4;
         goto wanexpl;
@@ -3166,6 +3168,9 @@ struct obj *obj;
     case WAN_UNDEAD_TURNING:
         affects_objects = TRUE;
         break;
+    case WAN_DIGGING:
+        expltype = EXPL_MUDDY;
+        break;
     default:
         break;
     }
@@ -3176,7 +3181,7 @@ struct obj *obj;
        fatal so that we never leave a bones file where none of the
        surrounding targets (or underlying objects) got affected yet.] */
     explode(obj->ox, obj->oy, -(obj->otyp), rnd(dmg), WAND_CLASS,
-            EXPL_MAGICAL);
+            expltype);
 
     /* prepare for potential feedback from polymorph... */
     zapsetup();
