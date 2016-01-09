@@ -31,10 +31,15 @@
 #==============================================================================
 # BUILD DECISIONS SECTION
 #
-# There are currently only 3 decisions that you have to make.
+# There are currently only 4 decisions that you have to make.
 #	1. 32-bit or 64-bit?
 #	2. Where do you want your build to end up?
 #	3. Do you want debug information in the executable?
+#	4. Do you want additional GUI interfaces in the executable?
+#
+# Note that additional GUI interfaces may require external libraries.
+# These libraries are placed in a subdirectory of your home directory, either
+# x86libs or x64libs depending on whether you're building for 64 bits.
 #
 #==============================================================================
 # 1. 32-bit or 64-bit?
@@ -59,6 +64,41 @@ GAMEDIR = ../binary
 #
 
 DEBUGINFO = Y
+
+#
+#---------------------------------------------------------------
+# 4. Do you want additional GUI interfaces in the executable?
+#
+
+WANT_WIN_QT4=1
+WANT_WIN_SDL2=1
+WANT_WIN_CURSES=1
+
+# WANT_WIN_QT4 requires Qt 4 or Qt 5, see
+# https://www.qt.io/download-open-source/
+# Earlier versions of Qt are not compatible with Windows
+# For Qt 5, use:
+QT4_DIRECTORY = c:/Qt/Qt5.5.1/5.5/mingw492_32
+HAVE_QT5 = Y
+
+# For Qt 4, comment out the above two lines and use:
+#QT4_DIRECTORY = c:/Qt/4.8.6
+#HAVE_QT5 = N
+
+# Other external include and library files go under x86libs or x64libs in your
+# home directory:
+LIBRARIES = $(subst \,/,$(USERPROFILE))/$(TARGET_CPU)libs
+
+# WANT_WIN_SDL2 requires SDL2 and SDL2_image
+# SDL2 under SDL2-2.0.3, see https://libsdl.org/download-2.0.php
+SDL2_DIRECTORY = $(LIBRARIES)/SDL2-2.0.3
+# SDL2_image under SDL2_image-2.0.0, see
+# https://www.libsdl.org/projects/SDL_image/
+SDL2_IMAGE_DIRECTORY = $(LIBRARIES)/SDL2_image-2.0.0
+
+# WANT_WIN_CURSES requires win32a (a fork of PDCurses, see
+# http://www.projectpluto.com/win32a.htm).
+WIN32A_DIRECTORY = $(LIBRARIES)/win32a
 
 # This marks the end of the BUILD DECISIONS section.
 #==============================================================================
@@ -95,8 +135,21 @@ MSWSYS = ../sys/winnt
 TTY   = ../win/tty
 # window port files (WIN32)
 MSWIN = ../win/win32
+# window port files (Qt4)
+QT4 = ../win/Qt4
+# window port files (SDL2)
+SDL2 = ../win/sdl2
+# window port files (Curses)
+CURSES = ../win/curses
 # Tile support files
 WSHR  = ../win/share
+
+# Need this to build include and library paths for SDL2 and SDL2_image
+ifeq "$(TARGET_CPU)" "x86"
+    SDL2_ARCH = i686-w64-mingw32
+else
+    SDL2_ARCH = x86_64-w64-mingw32
+endif
 
 #
 #  Object directory.
@@ -105,8 +158,15 @@ WSHR  = ../win/share
 OBJ = o
 
 cc     = gcc
+cxx    = g++
 rc     = windres
 link   = gcc
+ifdef WANT_WIN_QT4
+    link = g++
+endif
+ifdef WANT_WIN_SDL2
+    link = g++
+endif
 
 #
 #==========================================
@@ -157,6 +217,15 @@ RANDOM  = $(OBJ)/random.o
 #RANDOM =
 
 WINPFLAG   = -DTILES -DMSWIN_GRAPHICS -DWIN32CON -D_WIN32_IE=0x0400 -D_WIN32_WINNT=0x0501
+ifdef WANT_WIN_QT4
+    WINPFLAG += -DQT_GRAPHICS
+endif
+ifdef WANT_WIN_SDL2
+    WINPFLAG += -DSDL2_GRAPHICS -DPOSITIONBAR
+endif
+ifdef WANT_WIN_CURSES
+    WINPFLAG += -DCURSES_GRAPHICS
+endif
 # To store all the level files,
 # help files, etc. in a single library file.
 # USE_DLB = Y is left uncommented
@@ -183,14 +252,58 @@ cdebug =
 linkdebug =
 endif
 
-
-
 CFLAGSBASE  = -c $(cflags) -I$(INCL) $(WINPINC) $(cdebug)
 #LFLAGSBASEC = $(linkdebug)
 #LFLAGSBASEG = $(linkdebug) -mwindows
 
 conlibs = -lwinmm
-guilibs = -lcomctl32 -lwinmm
+guilibs = -lcomctl32
+ifdef WANT_WIN_QT4
+    # Might be either Qt 4 or Qt 5
+    ifeq "$(HAVE_QT5)" "Y"
+        guilibs += $(QT4_DIRECTORY)/lib/libQt5Core.a
+        guilibs += $(QT4_DIRECTORY)/lib/libQt5Gui.a
+        guilibs += $(QT4_DIRECTORY)/lib/libQt5Widgets.a
+        conlibs += $(QT4_DIRECTORY)/lib/libQt5Core.a
+    else
+    	# TODO: specify QT 4 libraries here
+        guilibs += $(QT4_DIRECTORY)/lib/libQtCore4.a
+        guilibs += $(QT4_DIRECTORY)/lib/libQtGui4.a
+        conlibs += $(QT4_DIRECTORY)/lib/libQtCore4.a
+    endif
+endif
+ifdef WANT_WIN_SDL2
+    guilibs += $(SDL2_DIRECTORY)/$(SDL2_ARCH)/lib/libSDL2.a
+    guilibs += $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/lib/libSDL2_image.a
+    guilibs +=-limm32 -lole32 -loleaut32 -lversion
+endif
+ifdef WANT_WIN_CURSES
+    guilibs += $(WIN32A_DIRECTORY)/win32a/pdcurses.a
+endif
+guilibs += -lwinmm
+
+#==========================================
+# Extra files needed for some ports
+#==========================================
+DLLS =
+ifdef WANT_WIN_QT4
+    ifeq "$(HAVE_QT5)" "Y"
+        DLLS += $(GAMEDIR)/Qt5Core.dll
+        DLLS += $(GAMEDIR)/Qt5Gui.dll
+        DLLS += $(GAMEDIR)/Qt5Widgets.dll
+    else
+    # TODO: define QT 4 DLLs here
+        DLLS += $(GAMEDIR)/QtCore4.dll
+        DLLS += $(GAMEDIR)/QtGui4.dll
+    endif
+    DLLS += $(GAMEDIR)/rip.xpm
+endif
+ifdef WANT_WIN_SDL2
+    DLLS += $(GAMEDIR)/libjpeg-9.dll
+    DLLS += $(GAMEDIR)/libpng16-16.dll
+    DLLS += $(GAMEDIR)/libtiff-5.dll
+    DLLS += $(GAMEDIR)/libwebp-4.dll
+endif
 
 #==========================================
 # Util builds
@@ -205,6 +318,8 @@ LFLAGSU = $(LFLAGSBASEC)
 
 CFLAGS   = $(CFLAGSBASE) $(WINPFLAG) $(DLBFLG)
 lflags  = $(LFLAGSBASEC) $(linkdebuf)
+
+CXXFLAGS = $(CFLAGS)
 
 ifeq  "$(USE_DLB)" "Y"
 DLB = nhdat
@@ -297,10 +412,15 @@ VOBJ24 = $(O)track.o    $(O)trap.o     $(O)u_init.o   $(O)uhitm.o
 VOBJ25 = $(O)vault.o    $(O)vis_tab.o  $(O)vision.o   $(O)weapon.o
 VOBJ26 = $(O)were.o     $(O)wield.o    $(O)windows.o  $(O)wizard.o
 VOBJ27 = $(O)worm.o     $(O)worn.o     $(O)write.o    $(O)zap.o
+VOBJ28 = $(O)string.o   $(O)unicode.o
 
 DLBOBJ = $(O)dlb.o
 
+ifdef WANT_WIN_QT4
+REGEX  = $(O)qt4regex.o
+else
 REGEX  = $(O)cppregex.o
+endif
 
 TTYOBJ = $(O)topl.o     $(O)getline.o  $(O)wintty.o
 
@@ -312,18 +432,56 @@ OBJS   = $(VOBJ01) $(VOBJ02) $(VOBJ03) $(VOBJ04) $(VOBJ05) \
 	$(VOBJ11) $(VOBJ12) $(VOBJ13) $(VOBJ14) $(VOBJ15) \
 	$(VOBJ16) $(VOBJ17) $(VOBJ18) $(VOBJ19) $(VOBJ20) \
 	$(VOBJ21) $(VOBJ22) $(VOBJ23) $(VOBJ24) $(VOBJ25) \
-	$(VOBJ26) $(VOBJ27) $(REGEX)
+	$(VOBJ26) $(VOBJ27) $(VOBJ28) $(REGEX)
 
 GUIOBJ  = $(O)mhaskyn.o $(O)mhdlg.o \
 	$(O)mhfont.o $(O)mhinput.o $(O)mhmain.o $(O)mhmap.o \
 	$(O)mhmenu.o $(O)mhmsgwnd.o $(O)mhrip.o $(O)mhsplash.o \
 	$(O)mhstatus.o $(O)mhtext.o $(O)mswproc.o $(O)winhack.o
+ifdef WANT_WIN_QT4
+    GUIOBJ += $(O)qt4bind.o $(O)qt4click.o $(O)qt4clust.o $(O)qt4delay.o \
+	$(O)qt4glyph.o $(O)qt4icon.o $(O)qt4inv.o $(O)qt4key.o $(O)qt4line.o \
+	$(O)qt4main.o $(O)qt4map.o $(O)qt4menu.o $(O)qt4msg.o $(O)qt4plsel.o \
+	$(O)qt4rip.o $(O)qt4set.o $(O)qt4stat.o $(O)qt4str.o $(O)qt4streq.o \
+	$(O)qt4svsel.o $(O)qt4win.o $(O)qt4xcmd.o $(O)qt4yndlg.o
+endif
+ifdef WANT_WIN_SDL2
+    GUIOBJ += $(O)sdl2bind.o $(O)sdl2extcmd.o $(O)sdl2font_windows.o \
+	$(O)sdl2getlin.o $(O)sdl2interface.o $(O)sdl2map.o $(O)sdl2menu.o \
+	$(O)sdl2message.o $(O)sdl2plsel.o $(O)sdl2posbar.o $(O)sdl2status.o \
+	$(O)sdl2text.o $(O)sdl2window.o
+endif
+ifdef WANT_WIN_CURSES
+    GUIOBJ += $(O)cursdial.o $(O)cursinit.o $(O)cursmain.o $(O)cursmesg.o \
+	$(O)cursmisc.o $(O)cursstat.o $(O)curswins.o
+endif
 
 GUIHDR = $(MSWIN)/mhaskyn.h $(MSWIN)/mhdlg.h $(MSWIN)/mhfont.h \
 	$(MSWIN)/mhinput.h $(MSWIN)/mhmain.h $(MSWIN)/mhmap.h \
 	$(MSWIN)/mhmenu.h $(MSWIN)/mhmsg.h $(MSWIN)/mhmsgwnd.h \
 	$(MSWIN)/mhrip.h $(MSWIN)/mhstatus.h \
 	$(MSWIN)/mhtext.h $(MSWIN)/resource.h $(MSWIN)/winMS.h
+ifdef WANT_WIN_QT4
+    GUIHDR += $(QT4)/qt4bind.h $(QT4)/qt4click.h $(QT4)/qt4clust.h \
+	$(QT4)/qt4delay.h $(QT4)/qt4glyph.h $(QT4)/qt4icon.h $(QT4)/qt4inv.h \
+	$(QT4)/qt4kde0.h $(QT4)/qt4key.h $(QT4)/qt4line.h $(QT4)/qt4main.h \
+	$(QT4)/qt4map.h $(QT4)/qt4menu.h $(QT4)/qt4msg.h $(QT4)/qt4plsel.h \
+	$(QT4)/qt4rip.h $(QT4)/qt4set.h $(QT4)/qt4stat.h $(QT4)/qt4str.h \
+	$(QT4)/qt4streq.h $(QT4)/qt4svsel.h $(QT4)/qt4win.h $(QT4)/qt4xcmd.h \
+	$(QT4)/qt4yndlg.h
+endif
+ifdef WANT_WIN_SDL2
+    GUIHDR += $(SDL2)/sdl2.h $(SDL2)/sdl2extcmd.h $(SDL2)/sdl2font.h \
+	$(SDL2)/sdl2getlin.h $(SDL2)/sdl2interface.h $(SDL2)/sdl2map.h \
+	$(SDL2)/sdl2menu.h $(SDL2)/sdl2message.h $(SDL2)/sdl2plsel.h \
+	$(SDL2)/sdl2posbar.h $(SDL2)/sdl2status.h $(SDL2)/sdl2text.h \
+	$(SDL2)/sdl2window.h
+endif
+ifdef WANT_WIN_CURSES
+    GUIHDR += $(CURSES)/cursdial.h $(CURSES)/cursinit.h $(CURSES)/cursmesg.h \
+	$(CURSES)/cursmisc.h $(CURSES)/cursstat.h $(CURSES)/curswins.h \
+	$(CURSES)/wincurs.h
+endif
 
 KEYDLLS = $(GAMEDIR)/nhdefkey.dll $(GAMEDIR)/nh340key.dll $(GAMEDIR)/nhraykey.dll
 
@@ -383,7 +541,7 @@ DATABASE = $(DAT)/data.base
 #================ RULES ==================
 #==========================================
 
-.SUFFIXES: .exe .o .til .uu .c .y .l
+.SUFFIXES: .exe .o .til .uu .c .y .l .moc
 
 #==========================================
 # Rules for files in src
@@ -403,7 +561,7 @@ $(OBJ)/%.o : $(SSYS)/%.c
 	$(cc) $(CFLAGS)  -o$@  $<
 
 $(OBJ)/%.o : $(SSYS)/%.cpp
-	g++ $(CFLAGS) -std=c++11  -o$@  $<
+	$(cxx) $(CXXFLAGS) -std=c++11  -o$@  $<
 
 #==========================================
 # Rules for files in sys/winnt
@@ -450,6 +608,30 @@ $(OBJ)/%.o : $(MSWIN)/%.c
 	$(cc) $(CFLAGS)  -o$@  $<
 
 #==========================================
+# Rules for files in win/Qt4
+#==========================================
+
+$(OBJ)/%.o : $(QT4)/%.cpp
+	$(cxx) $(CXXFLAGS) -I$(MSWIN) -I$(QT4_DIRECTORY)/include -o$@  $<
+
+$(QT4)/%.moc : $(QT4)/%.h
+	$(QT4_DIRECTORY)\bin\moc -o $@ $<
+
+#==========================================
+# Rules for files in win/sdl2
+#==========================================
+
+$(OBJ)/%.o : $(SDL2)/%.cpp
+	$(cxx) $(CXXFLAGS) -I$(MSWIN) -I$(SDL2_DIRECTORY)/include -I$(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/include -o$@  $<
+
+#==========================================
+# Rules for files in win/curses
+#==========================================
+
+$(OBJ)/%.o : $(CURSES)/%.c
+	$(cc) $(CFLAGS) -I$(WIN32A_DIRECTORY) -o$@  $<
+
+#==========================================
 #=============== TARGETS ==================
 #==========================================
 
@@ -470,7 +652,7 @@ default : install
 
 all :   install
 
-install: graphicschk $(O)obj.tag $(GAMEDIR)/NetHack.exe $(GAMEDIR)/NetHackW.exe $(O)install.tag
+install: graphicschk $(O)obj.tag $(GAMEDIR)/NetHack.exe $(GAMEDIR)/NetHackW.exe $(O)install.tag $(DLLS)
 	@echo NetHack is up to date.
 	@echo Done.
 
@@ -1033,6 +1215,7 @@ spotless: clean
 	$(subst /,\,if exist $(U)recover.exe    del $(U)recover.exe)
 	$(subst /,\,if exist $(DAT)/dlb.lst      del $(DAT)/dlb.lst)
 	$(subst /,\,if exist nhdat.         del nhdat.)
+	$(subst /,\,if exist $(QT4)/*.moc        del $(QT4)/*.moc)
 ifneq "$(OBJ)" ""
 	$(subst /,\,rmdir $(OBJ)) /s /Q
 endif
@@ -1054,6 +1237,49 @@ clean:
 #===================================================================
 # OTHER DEPENDENCIES
 #===================================================================
+
+# DLLs needed by some ports
+$(GAMEDIR)/Qt5Core.dll : $(QT4_DIRECTORY)/bin/Qt5Core.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/Qt5Gui.dll : $(QT4_DIRECTORY)/bin/Qt5Gui.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/Qt5Widgets.dll : $(QT4_DIRECTORY)/bin/Qt5Widgets.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/QtCore4.dll : $(QT4_DIRECTORY)/bin/QtCore4.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/QtGui4.dll : $(QT4_DIRECTORY)/bin/QtGui4.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/rip.xpm : ../win/X11/rip.xpm
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/libjpeg-9.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libjpeg-9.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/libpng16-16.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libpng16-16.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/libtiff-5.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libtiff-5.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+$(GAMEDIR)/libwebp-4.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libwebp-4.dll
+	copy $(subst /,\,$<) $(subst /,\,$@)
+
+
+# Dependencies on .moc files (for Qt 4 or 5)
+$(OBJ)/qt4main.o : $(QT4)/qt4main.cpp $(QT4)/qt4main.moc $(QT4)/qt4kde0.moc
+$(OBJ)/qt4map.o : $(QT4)/qt4map.cpp $(QT4)/qt4map.moc
+$(OBJ)/qt4menu.o : $(QT4)/qt4menu.cpp $(QT4)/qt4menu.moc
+$(OBJ)/qt4msg.o : $(QT4)/qt4msg.cpp $(QT4)/qt4msg.moc
+$(OBJ)/qt4plsel.o : $(QT4)/qt4plsel.cpp $(QT4)/qt4plsel.moc
+$(OBJ)/qt4set.o : $(QT4)/qt4set.cpp $(QT4)/qt4set.moc
+$(OBJ)/qt4stat.o : $(QT4)/qt4stat.cpp $(QT4)/qt4stat.moc
+$(OBJ)/qt4xcmd.o : $(QT4)/qt4xcmd.cpp $(QT4)/qt4xcmd.moc
+$(OBJ)/qt4yndlg.o : $(QT4)/qt4yndlg.cpp $(QT4)/qt4yndlg.moc
 
 #
 # dat dependencies
@@ -1353,5 +1579,7 @@ $(O)worm.o: worm.c $(HACK_H) $(INCL)/lev.h
 $(O)worn.o: worn.c $(HACK_H)
 $(O)write.o: write.c $(HACK_H)
 $(O)zap.o: zap.c $(HACK_H)
+$(O)string.o: string.c $(HACK_H)
+$(O)unicode.o: unicode.c $(HACK_H)
 
 # end of file
