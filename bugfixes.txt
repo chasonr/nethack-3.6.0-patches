@@ -23,3 +23,6 @@ Bugs not mentioned on the DevTeam's website:
 *           Window interfaces that support transparency may give away unseen
             parts of the map.
             Author: Ray Chason
+
+*           xprname should honor iflags.menu_tab_sep.
+            Author: Ray Chason
