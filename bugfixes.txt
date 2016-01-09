@@ -19,3 +19,7 @@ Bugs not mentioned on the DevTeam's website:
 * W343-4:   Keyboard may stop responding after locking or unlocking a door when
             using altkeyhandler=nhraykey.dll 
             Author: Ray Chason
+
+*           Window interfaces that support transparency may give away unseen
+            parts of the map.
+            Author: Ray Chason
