@@ -539,6 +539,15 @@ void SDL2MapWindow::mapDraw(unsigned x, unsigned y, bool cursor)
         bg = SDL_MapRGBA(m_map_image->format, 0, 0, 0, 255);
         SDL_FillRect(m_map_image, &cell, bg);
 
+        // There's something screwy in the background rendering that gives away
+        // unexplored parts of the map. Drop the background glyph if any other
+        // glyph is present.
+        for (i = 1; i < SIZE(glyphs); ++i) {
+            if (glyphs[i] != NO_GLYPH) {
+                glyphs[0] = NO_GLYPH;
+                break;
+            }
+        }
         // Overlay possible characters on this background
         for (i = 0; i < SIZE(glyphs); ++i) {
             if (glyphs[i] != NO_GLYPH) {
