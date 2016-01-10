@@ -1749,6 +1749,10 @@ xchar x, y;
         case CLOUD:
            idx = S_cloud;
            break;
+        case POOL:
+        case MOAT:
+           idx = S_pool;
+           break;
         case WATER:
            idx = S_water;
            break;
