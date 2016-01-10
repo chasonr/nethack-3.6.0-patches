@@ -34,6 +34,7 @@ typedef struct mswin_nethack_map_window {
     POINT map_orig;           /* map origin point */
 
     HFONT hMapFont;           /* font for ASCII mode */
+    UINT mapCharSet;          /* character set used for hMapFont */
 } NHMapWindow, *PNHMapWindow;
 
 static TCHAR szNHMapWindowClass[] = TEXT("MSNethackMapWndClass");
@@ -48,6 +49,7 @@ static void nhcoord2display(PNHMapWindow data, int x, int y, LPRECT lpOut);
 #if (VERSION_MAJOR < 4) && (VERSION_MINOR < 4) && (PATCHLEVEL < 2)
 static void nhglyph2charcolor(short glyph, uchar *ch, int *color);
 #endif
+static void mswin_create_map_font(PNHMapWindow data);
 
 HWND
 mswin_init_map_window()
@@ -99,7 +101,6 @@ mswin_map_stretch(HWND hWnd, LPSIZE lpsz, BOOL redraw)
     RECT client_rt;
     SCROLLINFO si;
     SIZE wnd_size;
-    LOGFONT lgfnt;
 
     /* check arguments */
     if (!IsWindow(hWnd) || !lpsz || lpsz->cx <= 0 || lpsz->cy <= 0)
@@ -173,29 +174,7 @@ mswin_map_stretch(HWND hWnd, LPSIZE lpsz, BOOL redraw)
     SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
 
     /* create font */
-    if (data->hMapFont)
-        DeleteObject(data->hMapFont);
-    ZeroMemory(&lgfnt, sizeof(lgfnt));
-    lgfnt.lfHeight = -data->yScrTile;          // height of font
-    lgfnt.lfWidth = -data->xScrTile;           // average character width
-    lgfnt.lfEscapement = 0;                    // angle of escapement
-    lgfnt.lfOrientation = 0;                   // base-line orientation angle
-    lgfnt.lfWeight = FW_NORMAL;                // font weight
-    lgfnt.lfItalic = FALSE;                    // italic attribute option
-    lgfnt.lfUnderline = FALSE;                 // underline attribute option
-    lgfnt.lfStrikeOut = FALSE;                 // strikeout attribute option
-    lgfnt.lfCharSet = mswin_charset();         // character set identifier
-    lgfnt.lfOutPrecision = OUT_DEFAULT_PRECIS; // output precision
-    lgfnt.lfClipPrecision = CLIP_DEFAULT_PRECIS; // clipping precision
-    lgfnt.lfQuality = DEFAULT_QUALITY;           // output quality
-    if (iflags.wc_font_map && *iflags.wc_font_map) {
-        lgfnt.lfPitchAndFamily = DEFAULT_PITCH; // pitch and family
-        NH_A2W(iflags.wc_font_map, lgfnt.lfFaceName, LF_FACESIZE);
-    } else {
-        lgfnt.lfPitchAndFamily = FIXED_PITCH; // pitch and family
-        NH_A2W(NHMAP_FONT_NAME, lgfnt.lfFaceName, LF_FACESIZE);
-    }
-    data->hMapFont = CreateFontIndirect(&lgfnt);
+    mswin_create_map_font(data);
 
     mswin_cliparound(data->xCur, data->yCur);
 
@@ -557,7 +536,7 @@ onMSNHCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         int col, row;
         int color;
         unsigned special;
-        int mgch;
+        nhsym mgch;
 
         index = 0;
         for (row = 0; row < ROWNO; row++) {
@@ -653,6 +632,10 @@ onPaint(HWND hWnd)
             /* You enter a VERY primitive world! */
             HGDIOBJ oldFont;
 
+            if(mswin_charset() != data->mapCharSet) {
+                /* Perhaps the symset has changed */
+                mswin_create_map_font(data);
+            }
             oldFont = SelectObject(hDC, data->hMapFont);
             SetBkMode(hDC, TRANSPARENT);
 
@@ -660,12 +643,10 @@ onPaint(HWND hWnd)
             for (i = paint_rt.left; i < paint_rt.right; i++)
                 for (j = paint_rt.top; j < paint_rt.bottom; j++)
                     if (data->map[i][j] >= 0) {
-                        char ch;
-                        TCHAR wch;
                         RECT glyph_rect;
                         int color;
                         unsigned special;
-                        int mgch;
+                        nhsym mgch;
                         HBRUSH back_brush;
                         COLORREF OldFg;
 
@@ -678,7 +659,6 @@ onPaint(HWND hWnd)
                         /* rely on NetHack core helper routine */
                         (void) mapglyph(data->map[i][j], &mgch, &color,
                                         &special, i, j);
-                        ch = (char) mgch;
                         if (((special & MG_PET) && iflags.hilite_pet)
                             || ((special & MG_DETECT)
                                 && iflags.use_inverse)) {
@@ -701,8 +681,27 @@ onPaint(HWND hWnd)
                         }
 #endif
 
-                        DrawText(hDC, NH_A2W(&ch, &wch, 1), 1, &glyph_rect,
-                                 DT_CENTER | DT_VCENTER | DT_NOPREFIX);
+                        if (SYMHANDLING(H_UNICODE)) {
+                            WCHAR wch[2];
+                            unsigned size;
+                            if (mgch < 0x10000) {
+                                wch[0] = (WCHAR) mgch;
+                                size = 1;
+                            } else {
+                                wch[0] = (WCHAR) (0xD7C0 + (mgch >> 10));
+                                wch[1] = (WCHAR) (0xDC00 + (mgch & 0x3FF));
+                                size = 2;
+                            }
+                            /* Prefer TextOutW to DrawTextW, because it can
+                               print Unicode even on Windows 95 */
+                            TextOutW(hDC, glyph_rect.left, glyph_rect.top,
+                                    wch, size);
+                        } else {
+                            CHAR ch = (CHAR) mgch;
+                            TCHAR wch;
+                            DrawText(hDC, NH_A2W(&ch, &wch, 1), 1, &glyph_rect,
+                                     DT_CENTER | DT_VCENTER | DT_NOPREFIX);
+                        }
                         SetTextColor(hDC, OldFg);
                     }
             SelectObject(hDC, oldFont);
@@ -715,7 +714,7 @@ onPaint(HWND hWnd)
 #ifdef USE_PILEMARK
             int color;
             unsigned special;
-            int mgch;
+            nhsym mgch;
 #endif
             /* prepare tiles DC for mapping */
             tileDC = CreateCompatibleDC(hDC);
@@ -826,6 +825,37 @@ onPaint(HWND hWnd)
         }
     }
     EndPaint(hWnd, &ps);
+}
+
+static void
+mswin_create_map_font(PNHMapWindow data)
+{
+    LOGFONT lgfnt;
+
+    if (data->hMapFont)
+        DeleteObject(data->hMapFont);
+    ZeroMemory(&lgfnt, sizeof(lgfnt));
+    lgfnt.lfHeight = -data->yScrTile;          // height of font
+    lgfnt.lfWidth = -data->xScrTile;           // average character width
+    lgfnt.lfEscapement = 0;                    // angle of escapement
+    lgfnt.lfOrientation = 0;                   // base-line orientation angle
+    lgfnt.lfWeight = FW_NORMAL;                // font weight
+    lgfnt.lfItalic = FALSE;                    // italic attribute option
+    lgfnt.lfUnderline = FALSE;                 // underline attribute option
+    lgfnt.lfStrikeOut = FALSE;                 // strikeout attribute option
+    lgfnt.lfCharSet = mswin_charset();         // character set identifier
+    lgfnt.lfOutPrecision = OUT_DEFAULT_PRECIS; // output precision
+    lgfnt.lfClipPrecision = CLIP_DEFAULT_PRECIS; // clipping precision
+    lgfnt.lfQuality = DEFAULT_QUALITY;           // output quality
+    if (iflags.wc_font_map && *iflags.wc_font_map) {
+        lgfnt.lfPitchAndFamily = DEFAULT_PITCH; // pitch and family
+        NH_A2W(iflags.wc_font_map, lgfnt.lfFaceName, LF_FACESIZE);
+    } else {
+        lgfnt.lfPitchAndFamily = FIXED_PITCH; // pitch and family
+        NH_A2W(NHMAP_FONT_NAME, lgfnt.lfFaceName, LF_FACESIZE);
+    }
+    data->mapCharSet = lgfnt.lfCharSet;
+    data->hMapFont = CreateFontIndirect(&lgfnt);
 }
 
 /* on WM_VSCROLL */

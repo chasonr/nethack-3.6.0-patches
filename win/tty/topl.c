@@ -131,7 +131,7 @@ const char *str;
 {
     int otoplin = ttyDisplay->toplin;
     home();
-    if (*str & 0x80) {
+    if ((*str & 0x80) && !SYMHANDLING(H_UNICODE)) {
         /* kludge for the / command, the only time we ever want a */
         /* graphics character on the top line */
         g_putch((int) *str++);
