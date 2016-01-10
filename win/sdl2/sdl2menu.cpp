@@ -255,10 +255,7 @@ void SDL2Menu::putStr(int attr, const char *str)
     entry->str = new char[strlen(str) + 1];
     strcpy(entry->str, str);
     entry->selected = false;
-    entry->color.r = 176;
-    entry->color.g = 176;
-    entry->color.b = 176;
-    entry->color.a = 255;
+    entry->color = textFG(attr);
     entry->count = 0;
 }
 
