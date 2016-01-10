@@ -382,7 +382,7 @@ register struct obj *obj;
                 break;
             }
             seemimic(mtmp);
-            pline("That %s is really %s", what, mnm);
+            pline("That %s is really %s.", what, mnm);
         } else if (flags.verbose && !canspotmon(mtmp)) {
             There("is %s there.", mnm);
         }

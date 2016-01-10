@@ -26,3 +26,6 @@ Bugs not mentioned on the DevTeam's website:
 
 *           xprname should honor iflags.menu_tab_sep.
             Author: Ray Chason
+
+*           Punctuation for "That foo is really a mimic."
+            Author: Ray Chason
