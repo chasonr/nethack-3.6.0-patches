@@ -543,7 +543,7 @@ int
 do_screen_description(cc, looked, sym, out_str, firstmatch)
 coord cc;
 boolean looked;
-int sym;
+nhsym sym;
 char *out_str;
 const char **firstmatch;
 {
@@ -581,7 +581,7 @@ const char **firstmatch;
      * "the interior of a monster".
      */
     if (u.uswallow && looked
-        && (is_swallow_sym(sym) || (int) showsyms[S_stone] == sym)) {
+        && (is_swallow_sym(sym) || showsyms[S_stone] == sym)) {
         if (!found) {
             Sprintf(out_str, "%s%s", prefix, mon_interior);
             *firstmatch = mon_interior;
