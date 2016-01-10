@@ -1756,6 +1756,9 @@ xchar x, y;
         case WATER:
            idx = S_water;
            break;
+        case LAVAPOOL:
+           idx = S_lava;
+           break;
         default:
            idx = S_room;
            break;

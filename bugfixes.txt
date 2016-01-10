@@ -29,3 +29,6 @@ Bugs not mentioned on the DevTeam's website:
 
 *           Punctuation for "That foo is really a mimic."
             Author: Ray Chason
+
+*           Proper background tiles for lava and water
+            Author: Ray Chason
