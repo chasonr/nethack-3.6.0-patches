@@ -3,6 +3,7 @@
 /* NetHack may be freely redistributed.  See license for details. */
 
 #include "hack.h"
+#include "unicode.h"
 #if defined(TTY_GRAPHICS)
 #include "wintty.h" /* for prototype of has_color() only */
 #endif
@@ -48,17 +49,17 @@ static int explcolors[] = {
 
 #if defined(USE_TILES) && defined(MSDOS)
 #define HAS_ROGUE_IBM_GRAPHICS \
-    (currentgraphics == ROGUESET && SYMHANDLING(H_IBM) && !iflags.grmode)
+    (currentgraphics == ROGUESET && (SYMHANDLING(H_IBM) || SYMHANDLING(H_UNICODE)) && !iflags.grmode)
 #else
 #define HAS_ROGUE_IBM_GRAPHICS \
-    (currentgraphics == ROGUESET && SYMHANDLING(H_IBM))
+    (currentgraphics == ROGUESET && (SYMHANDLING(H_IBM) || SYMHANDLING(H_UNICODE)))
 #endif
 
 /*ARGSUSED*/
 int
 mapglyph(glyph, ochar, ocolor, ospecial, x, y)
 int glyph, *ocolor, x, y;
-int *ochar;
+nhsym *ochar;
 unsigned *ospecial;
 {
     register int offset, idx;
@@ -221,7 +222,7 @@ unsigned *ospecial;
         color = NO_COLOR;
 #endif
 
-    *ochar = (int) ch;
+    *ochar = ch;
     *ospecial = special;
 #ifdef TEXTCOLOR
     *ocolor = color;
@@ -258,13 +259,15 @@ int attr;
 const char *str;
 {
     static const char hex[] = "00112233445566778899aAbBcCdDeEfF";
+    str_context ctx = str_open_context("genl_putmixed");
     char buf[BUFSZ];
     const char *cp = str;
     char *put = buf;
 
     while (*cp) {
         if (*cp == '\\') {
-            int rndchk, dcount, so, gv, ch = 0, oc = 0;
+            int rndchk, dcount, so, gv, oc = 0;
+            nhsym ch = 0;
             unsigned os = 0;
             const char *dp, *save_cp;
 
@@ -285,7 +288,17 @@ const char *str;
                         else
                             break;
                     so = mapglyph(gv, &ch, &oc, &os, 0, 0);
-                    *put++ = showsyms[so];
+                    if (SYMHANDLING(H_UNICODE)) {
+                        utf32_t ch32[2];
+                        char *utf8;
+                        ch32[0] = showsyms[so];
+                        ch32[1] = '\0';
+                        utf8 = uni_32to8(ch32);
+                        strcpy(put, utf8);
+                        put += strlen(utf8);
+                    } else {
+                        *put++ = showsyms[so];
+                    }
                     /* 'cp' is ready for the next loop iteration and '*cp'
                        should not be copied at the end of this iteration */
                     continue;
@@ -322,6 +335,7 @@ const char *str;
     *put = '\0';
     /* now send it to the normal putstr */
     putstr(window, attr, buf);
+    str_close_context(ctx);
 }
 
 /*mapglyph.c*/

@@ -930,7 +930,7 @@ winid window;
 xchar x, y;
 int glyph;
 {
-    int ch;
+    nhsym ch;
     int color;
     unsigned special;
 

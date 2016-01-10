@@ -394,3 +394,225 @@ start: NHAccess
 	S_explode9: \047
 finish
 
+start: UTF8graphics
+	Handling: Unicode
+	S_vwall:     \u2502		# vertical rule
+	S_hwall:     \u2500		# horizontal rule
+	S_tlcorn:    \u250C		# top left corner
+	S_trcorn:    \u2510		# top right corner
+	S_blcorn:    \u2514		# bottom left
+	S_brcorn:    \u2518		# bottom right
+	S_crwall:    \u253C		# cross
+	S_tuwall:    \u2534		# T up
+	S_tdwall:    \u252C		# T down
+	S_tlwall:    \u2524		# T left
+	S_trwall:    \u251C		# T right
+	S_ndoor:     \u00B7		# centered dot
+	S_vodoor:    \u25A0		# small centered square
+	S_hodoor:    \u25A0		# small centered square
+	S_bars:      \u2261		# equivalence symbol
+	S_tree:      \u00B1		# plus or minus symbol
+	S_room:      \u00B7		# centered dot
+	S_corr:      \u2591		# light shading
+	S_litcorr:   \u2592		# medium shading
+	S_fountain:  \u2320		# integral top half
+	S_pool:      \u2248		# approx. equals
+	S_ice:       \u00B7		# centered dot
+	S_lava:      \u2248		# approx. equals
+	S_vodbridge: \u00B7		# centered dot
+	S_hodbridge: \u00B7		# centered dot
+	S_water:     \u2248		# approx. equals
+	S_vbeam:     \u2502		# vertical rule
+	S_hbeam:     \u2500		# horizontal rule
+	S_sw_ml:     \u2502		# vertical rule
+	S_sw_mr:     \u2502		# vertical rule
+	S_explode4:  \u2502		# vertical rule
+	S_explode6:  \u2502		# vertical rule
+finish
+
+start: UTF8Graphics_1
+	Handling: Unicode
+	S_vwall:     \u2502		# vertical rule
+	S_hwall:     \u2500		# horizontal rule
+	S_tlcorn:    \u250C		# top left corner
+	S_trcorn:    \u2510		# top right corner
+	S_blcorn:    \u2514		# bottom left
+	S_brcorn:    \u2518		# bottom right
+	S_crwall:    \u253C		# cross
+	S_tuwall:    \u2534		# T up
+	S_tdwall:    \u252C		# T down
+	S_tlwall:    \u2524		# T left
+	S_trwall:    \u251C		# T right
+	S_vbeam:     \u2502		# vertical rule
+	S_hbeam:     \u2500		# horizontal rule
+	S_sw_ml:     \u2502		# vertical rule
+	S_sw_mr:     \u2502		# vertical rule
+	S_explode4:  \u2502		# vertical rule
+	S_explode6:  \u2502		# vertical rule
+finish
+
+start: UTF8Graphics_2
+	Handling: Unicode
+	S_vwall:     \u2502		# vertical rule
+	S_hwall:     \u2500		# horizontal rule
+	S_tlcorn:    \u250C		# top left corner
+	S_trcorn:    \u2510		# top right corner
+	S_blcorn:    \u2514		# bottom left
+	S_brcorn:    \u2518		# bottom right
+	S_crwall:    \u253C		# cross
+	S_tuwall:    \u2534		# T up
+	S_tdwall:    \u252C		# T down
+	S_tlwall:    \u2524		# T left
+	S_trwall:    \u251C		# T right
+	S_vodoor:    \u25A0		# small centered square
+	S_hodoor:    \u25A0		# small centered square
+	S_corr:      \u2591		# light shading
+	S_litcorr:   \u2592		# medium shading
+	S_vbeam:     \u2502		# vertical rule
+	S_hbeam:     \u2500		# horizontal rule
+	S_sw_ml:     \u2502		# vertical rule
+	S_sw_mr:     \u2502		# vertical rule
+	S_explode4:  \u2502		# vertical rule
+	S_explode6:  \u2502		# vertical rule
+finish
+
+start: RogueIBM_UTF8
+	Handling: Unicode
+	Restrictions: rogue
+	S_weapon:  \u0029
+	S_amulet:  \u002c
+	S_food:    \u003a
+	S_potion:  \u00a1
+	S_scroll:  \u003f
+	S_book:    \u002b
+	S_wand:    \u03c4
+	S_vwall:   \u2551			# all walls now use
+	S_hwall:   \u2550			# double line graphics
+	S_tlcorn:  \u2554
+	S_trcorn:  \u2557
+	S_blcorn:  \u255a
+	S_brcorn:  \u255d
+	S_crwall:  \u256c
+	S_tuwall:  \u2569
+	S_tdwall:  \u2566
+	S_tlwall:  \u2563
+	S_trwall:  \u2560
+	S_ndoor:   \u256c
+	S_vodoor:  \u256c
+	S_hodoor:  \u256c
+	S_room:    \u00b7			# centered dot
+	S_corr:    \u2592
+	S_litcorr: \u2593
+	S_upstair: \u2261			# Greek Xi
+	S_dnstair: \u2261
+finish
+
+start: RogueEpyx_UTF8
+	Description: Rogue level color symbol set like Epyx Rogue
+	Restrictions: rogue
+	Handling: Unicode
+	Color: Yes
+	S_weapon:               \u2191			# up arrow
+	S_armor:                \u25d9			# Vert rect with o
+	S_ring:                 \u25cb			# circle with arrow
+	S_amulet:               \u2640			# "female" symbol
+	S_food:                 \u2663			# club (as in cards)
+	S_potion:               \u00a1			# upside down '!'
+	S_scroll:               \u266b			# musical note
+	S_wand:                 \u03c4			# greek tau
+	S_coin:                 \u263c			# yes it's the same as gems
+	S_gem:                  \u263c			# fancy '*'
+	S_rock:                 \u0060
+	S_ball:                 \u0030
+	S_chain:                \u005f
+	S_venom:                \u002e
+	S_vwall:                \u2551			# all walls now use
+	S_hwall:                \u2550			# double line graphics
+	S_tlcorn:               \u2554
+	S_trcorn:               \u2557
+	S_blcorn:               \u255a
+	S_brcorn:               \u255d
+	S_crwall:               \u256c
+	S_tuwall:               \u2569
+	S_tdwall:               \u2566
+	S_tlwall:               \u2563
+	S_trwall:               \u2560
+	S_ndoor:                \u256c
+	S_vodoor:               \u256c
+	S_hodoor:               \u256c
+	S_room:                 \u00b7		# centered dot
+	S_corr:                 \u2592
+	S_litcorr:              \u2593
+	S_upstair:              \u2261		# Greek Xi
+	S_dnstair:              \u2261
+	S_arrow_trap:           \u2666		# diamond (cards)
+	S_dart_trap:            \u2666
+	S_falling_rock_trap:    \u2666
+	S_squeaky_board:        \u2666
+	S_bear_trap:            \u2666
+	S_land_mine:            \u2666
+	S_rolling_boulder_trap: \u2666
+	S_sleeping_gas_trap:    \u2666
+	S_rust_trap:            \u2666
+	S_fire_trap:            \u2666
+	S_pit:                  \u2666
+	S_spiked_pit:           \u2666
+	S_hole:                 \u2666
+	S_trap_door:            \u2666
+	S_teleportation_trap:   \u2666
+	S_level_teleporter:     \u2666
+	S_magic_portal:         \u2666
+	S_web:                  \u2666
+	S_statue_trap:          \u2666
+	S_magic_trap:           \u2666
+	S_anti_magic_trap:      \u2666
+	S_polymorph_trap:       \u2666
+	S_weapon:               \u2191
+	S_armor:                \u005b
+	S_ring:                 \u003d
+	S_amulet:               \u2640
+	S_tool:                 \u0028
+	S_food:                 \u2663
+	S_potion:               \u00a1
+	S_scroll:               \u266b
+	S_book:                 \u002b
+	S_wand:                 \u03c4
+	S_coin:                 \u263c
+	S_gem:                  \u263c
+	S_rock:                 \u0060
+	S_ball:                 \u0030
+	S_chain:                \u005f
+	S_venom:                \u002e
+	S_human:                \u263a
+finish
+
+start: RogueWindows_UTF8
+	Restrictions: rogue
+	Handling: Unicode
+	S_weapon:  \u0029
+	S_amulet:  \u002c
+	S_food:    \u003a
+	S_potion:  \u00a1
+	S_scroll:  \u003f
+	S_book:    \u002b
+	S_wand:    \u03c4
+	S_vwall:   \u2551			# all walls now use
+	S_hwall:   \u2550			# double line graphics
+	S_tlcorn:  \u2554
+	S_trcorn:  \u2557
+	S_blcorn:  \u255a
+	S_brcorn:  \u255d
+	S_crwall:  \u256c
+	S_tuwall:  \u2569
+	S_tdwall:  \u2566
+	S_tlwall:  \u2563
+	S_trwall:  \u2560
+	S_ndoor:   \u256c
+	S_vodoor:  \u256c
+	S_hodoor:  \u256c
+	S_room:    \u00b7			# centered dot
+	S_corr:    \u2592
+	S_litcorr: \u2593
+	S_upstair: \u2261			# Greek Xi
+	S_dnstair: \u2261
+finish

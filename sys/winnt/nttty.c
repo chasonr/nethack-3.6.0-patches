@@ -510,7 +510,7 @@ const char *s;
  */
 void
 g_putch(in_ch)
-int in_ch;
+nhsym in_ch;
 {
     /* CP437 to Unicode mapping according to the Unicode Consortium */
     static const WCHAR cp437[] = {
@@ -547,15 +547,20 @@ int in_ch;
         0x2261, 0x00b1, 0x2265, 0x2264, 0x2320, 0x2321, 0x00f7, 0x2248,
         0x00b0, 0x2219, 0x00b7, 0x221a, 0x207f, 0x00b2, 0x25a0, 0x00a0
     };
-    unsigned char ch = (unsigned char) in_ch;
 
     cursor.X = ttyDisplay->curx;
     cursor.Y = ttyDisplay->cury;
     WriteConsoleOutputAttribute(hConOut, &attr, 1, cursor, &acount);
-    if (has_unicode)
+    if (SYMHANDLING(H_UNICODE)) {
+        WCHAR ch = (WCHAR) in_ch;
+        WriteConsoleOutputCharacterW(hConOut, &ch, 1, cursor, &ccount);
+    } else if (has_unicode) {
+        unsigned char ch = (unsigned char) in_ch;
         WriteConsoleOutputCharacterW(hConOut, &cp437[ch], 1, cursor, &ccount);
-    else
+    } else {
+        unsigned char ch = (unsigned char) in_ch;
         WriteConsoleOutputCharacterA(hConOut, &ch, 1, cursor, &ccount);
+    }
 }
 
 void

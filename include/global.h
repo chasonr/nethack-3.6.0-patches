@@ -56,8 +56,13 @@
  * since otherwise comparisons with signed quantities are done incorrectly
  */
 typedef schar xchar;
+#if defined(__GNUC__) && defined(WIN32) && defined(__cplusplus)
+/* Resolve conflict with Qt 5 and MinGW-w64 */
+typedef uchar boolean; /* 0 or 1 */
+#else
 #ifndef SKIP_BOOLEAN
 typedef xchar boolean; /* 0 or 1 */
+#endif
 #endif
 
 #ifndef TRUE /* defined in some systems' native include files */
@@ -66,9 +71,28 @@ typedef xchar boolean; /* 0 or 1 */
 #endif
 
 /*
+ * Unicode character types
+ * Improvise a bit
+ */
+typedef unsigned short utf16_t;
+#if defined(MSDOS) || defined(OS2)
+    /* Possible 16 bit build; ensure 32 bit */
+    typedef unsigned long utf32_t;
+#else
+    /* Most things have 32 bit int */
+    typedef unsigned utf32_t;
+#endif
+
+/*
  * type nhsym: loadable symbols go into this type
  */
-typedef uchar nhsym;
+typedef utf32_t nhsym;
+
+/*
+ * opaque type for string allocation
+ */
+struct str_context_rec;
+typedef struct str_context_rec *str_context;
 
 #ifndef STRNCMPI
 #ifndef __SASC_60 /* SAS/C already shifts to stricmp */
