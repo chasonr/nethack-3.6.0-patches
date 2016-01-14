@@ -1152,7 +1152,7 @@ int chr, col, color;
 
     pixy = PBAR_ROW * MAX_ROWS_PER_CELL;
     for (vplane = 0; vplane < SCREENPLANES; ++vplane) {
-        egareadplane(vplane);
+        egareadplane(SCREENPLANES - 1 - vplane);
         y = pixy;
         for (i = 0; i < ROWS_PER_CELL; ++i) {
             tmp_d = screentable[y++] + col;
