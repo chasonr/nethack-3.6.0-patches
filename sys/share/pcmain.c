@@ -111,9 +111,11 @@ char *argv[];
 {
     register int fd;
     register char *dir;
-#if defined(WIN32)
+#if defined(WIN32) || defined(MSDOS)
     char *envp = NULL;
     char *sptr = NULL;
+#endif
+#if defined(WIN32)
     char fnamebuf[BUFSZ], encodedfnamebuf[BUFSZ];
     boolean save_getreturn_status = getreturn_enabled;
 #endif
