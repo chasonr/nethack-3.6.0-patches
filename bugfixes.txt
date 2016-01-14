@@ -32,3 +32,7 @@ Bugs not mentioned on the DevTeam's website:
 
 *           Proper background tiles for lava and water
             Author: Ray Chason
+
+*           MS-DOS port restored to functionality.
+            Author: Ray Chason; credit to Reddit user b_helyer for the fix to
+            sys/share/pcmain.c.
