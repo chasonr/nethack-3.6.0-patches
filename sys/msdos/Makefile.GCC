@@ -66,7 +66,7 @@ LIBRARIES = $(LIBS) $(TERMLIB)
 #
 # If you have yacc/lex or a work-alike set YACC_LEX to Y
 #
-YACC_LEX = Y
+YACC_LEX = N
 ifeq ($(YACC_LEX),Y)
 DO_YACC = YACC_ACT
 DO_LEX  = LEX_ACT
@@ -336,7 +336,7 @@ VOBJ19 = $(O)trap.o     $(O)u_init.o  $(O)uhitm.o    $(O)vault.o    $(O)vision.o
 VOBJ20 = $(O)vis_tab.o  $(O)weapon.o  $(O)were.o     $(O)wield.o    $(O)windows.o
 VOBJ21 = $(O)wintty.o   $(O)wizard.o  $(O)worm.o     $(O)worn.o     $(O)write.o
 VOBJ22 = $(O)zap.o      $(O)light.o   $(O)dlb.o      $(O)dig.o      $(O)teleport.o
-VOBJ23 = $(O)region.o $(O)sys.o
+VOBJ23 = $(O)region.o $(O)sys.o $(O)pmatchre.o
 
 SOBJ   = $(O)msdos.o    $(O)sound.o   $(O)pcsys.o    $(O)tty.o	    $(O)unix.o \
 	 $(O)video.o    $(O)vidtxt.o  $(O)pckeys.o
@@ -451,8 +451,9 @@ endif
 	@$(subst /,\,if exist $(DAT)/*.tib copy $(DAT)/*.tib $(GAMEDIR))
 	@$(subst /,\,if exist $(DAT)/symbols copy $(DAT)/symbols $(GAMEDIR))
 	@$(subst /,\,copy $(SSHR)/NetHack.cnf  $(GAMEDIR)/defaults.nh)
-	@$(subst /,\,copy $(MSYS)/NHAccess.nh  $(GAMEDIR))
+	-@$(subst /,\,touch $(GAMEDIR)/record)
 	@$(subst /,\,copy $(DOC)/guidebo*.txt  $(GAMEDIR))
+	@$(subst /,\,copy ../sys/winnt/sysconf  $(GAMEDIR))
 	@$(subst /,\,if exist $(DOC)/nethack.txt copy $(DOC)/nethack.txt $(GAMEDIR))
 ifdef CWSDPMI
 	@$(subst /,\,if exist $(CWSDPMI) copy $(CWSDPMI) $(GAMEDIR))
@@ -466,7 +467,34 @@ endif
 #==========================================
 
 $(GAMEFILE): $(O)obj.tag $(PATCHLEV_H) $(O)utility.tag $(ALLOBJ) $(O)$(GAME).lnk
-	$(LINK) $(LFLAGS) -o$(GAME).exe @$(O)$(GAME).lnk $(LIBRARIES) $(ZLIB)
+	 @if exist temp.a del temp.a
+	 @ar ru temp.a $(VOBJ01)
+	 @ar ru temp.a $(VOBJ02)
+	 @ar ru temp.a $(VOBJ03)
+	 @ar ru temp.a $(VOBJ04)
+	 @ar ru temp.a $(VOBJ05)
+	 @ar ru temp.a $(VOBJ06)
+	 @ar ru temp.a $(VOBJ07)
+	 @ar ru temp.a $(VOBJ08)
+	 @ar ru temp.a $(VOBJ09)
+	 @ar ru temp.a $(VOBJ10)
+	 @ar ru temp.a $(VOBJ11)
+	 @ar ru temp.a $(VOBJ12)
+	 @ar ru temp.a $(VOBJ13)
+	 @ar ru temp.a $(VOBJ14)
+	 @ar ru temp.a $(VOBJ15)
+	 @ar ru temp.a $(VOBJ16)
+	 @ar ru temp.a $(VOBJ17)
+	 @ar ru temp.a $(VOBJ18)
+	 @ar ru temp.a $(VOBJ19)
+	 @ar ru temp.a $(VOBJ20)
+	 @ar ru temp.a $(VOBJ21)
+	 @ar ru temp.a $(VOBJ22)
+	 @ar ru temp.a $(VOBJ23)
+	 @ar ru temp.a $(SOBJ)
+	 @ar ru temp.a $(TILOBJ)
+	 @ar ru temp.a $(VVOBJ)
+	$(LINK) $(LFLAGS) -o$(GAME).exe temp.a $(LIBRARIES) $(ZLIB)
 	@$(subst /,\,stubedit $(GAME).exe minstack=2048K)
 	@$(subst /,\,copy $(GAME).exe $(GAMEFILE))
 	@$(subst /,\,del $(GAME).exe)
@@ -513,6 +541,7 @@ clean:
 	$(subst /,\,if exist $(O)sp_lev.tag del $(O)sp_lev.tag)
 	$(subst /,\,if exist $(O)thintile.tag del $(O)thintile.tag)
 	$(subst /,\,if exist $(O)utility.tag del $(O)utility.tag)
+	$(subst /,\,if exist temp.a del temp.a)
 
 spotless: clean
 
@@ -547,6 +576,9 @@ spotless: clean
 	$(subst /,\,if exist $(DAT)/dungeon del $(DAT)/dungeon)
 	$(subst /,\,if exist $(DAT)/oracles del $(DAT)/oracles)
 	$(subst /,\,if exist $(DAT)/quest.dat del $(DAT)/quest.dat)
+	$(subst /,\,if exist $(DAT)/bogusmon del $(DAT)/bogusmon)
+	$(subst /,\,if exist $(DAT)/engrave del $(DAT)/engrave)
+	$(subst /,\,if exist $(DAT)/epitaph del $(DAT)/epitaph)
 	$(subst /,\,if exist $(DAT)/dlb.lst del $(DAT)/dlb.lst)
 	$(subst /,\,if exist $(DAT)/nhdat del $(DAT)/nhdat)
 	$(subst /,\,if exist $(DAT)/*.lev del $(DAT)/*.lev)
@@ -614,7 +646,9 @@ $(O)makedefs.o:  $(CONFIG_H)	$(PERMONST_H)	   $(INCL)/objclass.h \
 #==========================================
 
 $(U)lev_comp.exe:  $(SPLEVOBJS)
-	$(LINK) $(LFLAGS) -o$@ $(SPLEVOBJS)
+	@rm -f temp.a
+	@ar ru temp.a $(SPLEVOBJS)
+	$(LINK) $(LFLAGS) -o$@ temp.a
 
 ifeq ($(YACC_LEX),Y)
 
@@ -783,10 +817,14 @@ $(DAT)/NetHacko.tib: $(O)thintile.tag $(TILEFILES2) $(U)til2bin2.exe
 	@$(subst /,\,chdir $(SRC))
 
 $(U)tile2bin.exe: $(O)tile2bin.o $(TEXTIO)
-	$(LINK) $(LFLAGS) -o$@ $(O)tile2bin.o $(TEXTIO)
+	@rm -f temp.a
+	@ar ru temp.a $(TEXTIO)
+	$(LINK) $(LFLAGS) -o$@ $(O)tile2bin.o temp.a
 
 $(U)til2bin2.exe: $(O)til2bin2.o $(TEXTIO2)
-	$(LINK) $(LFLAGS) -o$@ $(O)til2bin2.o $(TEXTIO2)
+	@rm -f temp.a
+	@ar ru temp.a $(TEXTIO2)
+	$(LINK) $(LFLAGS) -o$@ $(O)til2bin2.o temp.a
 
 $(U)thintile.exe: $(O)thintile.o 
 	$(LINK) $(LFLAGS) -o$@ $(O)thintile.o
@@ -900,6 +938,15 @@ $(DAT)/quest.dat: $(O)utility.tag  $(DAT)/quest.txt
 $(DAT)/oracles:	     $(O)utility.tag    $(DAT)/oracles.txt
 	@$(subst /,\,$(U)makedefs.exe -h)
 
+$(DAT)/bogusmon:     $(O)utility.tag    $(DAT)/bogusmon.txt
+	@$(subst /,\,$(U)makedefs.exe -s)
+
+$(DAT)/engrave:	     $(O)utility.tag    $(DAT)/engrave.txt
+	@$(subst /,\,$(U)makedefs.exe -s)
+
+$(DAT)/epitaph:	     $(O)utility.tag    $(DAT)/epitaph.txt
+	@$(subst /,\,$(U)makedefs.exe -s)
+
 $(O)sp_lev.tag: $(O)utility.tag $(DAT)/bigroom.des  $(DAT)/castle.des \
 	$(DAT)/endgame.des $(DAT)/gehennom.des $(DAT)/knox.des \
 	$(DAT)/medusa.des  $(DAT)/oracle.des   $(DAT)/tower.des \
@@ -949,24 +996,14 @@ $(DAT)/dungeon:	  $(O)utility.tag  $(DAT)/dungeon.def
 #note that dir below assumes bin/dir.exe from djgpp distribution
 #
 $(DAT)/nhdat:	$(U)dlb_main.exe $(DAT)/data $(DAT)/rumors $(DAT)/dungeon \
-	    $(DAT)/oracles $(DAT)/quest.dat $(O)sp_lev.tag
+	    $(DAT)/oracles $(DAT)/quest.dat $(O)sp_lev.tag \
+	    $(DAT)/bogusmon $(DAT)/engrave $(DAT)/epitaph $(DAT)/tribute
 	@$(subst /,\,echo dat done >$(O)dat.tag)
 	@$(subst /,\,cd $(DAT))
 	@$(subst /,\,copy $(MSYS)/msdoshlp.txt .)
-	@$(subst /,\,echo data >dlb.lst)
-	@$(subst /,\,echo dungeon >>dlb.lst)
-	@$(subst /,\,echo oracles >>dlb.lst)
-	@$(subst /,\,echo options >>dlb.lst)
-	@$(subst /,\,echo quest.dat >>dlb.lst)
-	@$(subst /,\,echo rumors >>dlb.lst)
-	@$(subst /,\,echo help >>dlb.lst)
-	@$(subst /,\,echo hh >>dlb.lst)
-	@$(subst /,\,echo cmdhelp >>dlb.lst)
-	@$(subst /,\,echo history >>dlb.lst)
-	@$(subst /,\,echo opthelp >>dlb.lst)
-	@$(subst /,\,echo wizhelp >>dlb.lst)
-	@$(subst /,\,echo license >>dlb.lst)
-	@$(subst /,\,echo msdoshlp.txt >>dlb.lst)
+	@$(LS) data dungeon oracles options quest.dat rumors help hh >dlb.lst
+	@$(LS) cmdhelp history opthelp wizhelp license msdoshlp.txt >>dlb.lst
+	@$(LS) bogusmon engrave epitaph tribute >>dlb.lst
 	$(LS) $(subst /,\,*.lev) >>dlb.lst
 	@$(subst /,\,$(U)dlb_main cvIf dlb.lst nhdat)
 	@$(subst /,\,cd $(SRC))
@@ -1270,6 +1307,7 @@ $(O)worm.o: worm.c $(HACK_H) $(INCL)/lev.h
 $(O)worn.o: worn.c $(HACK_H)
 $(O)write.o: write.c $(HACK_H)
 $(O)zap.o: zap.c $(HACK_H)
+$(O)pmatchre.o: $(SSHR)/pmatchre.c $(HACK_H)
 
 # end of file
 
