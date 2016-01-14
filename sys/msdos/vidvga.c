@@ -156,8 +156,8 @@ STATIC_VAR struct map_struct {
     }
 #define TOP_MAP_ROW 1
 
-STATIC_VAR int vgacmap[CLR_MAX] = { 0,  3, 5, 9, 4, 8, 12, 14,
-                                    11, 2, 6, 7, 1, 8, 12, 13 };
+STATIC_VAR int vgacmap[CLR_MAX] = {  1, 4, 6, 10, 5, 9, 0, 15,
+                                    12, 3, 7,  8, 2, 9, 0, 14 };
 STATIC_VAR int viewport_size = 40;
 /* STATIC_VAR char masktable[8]={0x80,0x40,0x20,0x10,0x08,0x04,0x02,0x01}; */
 /* STATIC_VAR char bittable[8]= {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80}; */
@@ -1021,10 +1021,10 @@ static unsigned char colorbits[] = { 0x08, 0x04, 0x02, 0x01 };
 #ifdef POSITIONBAR
 
 #define PBAR_ROW (LI - 4)
-#define PBAR_COLOR_ON 15    /* slate grey background colour of tiles */
-#define PBAR_COLOR_OFF 12   /* bluish grey, used in old style only */
-#define PBAR_COLOR_STAIRS 9 /* brown */
-#define PBAR_COLOR_HERO 14  /* creamy white */
+#define PBAR_COLOR_ON 13    /* slate grey background colour of tiles */
+#define PBAR_COLOR_OFF 0    /* bluish grey, used in old style only */
+#define PBAR_COLOR_STAIRS 10 /* brown */
+#define PBAR_COLOR_HERO 15  /* creamy white */
 
 static unsigned char pbar[COLNO];
 

@@ -63,6 +63,7 @@ struct tibhdr_struct tibheader;
 static void FDECL(write_tibtile, (int));
 static void FDECL(write_tibheader, (FILE *, struct tibhdr_struct *));
 static void FDECL(build_tibtile, (pixel(*) [TILE_X]));
+static void NDECL(remap_colors);
 
 #ifndef OVERVIEW_FILE
 char *tilefiles[] = { "../win/share/monsters.txt", "../win/share/objects.txt",
@@ -135,6 +136,7 @@ char *argv[];
         }
 
         if (!paletteflag) {
+            remap_colors();
             paletteptr = tibheader.palette;
             for (i = 0; i < num_colors; i++) {
                 *paletteptr++ = ColorMap[CM_RED][i],
@@ -242,6 +244,14 @@ pixel (*pixels)[TILE_X];
                 co_mask = masktable[i];
             }
 
+            if (k == 16) {
+                k = 13;
+            } else if (k == 28) {
+                k = 0;
+            }
+            if (k >= 16) {
+                fprintf(stderr, "Warning: pixel value %d in 16 color bitmap\n", k);
+            }
             tmp = planetile.plane[0].image[j][co_off];
             planetile.plane[0].image[j][co_off] =
                 (k & 0x0008) ? (tmp | co_mask) : (tmp & ~co_mask);
@@ -298,4 +308,20 @@ int recnum;
     }
     fwrite(&packtile, sizeof(packtile), 1, tibfile2);
 #endif
+}
+
+static void
+remap_colors()
+{
+    char swap;
+
+    swap = ColorMap[CM_RED][13];
+    ColorMap[CM_RED][13] = ColorMap[CM_RED][16];
+    ColorMap[CM_RED][16] = swap;
+    swap = ColorMap[CM_GREEN][13];
+    ColorMap[CM_GREEN][13] = ColorMap[CM_GREEN][16];
+    ColorMap[CM_GREEN][16] = swap;
+    swap = ColorMap[CM_BLUE][13];
+    ColorMap[CM_BLUE][13] = ColorMap[CM_BLUE][16];
+    ColorMap[CM_BLUE][16] = swap;
 }

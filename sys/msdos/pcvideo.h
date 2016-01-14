@@ -166,7 +166,7 @@ struct overview_planar_cell_struct {
 #define M_BRIGHTCYAN 11
 
 #define M_TEXT M_GRAY
-#define BACKGROUND_COLOR 0
+#define BACKGROUND_COLOR 1
 #define ATTRIB_NORMAL M_TEXT       /* Normal attribute */
 #define ATTRIB_INTENSE M_WHITE     /* Intense White */
 #define ATTRIB_MONO_NORMAL 0x01    /* Underlined,white */
@@ -176,9 +176,9 @@ struct overview_planar_cell_struct {
 #endif                             /*SCREEN_BIOS || SCREEN_DJGPPFAST */
 
 #if defined(SCREEN_VGA) || defined(SCREEN_8514)
-#define BACKGROUND_VGA_COLOR 0
+#define BACKGROUND_VGA_COLOR 1
 #define ATTRIB_VGA_NORMAL CLR_GRAY /* Normal attribute */
-#define ATTRIB_VGA_INTENSE 13      /* Intense White 94/06/07 palette chg*/
+#define ATTRIB_VGA_INTENSE 14      /* Intense White 94/06/07 palette chg*/
 #endif                             /*SCREEN_VGA || SCREEN_8514*/
 
 #if defined(PC9800)
