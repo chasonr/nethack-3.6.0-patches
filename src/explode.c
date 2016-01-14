@@ -243,30 +243,38 @@ int expltype;
         curs_on_u(); /* will flush screen and output */
 
         if (any_shield && flags.sparkle) { /* simulate shield effect */
-            for (k = 0; k < SHIELD_COUNT; k++) {
+            if (windowprocs.win_shieldeff != NULL) {
                 for (i = 0; i < 3; i++)
                     for (j = 0; j < 3; j++) {
                         if (explmask[i][j] == 1)
-                            /*
-                             * Bypass tmp_at() and send the shield glyphs
-                             * directly to the buffered screen.  tmp_at()
-                             * will clean up the location for us later.
-                             */
-                            show_glyph(i + x - 1, j + y - 1,
-                                       cmap_to_glyph(shield_static[k]));
+                            (*windowprocs.win_shieldeff)(i + x - 1, j + y - 1);
                     }
-                curs_on_u(); /* will flush screen and output */
-                delay_output();
-            }
-
-            /* Cover last shield glyph with blast symbol. */
-            for (i = 0; i < 3; i++)
-                for (j = 0; j < 3; j++) {
-                    if (explmask[i][j] == 1)
-                        show_glyph(
-                            i + x - 1, j + y - 1,
-                            explosion_to_glyph(expltype, explosion[i][j]));
+            } else {
+                for (k = 0; k < SHIELD_COUNT; k++) {
+                    for (i = 0; i < 3; i++)
+                        for (j = 0; j < 3; j++) {
+                            if (explmask[i][j] == 1)
+                                /*
+                                 * Bypass tmp_at() and send the shield glyphs
+                                 * directly to the buffered screen.  tmp_at()
+                                 * will clean up the location for us later.
+                                 */
+                                show_glyph(i + x - 1, j + y - 1,
+                                           cmap_to_glyph(shield_static[k]));
+                        }
+                    curs_on_u(); /* will flush screen and output */
+                    delay_output();
                 }
+
+                /* Cover last shield glyph with blast symbol. */
+                for (i = 0; i < 3; i++)
+                    for (j = 0; j < 3; j++) {
+                        if (explmask[i][j] == 1)
+                            show_glyph(
+                                i + x - 1, j + y - 1,
+                                explosion_to_glyph(expltype, explosion[i][j]));
+                    }
+            }
 
         } else { /* delay a little bit. */
             delay_output();
