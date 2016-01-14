@@ -32,7 +32,7 @@ copy_colormap()
     int r, g, b;
     char c[2];
 
-    while (fscanf(infile, "%[A-Za-z0-9] = (%d, %d, %d) ", c, &r, &g, &b)
+    while (fscanf(infile, "%[A-Za-z0-9.] = (%d, %d, %d) ", c, &r, &g, &b)
            == 4) {
         Fprintf(outfile, "%c = (%d, %d, %d)\n", c[0], r, g, b);
     }
