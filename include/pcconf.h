@@ -79,6 +79,7 @@
 #if (defined(SCREEN_BIOS) || defined(SCREEN_DJGPPFAST)) && !defined(PC9800)
 #ifdef USE_TILES
 #define SCREEN_VGA /* Include VGA	  graphics routines in the build */
+#define SCREEN_VESA
 #endif
 #endif
 #else
@@ -86,6 +87,7 @@
 #undef SCREEN_BIOS
 #undef SCREEN_DJGPPFAST
 #undef SCREEN_VGA
+#undef SCREEN_VESA
 #undef TERMLIB
 #define ANSI_DEFAULT
 #endif
@@ -310,9 +312,8 @@
 #endif
 /* SCREEN_8514, SCREEN_VESA are only placeholders presently - sub VGA instead
  */
-#if defined(SCREEN_8514) || defined(SCREEN_VESA)
+#if defined(SCREEN_8514)
 #undef SCREEN_8514
-#undef SCREEN_VESA
 #define SCREEN_VGA
 #endif
 /* Graphical tile sanity checks */
@@ -321,6 +322,7 @@
 #define POSITIONBAR
 /* Select appropriate tile file format, and map size */
 #define PLANAR_FILE
+#define PACKED_FILE
 #define SMALL_MAP
 #endif
 #endif /* End of sanity check block */
