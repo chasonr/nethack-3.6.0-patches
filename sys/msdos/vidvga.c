@@ -109,13 +109,21 @@ void NDECL(vga_backsp);
 STATIC_DCL void FDECL(vga_scrollmap, (BOOLEAN_P));
 #endif
 STATIC_DCL void FDECL(vga_redrawmap, (BOOLEAN_P));
-void FDECL(vga_cliparound, (int, int));
+static void FDECL(vga_cliparound, (int, int));
 STATIC_OVL void FDECL(decal_planar, (struct planar_cell_struct *, unsigned));
 
 #ifdef POSITIONBAR
 STATIC_DCL void NDECL(positionbar);
 static void FDECL(vga_special, (int, int, int));
 #endif
+
+static void FDECL(vga_DisplayCell, (struct planar_cell_struct *, int, int));
+static void FDECL(vga_DisplayCell_O,
+             (struct overview_planar_cell_struct *, int, int));
+static void FDECL(vga_SwitchMode, (unsigned int));
+static void FDECL(vga_SetPalette, (char *));
+static void FDECL(vga_WriteChar, (int, int, int, int));
+static void FDECL(vga_WriteStr, (char *, int, int, int, int));
 
 extern int clipx, clipxmax; /* current clipping column from wintty.c */
 extern boolean clipping;    /* clipping on? from wintty.c */
@@ -365,6 +373,11 @@ unsigned special; /* special feature: corpse, invis, detected, pet, ridden -
     int attr;
     int ry;
 
+    /* If statue glyph, map to the generic statue */
+    if (GLYPH_STATUE_OFF <= glyphnum && glyphnum < GLYPH_STATUE_OFF + NUMMONS) {
+        glyphnum = objnum_to_glyph(STATUE);
+    }
+
     row = currow;
     col = curcol;
     if ((col < 0 || col >= COLNO)
@@ -422,7 +435,7 @@ int col, row;
 }
 
 #if defined(USE_TILES) && defined(CLIPPING)
-void
+static void
 vga_cliparound(x, y)
 int x, y;
 {
@@ -730,7 +743,7 @@ vga_Init(void)
  * mode (video mode 0x12). No other modes are currently supported.
  *
  */
-void
+static void
 vga_SwitchMode(unsigned int mode)
 {
     union REGS regs;
@@ -853,7 +866,7 @@ vga_detect()
  * do it using the colour 'colour'.
  *
  */
-void
+static void
 vga_WriteChar(chr, col, row, colour)
 int chr, col, row, colour;
 {
@@ -901,7 +914,7 @@ int chr, col, row, colour;
  * not the x,y pixel location.
  *
  */
-void
+static void
 vga_DisplayCell(gp, col, row)
 struct planar_cell_struct *gp;
 int col, row;
@@ -932,7 +945,7 @@ int col, row;
     egawriteplane(15);
 }
 
-void
+static void
 vga_DisplayCell_O(gp, col, row)
 struct overview_planar_cell_struct *gp;
 int col, row;
@@ -965,7 +978,7 @@ int col, row;
  * is 'len' at location (x,y) using the 'colour' colour.
  *
  */
-void
+static void
 vga_WriteStr(s, len, col, row, colour)
 char *s;
 int len, col, row, colour;
@@ -993,7 +1006,7 @@ int len, col, row, colour;
  * 16 colour mode at 640 x 480.
  *
  */
-void
+static void
 vga_SetPalette(p)
 char *p;
 {

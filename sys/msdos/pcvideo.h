@@ -258,9 +258,6 @@ E int NDECL(vga_detect);
 #ifdef SIMULATE_CURSOR
 E void NDECL(vga_DrawCursor);
 #endif
-E void FDECL(vga_DisplayCell, (struct planar_cell_struct *, int, int));
-E void FDECL(vga_DisplayCell_O,
-             (struct overview_planar_cell_struct *, int, int));
 E void NDECL(vga_Finish);
 E char __far *NDECL(vga_FontPtrs);
 E void NDECL(vga_get_scr_size);
@@ -272,12 +269,8 @@ E void FDECL(vga_update_positionbar, (char *));
 E void NDECL(vga_HideCursor);
 #endif
 E void NDECL(vga_Init);
-E void FDECL(vga_SwitchMode, (unsigned int));
-E void FDECL(vga_SetPalette, (char *));
 E void NDECL(vga_tty_end_screen);
 E void FDECL(vga_tty_startup, (int *, int *));
-E void FDECL(vga_WriteChar, (int, int, int, int));
-E void FDECL(vga_WriteStr, (char *, int, int, int, int));
 E void FDECL(vga_xputs, (const char *, int, int));
 E void FDECL(vga_xputc, (CHAR_P, int));
 E void FDECL(vga_xputg, (int, int, unsigned));
@@ -286,6 +279,35 @@ E void FDECL(vga_overview, (BOOLEAN_P));
 E void FDECL(vga_traditional, (BOOLEAN_P));
 E void NDECL(vga_refresh);
 #endif /* SCREEN_VGA */
+#ifdef SCREEN_VESA
+E void NDECL(vesa_backsp);
+E void FDECL(vesa_clear_screen, (int));
+E void FDECL(vesa_cl_end, (int, int));
+E void FDECL(vesa_cl_eos, (int));
+E int NDECL(vesa_detect);
+#ifdef SIMULATE_CURSOR
+E void NDECL(vesa_DrawCursor);
+#endif
+E void NDECL(vesa_Finish);
+E void NDECL(vesa_get_scr_size);
+E void FDECL(vesa_gotoloc, (int, int));
+#ifdef POSITIONBAR
+E void FDECL(vesa_update_positionbar, (char *));
+#endif
+#ifdef SIMULATE_CURSOR
+E void NDECL(vesa_HideCursor);
+#endif
+E void NDECL(vesa_Init);
+E void NDECL(vesa_tty_end_screen);
+E void FDECL(vesa_tty_startup, (int *, int *));
+E void FDECL(vesa_xputs, (const char *, int, int));
+E void FDECL(vesa_xputc, (CHAR_P, int));
+E void FDECL(vesa_xputg, (int, int, unsigned));
+E void FDECL(vesa_userpan, (BOOLEAN_P));
+E void FDECL(vesa_overview, (BOOLEAN_P));
+E void FDECL(vesa_traditional, (BOOLEAN_P));
+E void NDECL(vesa_refresh);
+#endif /* SCREEN_VESA */
 #endif /* NO_TERMS   */
 
 #undef E
