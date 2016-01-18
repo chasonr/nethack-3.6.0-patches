@@ -252,6 +252,8 @@ struct instance_flags {
 #ifdef MSDOS
     boolean hasvga; /* has a vga adapter */
     boolean usevga; /* use the vga adapter */
+    boolean hasvesa; /* has a VESA-capable VGA adapter */
+    boolean usevesa; /* use the VESA-capable VGA adapter */
     boolean grmode; /* currently in graphics mode */
 #endif
 #ifdef LAN_FEATURES

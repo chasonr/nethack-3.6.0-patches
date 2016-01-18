@@ -241,7 +241,7 @@ U  = $(UTIL)/
 #  Utility Objects.
 #==========================================
 
-VGAOBJ      = $(O)vidvga.o
+VGAOBJ      = $(O)vidvga.o $(O)vidvesa.o
 
 MAKESRC	    = makedefs.c
 
@@ -289,11 +289,13 @@ TEXTIO      = $(O)tiletext.o $(O)tiletxt.o $(O)drawing.o $(O)decl.o $(O)monst.o 
 TEXTIO2     = $(O)tiletex2.o $(O)tiletxt2.o $(O)drawing.o $(O)decl.o $(O)monst.o \
 		$(O)objects.o $(O)stubvid.o
 
+PACKED_TIB  = $(DAT)/NetHack2.tib
+
 PLANAR_TIB  = $(DAT)/NetHack1.tib
 
 OVERVIEW_TIB = $(DAT)/NetHacko.tib
 
-TILEUTIL    = $(TILOBJ) $(U)tile2bin.exe $(U)til2bin2.exe $(PLANAR_TIB) $(OVERVIEW_TIB)
+TILEUTIL    = $(TILOBJ) $(U)tile2bin.exe $(U)til2bin2.exe $(PACKED_TIB) $(PLANAR_TIB) $(OVERVIEW_TIB)
 
 TILEFILES   = $(WSHR)/monsters.txt $(WSHR)/objects.txt $(WSHR)/other.txt
 
@@ -582,6 +584,7 @@ spotless: clean
 	$(subst /,\,if exist $(DAT)/dlb.lst del $(DAT)/dlb.lst)
 	$(subst /,\,if exist $(DAT)/nhdat del $(DAT)/nhdat)
 	$(subst /,\,if exist $(DAT)/*.lev del $(DAT)/*.lev)
+	$(subst /,\,if exist $(PACKED_TIB) del $(PACKED_TIB))
 	$(subst /,\,if exist $(PLANAR_TIB) del $(PLANAR_TIB))
 	$(subst /,\,if exist $(OVERVIEW_TIB) del $(OVERVIEW_TIB))
 	$(subst /,\,if exist $(WSHR)/monthin.txt del $(WSHR)/monthin.txt)
@@ -803,6 +806,12 @@ $(O)tilemap.o: $(WSHR)/tilemap.c $(HACK_H) $(TILE_H)
 #   Tile Utilities
 #  Required for tile support
 #==========================================
+
+$(DAT)/NetHack2.tib: $(TILEFILES) $(U)tile2bin.exe
+	@echo Creating binary tile files (this may take some time)
+	@$(subst /,\,chdir $(DAT))
+	@$(subst /,\,$(U)tile2bin.exe)
+	@$(subst /,\,chdir $(SRC))
 
 $(DAT)/NetHack1.tib: $(TILEFILES) $(U)tile2bin.exe
 	@echo Creating binary tile files (this may take some time)
@@ -1049,6 +1058,9 @@ $(O)video.o : $(HACK_H)  $(MSYS)/pcvideo.h $(MSYS)/portio.h $(MSYS)/video.c
 
 $(O)vidvga.o : $(HACK_H)  $(MSYS)/pcvideo.h $(MSYS)/portio.h $(TILE_H) $(MSYS)/vidvga.c
 	$(CC) $(cflags) -I$(MSYS) -I$(WSHR) -o$@ $(MSYS)/vidvga.c
+
+$(O)vidvesa.o : $(HACK_H)  $(MSYS)/pcvideo.h $(MSYS)/portio.h $(TILE_H) $(MSYS)/vidvesa.c
+	$(CC) $(cflags) -I$(MSYS) -I$(WSHR) -o$@ $(MSYS)/vidvesa.c
 
 $(O)vidtxt.o : $(HACK_H)  $(MSYS)/pcvideo.h $(MSYS)/portio.h $(TILE_H) $(MSYS)/vidtxt.c
 #	$(CC) $(cflags) -o$@ -I$(MSYS) $(MSYS)/vidtxt.c
