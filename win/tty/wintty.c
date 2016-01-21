@@ -2949,12 +2949,39 @@ end_glyphout()
 #ifndef WIN32
 void
 g_putch(in_ch)
-int in_ch;
+nhsym in_ch;
 {
     register char ch = (char) in_ch;
 
 #if defined(ASCIIGRAPH) && !defined(NO_TERMS)
-    if (SYMHANDLING(H_IBM) || iflags.eight_bit_tty) {
+    if (SYMHANDLING(H_UNICODE)) {
+        char utf8[5];
+
+        /* Exclude invalid code points */
+        if ((in_ch & 0xFFFFFC00) == 0xD800 || in_ch > 0x10FFFF) {
+            in_ch = 0xFFFD;
+        }
+        if (in_ch < 0x80) {
+            utf8[0] = (char) in_ch;
+            utf8[1] = '\0';
+        } else if (in_ch < 0x800) {
+            utf8[0] = (char) (0xC0 |  (in_ch >>  6)        );
+            utf8[1] = (char) (0x80 | ( in_ch        & 0x3F));
+            utf8[2] = '\0';
+        } else if (in_ch < 0x10000) {
+            utf8[0] = (char) (0xE0 |  (in_ch >> 12)        );
+            utf8[1] = (char) (0x80 | ((in_ch >>  6) & 0x3F));
+            utf8[2] = (char) (0x80 | ( in_ch        & 0x3F));
+            utf8[3] = '\0';
+        } else {
+            utf8[0] = (char) (0xF0 |  (in_ch >> 18)        );
+            utf8[1] = (char) (0x80 | ((in_ch >> 12) & 0x3F));
+            utf8[2] = (char) (0x80 | ((in_ch >>  6) & 0x3F));
+            utf8[3] = (char) (0x80 | ( in_ch        & 0x3F));
+            utf8[4] = '\0';
+        }
+        (void) fputs(utf8, stdout);
+    } else if (SYMHANDLING(H_IBM) || iflags.eight_bit_tty) {
         /* IBM-compatible displays don't need other stuff */
         (void) putchar(ch);
     } else if (ch & 0x80) {
@@ -3036,7 +3063,7 @@ xchar x, y;
 int glyph;
 int bkglyph UNUSED;
 {
-    int ch;
+    nhsym ch;
     boolean reverse_on = FALSE;
     int color;
     unsigned special;

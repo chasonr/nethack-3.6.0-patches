@@ -205,7 +205,9 @@ UINT
 mswin_charset()
 {
     CHARSETINFO cis;
-    if (SYMHANDLING(H_IBM))
+    if (SYMHANDLING(H_UNICODE))
+        return ANSI_CHARSET;
+    else if (SYMHANDLING(H_IBM))
         if (TranslateCharsetInfo((DWORD *) GetOEMCP(), &cis, TCI_SRCCODEPAGE))
             return cis.ciCharset;
         else
