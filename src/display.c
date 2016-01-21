@@ -1728,7 +1728,8 @@ xchar x, y;
     int idx, bkglyph = NO_GLYPH;
     struct rm *lev = &levl[x][y];
 
-    if (iflags.use_background_glyph && lev->seenv != 0) {
+    if (iflags.use_background_glyph && lev->seenv != 0
+            && gbuf[y][x].glyph != cmap_to_glyph(S_stone)) {
         switch (lev->typ) {
         case SCORR:
         case STONE:
