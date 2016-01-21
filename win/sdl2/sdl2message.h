@@ -58,6 +58,7 @@ private:
     static void initLineList(LineList *list, size_t size);
     static void freeLineList(LineList *list);
     static size_t numberOfLines(const LineList *list);
+    static Line *addLine(LineList *list, int attr, const char *str, int glyph);
 };
 
 }

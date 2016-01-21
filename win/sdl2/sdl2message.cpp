@@ -108,15 +108,7 @@ int SDL2MessageWindow::heightHint(void)
 void SDL2MessageWindow::putMixed(int attr, const char *str, int glyph)
 {
     // Add new string to m_contents
-    Line *new_line = &m_contents.lines[m_contents.tail++];
-    if (m_contents.tail >= m_contents.size) {
-        m_contents.tail = 0;
-    }
-    new_line->glyph = glyph;
-    delete[] new_line->text;
-    new_line->text = new char[strlen(str) + 1];
-    strcpy(new_line->text, str);
-    new_line->attributes = attr;
+    addLine(&m_contents, attr, str, glyph);
 
     // Add new string to m_lines.
     // This is a new line if this is the first message for a turn, if the
@@ -160,16 +152,7 @@ void SDL2MessageWindow::putMixed(int attr, const char *str, int glyph)
     }
     // Add the line
     if (add_new) {
-        Line *new_cline = &m_lines.lines[m_lines.tail++];
-        if (m_lines.tail >= m_lines.size) {
-            m_lines.tail = 0;
-        }
-
-        new_cline->glyph = glyph;
-        delete[] new_cline->text;
-        new_cline->text = new char[strlen(str) + 1];
-        strcpy(new_cline->text, str);
-        new_cline->attributes = attr;
+        Line *new_cline = addLine(&m_lines, attr, str, glyph);
         new_cline->num_messages = 1;
     } else {
         char *buf;
@@ -241,8 +224,8 @@ void SDL2MessageWindow::putMixed(int attr, const char *str)
 void SDL2MessageWindow::prevMessage(void)
 {
     int visible = height() / lineHeight();
-    if (visible < numberOfLines(&m_contents)) {
-        int max_scroll = numberOfLines(&m_contents) - visible;
+    if (visible < numberOfLines(&m_lines)) {
+        int max_scroll = numberOfLines(&m_lines) - visible;
         if (m_line_offset < max_scroll) {
             ++m_line_offset;
             interface()->redraw();
@@ -287,6 +270,27 @@ size_t SDL2MessageWindow::numberOfLines(const LineList *list)
         count += list->size;
     }
     return count;
+}
+
+SDL2MessageWindow::Line *SDL2MessageWindow::addLine(
+        LineList *list, int attr, const char *str, int glyph)
+{
+    Line *new_line = &list->lines[list->tail++];
+    if (list->tail >= list->size) {
+        list->tail = 0;
+    }
+    if (list->tail == list->head) {
+        ++list->head;
+        if (list->head >= list->size) {
+            list->head = 0;
+        }
+    }
+    delete[] new_line->text;
+    new_line->text = new char[strlen(str) + 1];
+    strcpy(new_line->text, str);
+    new_line->attributes = attr;
+    new_line->glyph = glyph;
+    return new_line;
 }
 
 }
