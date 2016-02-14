@@ -290,7 +290,7 @@ register char *s;
 }
 #endif /* WIN32 */
 
-#ifdef __EMX__
+#if defined(__EMX__) && __GNUC__ < 3
 void
 seteuid(int i)
 {

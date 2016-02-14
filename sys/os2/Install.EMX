@@ -1,0 +1,200 @@
+             Instructions for compiling and installing NetHack 3.6
+                               on an OS/2 system
+             =====================================================
+                         Timo Hakulinen and Ray Chason
+                        Last revision: 13 February 2016
+
+0.  Read this entire file before starting, and come back to the Notes below if
+    you have any problems.
+
+1.  Make sure all the NetHack files are in the appropriate directory
+    structure.  You should have a top directory (e.g. nh36, or whatever you
+    like) with subdirectories dat, doc, include, src, util, sys\share,
+    sys\os2, and win\tty.  You may have other subdirectories under sys and
+    win, but they will not affect compilation for an OS/2 system.  If you do
+    not follow this structure, the makefile will not function properly.  The
+    .c files for the main program belong in src, those for utility programs in
+    util, and OS/2-specific ones in sys\os2.  All the .h files belong in
+    include, the documentation in doc, and assorted data files in dat.  There
+    are also some necessary files in sys\share (pc*.c, random.c, dgn_*.*,
+    lev_*.*).  A more detailed explanation of the directory structure is found
+    in file Files, which should be in the top directory.
+
+    If you downloaded or ftp'd the sources from a UNIX system, the lines may
+    end in UNIX-style newlines instead of the carriage return and line feed
+    pairs used by DOS and OS/2.  You'll have to convert them (with a utility
+    like Rahul Dhesi's "flip").  Also, every file should end with a carriage
+    return / line feed pair, because Microsoft C has had a habit of ignoring
+    the last line of each file otherwise.  Besides, even editing UNIX-style
+    files with DOS editors is often a royal pain.
+
+2.  A new makefile is provided for EMX 0.9d. This file is Makefile.EMX, and
+    is found in directory sys\os2.  Copy it to the top directory (nh36, if that
+    is what you namedit) and rename it Makefile.  From now on, Makefile.EMX
+    will be referred to as "the makefile" in this document.
+
+    The makefile is confirmed to work with the following packages, available
+    at hobbes.nmsu.edu as of 13 February 2016. Unfortunately, these packages
+    are not consistent in their use of paths, and each will need to be
+    unpacked per the instructions given here.
+
+    http://hobbes.nmsu.edu/download/pub/os2/dev/emx/v0.9d/emxrt.zip
+    http://hobbes.nmsu.edu/download/pub/os2/dev/emx/v0.9d/emxdev1.zip
+    http://hobbes.nmsu.edu/download/pub/os2/dev/emx/v0.9d/emxdev2.zip
+    http://hobbes.nmsu.edu/download/pub/os2/dev/emx/v0.9d/gnudev1.zip
+    http://hobbes.nmsu.edu/download/pub/os2/dev/emx/v0.9d/gnudev2.zip
+        Unzip these to the root on the drive on which you will build NetHack
+
+    http://hobbes.nmsu.edu/download/pub/os2/dev/util/gnumake.zip
+        Unzip this to a temporary directory
+        move make-os2.exe to \emx\bin\make.exe
+
+    The remaining packages may be omitted, but you will need to edit the
+    makefile so that HAVE_BISON is set to N:
+
+    http://hobbes.nmsu.edu/download/pub/os2/dev/misc/m4_1412.zip
+    http://hobbes.nmsu.edu/download/pub/os2/dev/emx/contrib/bison/bison24.zip
+        Unzip these to \emx
+
+    http://hobbes.nmsu.edu/download/pub/os2/dev/misc/flex254-2.zip
+        Unzip this to a temporary directory
+        Move binos2\flex.exe to \emx\bin\flex.exe
+
+    The kLIBC package (http:/trac.netlabs.org/libc/) is also confirmed to
+    work. You'll still need Make, M4, Flex and Bison. The resulting binary is
+    not compatible with ones built with EMX 0.9d.
+
+    The build with Fred Fish's termcap library is not confirmed to work.
+    You'll need Makefile.lib in sys\share (see note 3).
+
+3.  Go to the include subdirectory.  First edit config.h according to the
+    comments to match your system and desired set of features.  In particular,
+    make sure that HACKDIR, and COMPRESS are *not* defined.  If your compiler
+    is ANSI compliant (like practically all OS/2 compilers are), it's probable
+    that nothing else needs to be configured in config.h.
+
+    Next look at os2conf.h.  This file shouldn't need much changing.  If you
+    want to use the hardcoded OS/2 system definitions in def_os2.h instead of
+    the compiler's standard headers, comment out OS2_USESYSHEADERS.  This may
+    become necessary if you are using a compiler which doesn't come with
+    proper system headers by default.  In this case you may have to edit the
+    definitions there, because every compiler has its own way of declaring
+    the necessary system functions and data structures.  In general you
+    should prefer the compiler's offerings, if possible.
+
+    If the file include\patchlevel.h exists under that complete name, the
+    makefile will assume that you are compiling on an HPFS volume. The files
+    dat\data.base and sys\share\pmatchregex.c will also be sought under their
+    long names. The compile is confirmed to work on both FAT and HPFS volumes,
+    and the generated executable will only use file names compatible with FAT
+    drives.
+
+    If you want to muck with different termcap settings, uncomment TERMLIB to
+    enable the use of termcap routines (see note 3).  This is not necessary to
+    create a fully functional game, however. This usage is not confirmed to
+    work in 3.6.
+
+4.  If you want to change the high score list behavior, examine the top of
+    topten.c, in the src directory.  You may want to change the definitions of
+    PERSMAX, POINTSMIN, and ENTRYMAX.
+
+5.  Go to the top directory. If you do not have all of M4, Flex or Bison,
+    edit the makefile so that HAVE_BISON is set to N. Don't mess with HAVE_TTY
+    or HAVE_X11, because the X11 port is not yet functional. Installing X11
+    on OS/2 has proven thus far to be no use.
+
+6.  Now, enter "make all", and take a siesta; your computer will be occupied
+    for a fair amount of time.  If all goes well, you will get an executable.
+
+7.  The game files are generated in the "binary" directory under the top
+    directory. You should find these files:
+
+        license
+        logfile
+        NetHack.cnf
+        nethack.exe
+        nhdat
+        perm
+        record
+        symbols
+        sysconf
+        xlogfile
+
+    If you have old record, logfile, or news files in the game directory, they
+    are not overwritten.  Of course, old records from NetHack 3.1 and 3.2 are
+    not worth keeping with 3.6, since these games are really quite different.
+
+    Edit file nethack.cnf in the game directory to reflect your particular
+    setup and personal preferences, following the comments there.  More info
+    about settable options can be found in the file opthelp and the guidebook.
+
+    You can move these files to whatever directory you like. If you intend to
+    distribute these packages, you'll also need to include \emx\bin\emxrt.dll.
+
+8.  If you'll be running NetHack from a different subdirectory, you will want
+    to "set HACKDIR=c:\games\nh36" (or whatever directory you want to use).
+    Add it to your config.sys, if you'll be playing often.
+
+    You can also create a special NetHack entry in your Presentation Manager /
+    Workplace Shell desktop.  This will use the included NetHack icon.
+    The following is a sample program description for OS/2 1.3 desktop, but
+    it's similar for OS/2 2.0:
+
+    Program title:          NetHack 3.6
+    Path and file name:     c:\games\nh36\nethack.exe
+    Parameters:
+    Working directory:      c:\games\nh36
+    Program type:           OS/2 Full screen
+
+    Naturally you must fill in your own game directory and parameters if you
+    want to set any.  The program type can be either OS/2 Full screen or OS/2
+    Windowed.  Note that you should set the executable path to use the .cmd
+    file generated by the makefile.  This file generates an extra pause after
+    the program exit, because otherwise you wouldn't get to see the high score
+    list upon quitting due to PM/WPS automatically closing the program window.
+    When starting NetHack normally from OS/2 command prompt, the command
+    processor starts nethack.exe instead, so no extra pause is generated.
+
+9.  If you want to clear up the temporary files and objects created by the
+    compilation process, you may issue "make clean".  This will return your
+    source tree to near-distribution condition.  Naturally, it will not affect
+    your newly built game files in any way.
+
+10. Play NetHack.  If it works, you're done!
+
+
+Notes
+-----
+
+1)  Save-files and bones-files from previous versions will not work with
+    NetHack 3.6.  Don't bother trying to keep them.
+
+2)  To install an update of NetHack after changing something, enter "make"
+    from the src directory.  If you add, delete, or reorder monsters or
+    objects, or you change the format of saved level files, delete any save
+    and bones files.  (Trying to use such files sometimes produces amusing
+    confusions on the game's part, but usually crashes.)
+
+3)  The file sys\share\termcap.uu is the fixed version of the Fred Fish
+    termcap library.  You will need to run a uudecode utility on it to
+    generate the file termcap.zip.  termcap.zip contains several files of
+    termcap routines.  Using them with NetHack involves very little knowledge
+    of the UNIX concept of a termcap database; mostly you need to know enough
+    to set a TERM environment variable.  You can unzip termcap.zip in the
+    sys\share directory, but if you are going to use it, it is probably best
+    to unzip a copy in the src directory.  That way you will not miss copying
+    any files over.  Wherever you unzip it, get rid of the included makefile
+    since a better version has been provided as Makefile.lib.  After creating
+    the termcap library file termlib.lib, copy it to src before compiling the
+    game main source.
+
+4)  Note that emx 0.8f is the first version of GCC for OS/2 that can properly
+    compile NetHack.  Earlier versions do not work, because they don't support
+    the 16 bit API calls of OS/2.
+
+    GCC emx 0.8f does not currently work properly when fseek() function is
+    used with text files.  This is well documented in the compiler's
+    documentation.  Unfortunately NetHack uses fseek() in several places in
+    connection with text data.  This means that some help texts may not come
+    out right, but no serious problems should emerge.
+

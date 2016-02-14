@@ -1,0 +1,1098 @@
+# Makefile for OS/2
+
+# Configuration
+HAVE_BISON = Y      # If you have flex and bison
+WANT_X11 = N        # To build the X11 interface
+WANT_TTY = Y        # To build the TTY interface
+
+# Compiler
+CC = gcc
+LEX = flex
+YACC = bison -y
+CFLAGS = -Wall -O2 -Iinclude -DDLB
+LFLAGS =
+
+# Determine whether we're building on a file system that supports long names
+ifeq ($(wildcard include/patchlevel.h), include/patchlevel.h)
+HAVE_HPFS = Y
+else
+HAVE_HPFS = N
+endif
+
+# Extra compiler options for configuration
+ifeq ($(strip $(HAVE_HPFS)),Y)
+CFLAGS += -DOS2_HPFS
+PATCHLEV_H = include/patchlevel.h
+DATA_BASE = dat/data.base
+REGEX = pmatchregex
+else
+PATCHLEV_H = include/patchlev.h
+DATA_BASE = dat/data.bas
+REGEX = pmatchre
+endif
+ifeq ($(strip $(WANT_X11)),Y)
+CFLAGS += -DX11_GRAPHICS
+endif
+ifneq ($(strip $(WANT_TTY)),Y)
+CFLAGS += -DNOTTYGRAPHICS
+endif
+
+.PHONY : default clean
+
+ALL_FILES = \
+binary/nethack.exe \
+binary/nhdat \
+binary/license \
+binary/logfile \
+binary/perm \
+binary/record \
+binary/symbols \
+binary/sysconf \
+binary/xlogfile \
+binary/NetHack.cnf
+
+default: $(ALL_FILES)
+
+##############################################################################
+#                                nethack.exe                                 #
+##############################################################################
+
+# Object files for NetHack
+NETHACK_OFILES = \
+build/allmain.o \
+build/alloc.o \
+build/apply.o \
+build/artifact.o \
+build/attrib.o \
+build/ball.o \
+build/bones.o \
+build/botl.o \
+build/cmd.o \
+build/dbridge.o \
+build/decl.o \
+build/detect.o \
+build/dig.o \
+build/display.o \
+build/dlb.o \
+build/do.o \
+build/do_name.o \
+build/do_wear.o \
+build/dog.o \
+build/dogmove.o \
+build/dokick.o \
+build/dothrow.o \
+build/drawing.o \
+build/dungeon.o \
+build/eat.o \
+build/end.o \
+build/engrave.o \
+build/exper.o \
+build/explode.o \
+build/extralev.o \
+build/files.o \
+build/fountain.o \
+build/hack.o \
+build/hacklib.o \
+build/invent.o \
+build/light.o \
+build/lock.o \
+build/mail.o \
+build/makemon.o \
+build/mapglyph.o \
+build/mcastu.o \
+build/mhitm.o \
+build/mhitu.o \
+build/minion.o \
+build/mklev.o \
+build/mkmap.o \
+build/mkmaze.o \
+build/mkobj.o \
+build/mkroom.o \
+build/mon.o \
+build/mondata.o \
+build/monmove.o \
+build/monst.o \
+build/monstr.o \
+build/mplayer.o \
+build/mthrowu.o \
+build/muse.o \
+build/music.o \
+build/o_init.o \
+build/objects.o \
+build/objnam.o \
+build/options.o \
+build/pager.o \
+build/pickup.o \
+build/pline.o \
+build/polyself.o \
+build/potion.o \
+build/pray.o \
+build/priest.o \
+build/quest.o \
+build/questpgr.o \
+build/read.o \
+build/rect.o \
+build/region.o \
+build/restore.o \
+build/rip.o \
+build/rnd.o \
+build/role.o \
+build/rumors.o \
+build/save.o \
+build/shk.o \
+build/shknam.o \
+build/sit.o \
+build/sounds.o \
+build/sp_lev.o \
+build/spell.o \
+build/steal.o \
+build/steed.o \
+build/sys.o \
+build/teleport.o \
+build/timeout.o \
+build/topten.o \
+build/track.o \
+build/trap.o \
+build/u_init.o \
+build/uhitm.o \
+build/vault.o \
+build/version.o \
+build/vision.o \
+build/weapon.o \
+build/were.o \
+build/wield.o \
+build/windows.o \
+build/wizard.o \
+build/worm.o \
+build/worn.o \
+build/write.o \
+build/zap.o \
+build/pcmain.o \
+build/pcsys.o \
+build/pctty.o \
+build/pcunix.o \
+build/$(REGEX).o \
+build/random.o \
+build/os2.o \
+
+ifeq ($(strip $(WANT_TTY)),Y)
+NETHACK_OFILES += build/getline.o build/termcap.o build/topl.o build/wintty.o
+endif
+
+binary/nethack.exe : $(NETHACK_OFILES)
+	-@if not exist binary mkdir binary
+	$(CC) $(LFLAGS) -o $@ $(NETHACK_OFILES)
+
+##############################################################################
+#                           nhdat and its contents                           #
+##############################################################################
+
+NHDAT_FILES = \
+dat/bogusmon \
+dat/cmdhelp \
+dat/data \
+dat/dungeon \
+dat/engrave \
+dat/epitaph \
+dat/help \
+dat/hh \
+dat/history \
+dat/opthelp \
+dat/options \
+dat/oracles \
+dat/quest.dat \
+dat/rumors \
+dat/tribute \
+dat/wizhelp \
+
+LEVEL_FILES = \
+dat/Arc-strt.lev \
+dat/Arc-loca.lev \
+dat/Arc-fila.lev \
+dat/Arc-filb.lev \
+dat/Arc-goal.lev \
+dat/Bar-strt.lev \
+dat/Bar-loca.lev \
+dat/Bar-fila.lev \
+dat/Bar-filb.lev \
+dat/Bar-goal.lev \
+dat/Cav-strt.lev \
+dat/Cav-loca.lev \
+dat/Cav-fila.lev \
+dat/Cav-filb.lev \
+dat/Cav-goal.lev \
+dat/Hea-strt.lev \
+dat/Hea-loca.lev \
+dat/Hea-fila.lev \
+dat/Hea-filb.lev \
+dat/Hea-goal.lev \
+dat/Kni-strt.lev \
+dat/Kni-loca.lev \
+dat/Kni-fila.lev \
+dat/Kni-filb.lev \
+dat/Kni-goal.lev \
+dat/Mon-strt.lev \
+dat/Mon-loca.lev \
+dat/Mon-fila.lev \
+dat/Mon-filb.lev \
+dat/Mon-goal.lev \
+dat/Pri-strt.lev \
+dat/Pri-loca.lev \
+dat/Pri-fila.lev \
+dat/Pri-filb.lev \
+dat/Pri-goal.lev \
+dat/Ran-strt.lev \
+dat/Ran-loca.lev \
+dat/Ran-fila.lev \
+dat/Ran-filb.lev \
+dat/Ran-goal.lev \
+dat/Rog-strt.lev \
+dat/Rog-loca.lev \
+dat/Rog-fila.lev \
+dat/Rog-filb.lev \
+dat/Rog-goal.lev \
+dat/Sam-strt.lev \
+dat/Sam-loca.lev \
+dat/Sam-fila.lev \
+dat/Sam-filb.lev \
+dat/Sam-goal.lev \
+dat/Tou-strt.lev \
+dat/Tou-loca.lev \
+dat/Tou-fila.lev \
+dat/Tou-filb.lev \
+dat/Tou-goal.lev \
+dat/Val-strt.lev \
+dat/Val-loca.lev \
+dat/Val-fila.lev \
+dat/Val-filb.lev \
+dat/Val-goal.lev \
+dat/Wiz-strt.lev \
+dat/Wiz-loca.lev \
+dat/Wiz-fila.lev \
+dat/Wiz-filb.lev \
+dat/Wiz-goal.lev \
+dat/air.lev \
+dat/asmodeus.lev \
+dat/astral.lev \
+dat/baalz.lev \
+dat/bigrm-1.lev \
+dat/bigrm-10.lev \
+dat/bigrm-2.lev \
+dat/bigrm-3.lev \
+dat/bigrm-4.lev \
+dat/bigrm-5.lev \
+dat/bigrm-6.lev \
+dat/bigrm-7.lev \
+dat/bigrm-8.lev \
+dat/bigrm-9.lev \
+dat/castle.lev \
+dat/earth.lev \
+dat/fakewiz1.lev \
+dat/fakewiz2.lev \
+dat/fire.lev \
+dat/juiblex.lev \
+dat/knox.lev \
+dat/medusa-1.lev \
+dat/medusa-2.lev \
+dat/medusa-3.lev \
+dat/medusa-4.lev \
+dat/minefill.lev \
+dat/minend-1.lev \
+dat/minend-2.lev \
+dat/minend-3.lev \
+dat/minetn-1.lev \
+dat/minetn-2.lev \
+dat/minetn-3.lev \
+dat/minetn-4.lev \
+dat/minetn-5.lev \
+dat/minetn-6.lev \
+dat/minetn-7.lev \
+dat/oracle.lev \
+dat/orcus.lev \
+dat/sanctum.lev \
+dat/soko1-1.lev \
+dat/soko1-2.lev \
+dat/soko2-1.lev \
+dat/soko2-2.lev \
+dat/soko3-1.lev \
+dat/soko3-2.lev \
+dat/soko4-1.lev \
+dat/soko4-2.lev \
+dat/tower1.lev \
+dat/tower2.lev \
+dat/tower3.lev \
+dat/valley.lev \
+dat/water.lev \
+dat/wizard1.lev \
+dat/wizard2.lev \
+dat/wizard3.lev \
+
+# Used verbatim:
+# dat/cmdhelp
+# dat/help
+# dat/hh
+# dat/history
+# dat/opthelp
+# dat/tribute
+# dat/wizhelp
+
+binary/nhdat: build/dlb.exe $(NHDAT_FILES) $(LEVEL_FILES)
+	@dir /b $(subst /,\\,$(NHDAT_FILES)) >dat/dlb.lst
+	@dir /b dat\*.lev >>dat/dlb.lst
+	cd dat && ..\build\dlb cfI ../binary/nhdat dlb.lst
+
+##############################################################################
+#                            Miscellaneous files                             #
+##############################################################################
+
+binary/license : dat/license
+	-@if not exist binary mkdir binary
+	copy dat\license binary
+
+binary/symbols : dat/symbols
+	-@if not exist binary mkdir binary
+	copy dat\symbols binary
+
+binary/sysconf : sys/winnt/sysconf
+	-@if not exist binary mkdir binary
+	copy sys\winnt\sysconf binary
+
+binary/NetHack.cnf : sys/share/NetHack.cnf
+	-@if not exist binary mkdir binary
+	copy sys\share\NetHack.cnf binary
+
+binary/logfile:
+	-@if not exist binary mkdir binary
+	@if not exist binary\logfile echo on > binary\logfile
+
+binary/perm:
+	-@if not exist binary mkdir binary
+	@if not exist binary\perm echo on > binary\perm
+
+binary/record:
+	-@if not exist binary mkdir binary
+	@if not exist binary\record echo on > binary\record
+
+binary/xlogfile:
+	-@if not exist binary mkdir binary
+	@if not exist binary\xlogfile echo on > binary\xlogfile
+
+##############################################################################
+#                    makedefs and the stuff it generates                     #
+##############################################################################
+
+MAKEDEFS_OFILES = \
+build/makedefs.o \
+build/monst.o \
+build/objects.o \
+
+build/makedefs.exe : $(MAKEDEFS_OFILES)
+	-@if not exist build mkdir build
+	$(CC) $(LFLAGS) -o $@ $(MAKEDEFS_OFILES)
+
+include/onames.h: build/makedefs.exe
+	cd build && makedefs -o
+
+include/pm.h: build/makedefs.exe
+	cd build && makedefs -p
+
+include/date.h: build/makedefs.exe
+	cd build && makedefs -v
+
+dat/options: build/makedefs.exe
+	cd build && makedefs -v
+
+src/monstr.c: build/makedefs.exe
+	cd build && makedefs -m
+
+dat/bogusmon: build/makedefs.exe dat/bogusmon.txt
+	cd build && makedefs -s
+
+dat/engrave: build/makedefs.exe dat/engrave.txt
+	cd build && makedefs -s
+
+dat/epitaph: build/makedefs.exe dat/epitaph.txt
+	cd build && makedefs -s
+
+dat/data: build/makedefs.exe $(DATA_BASE)
+	cd build && makedefs -d
+
+dat/oracles: build/makedefs.exe dat/oracles.txt
+	cd build && makedefs -h
+
+dat/quest.dat: dat/quest.txt
+	cd build && makedefs -q
+
+dat/rumors: dat/rumors.fal dat/rumors.tru
+	cd build && makedefs -r
+
+dat/dungeon.pdf: dat/dungeon.def
+	cd build && makedefs -e
+
+##############################################################################
+#                                  dlb.exe                                   #
+##############################################################################
+
+DLB_OFILES = \
+build/dlb_main.o \
+build/dlb.o \
+build/alloc.o \
+build/panic.o \
+
+build/dlb.exe : $(DLB_OFILES)
+	-@if not exist build mkdir build
+	$(CC) $(LFLAGS) -o $@ $(DLB_OFILES)
+
+##############################################################################
+#                    The dungeon compiler and its output                     #
+##############################################################################
+
+DGN_COMP_OFILES = \
+build/dgn_main.o \
+build/dgn_lex.o \
+build/dgn_yacc.o \
+build/alloc.o \
+build/panic.o \
+
+build/dgn_comp.exe : $(DGN_COMP_OFILES)
+	-@if not exist build mkdir build
+	$(CC) $(LFLAGS) -o $@ $(DGN_COMP_OFILES)
+
+dat/dungeon: build/dgn_comp.exe dat/dungeon.pdf
+	cd dat && ..\build\dgn_comp.exe dungeon.pdf
+
+##############################################################################
+#                     The level compiler and its output                      #
+##############################################################################
+
+LEV_COMP_OFILES = \
+build/lev_main.o \
+build/lev_lex.o \
+build/lev_yacc.o \
+build/alloc.o \
+build/panic.o \
+build/decl.o \
+build/drawing.o \
+build/monst.o \
+build/objects.o \
+
+build/lev_comp.exe : $(LEV_COMP_OFILES)
+	-@if not exist build mkdir build
+	$(CC) $(LFLAGS) -o $@ $(LEV_COMP_OFILES)
+
+dat/Arc-strt.lev : build/lev_comp.exe dat/Arch.des
+	cd dat && ..\build\lev_comp.exe Arch.des
+
+dat/Arc-loca.lev : build/lev_comp.exe dat/Arch.des
+	cd dat && ..\build\lev_comp.exe Arch.des
+
+dat/Arc-fila.lev : build/lev_comp.exe dat/Arch.des
+	cd dat && ..\build\lev_comp.exe Arch.des
+
+dat/Arc-filb.lev : build/lev_comp.exe dat/Arch.des
+	cd dat && ..\build\lev_comp.exe Arch.des
+
+dat/Arc-goal.lev : build/lev_comp.exe dat/Arch.des
+	cd dat && ..\build\lev_comp.exe Arch.des
+
+dat/Bar-strt.lev : build/lev_comp.exe dat/Barb.des
+	cd dat && ..\build\lev_comp.exe Barb.des
+
+dat/Bar-loca.lev : build/lev_comp.exe dat/Barb.des
+	cd dat && ..\build\lev_comp.exe Barb.des
+
+dat/Bar-fila.lev : build/lev_comp.exe dat/Barb.des
+	cd dat && ..\build\lev_comp.exe Barb.des
+
+dat/Bar-filb.lev : build/lev_comp.exe dat/Barb.des
+	cd dat && ..\build\lev_comp.exe Barb.des
+
+dat/Bar-goal.lev : build/lev_comp.exe dat/Barb.des
+	cd dat && ..\build\lev_comp.exe Barb.des
+
+dat/Cav-strt.lev : build/lev_comp.exe dat/Caveman.des
+	cd dat && ..\build\lev_comp.exe Caveman.des
+
+dat/Cav-loca.lev : build/lev_comp.exe dat/Caveman.des
+	cd dat && ..\build\lev_comp.exe Caveman.des
+
+dat/Cav-fila.lev : build/lev_comp.exe dat/Caveman.des
+	cd dat && ..\build\lev_comp.exe Caveman.des
+
+dat/Cav-filb.lev : build/lev_comp.exe dat/Caveman.des
+	cd dat && ..\build\lev_comp.exe Caveman.des
+
+dat/Cav-goal.lev : build/lev_comp.exe dat/Caveman.des
+	cd dat && ..\build\lev_comp.exe Caveman.des
+
+dat/Hea-strt.lev : build/lev_comp.exe dat/Healer.des
+	cd dat && ..\build\lev_comp.exe Healer.des
+
+dat/Hea-loca.lev : build/lev_comp.exe dat/Healer.des
+	cd dat && ..\build\lev_comp.exe Healer.des
+
+dat/Hea-fila.lev : build/lev_comp.exe dat/Healer.des
+	cd dat && ..\build\lev_comp.exe Healer.des
+
+dat/Hea-filb.lev : build/lev_comp.exe dat/Healer.des
+	cd dat && ..\build\lev_comp.exe Healer.des
+
+dat/Hea-goal.lev : build/lev_comp.exe dat/Healer.des
+	cd dat && ..\build\lev_comp.exe Healer.des
+
+dat/Kni-strt.lev : build/lev_comp.exe dat/Knight.des
+	cd dat && ..\build\lev_comp.exe Knight.des
+
+dat/Kni-loca.lev : build/lev_comp.exe dat/Knight.des
+	cd dat && ..\build\lev_comp.exe Knight.des
+
+dat/Kni-fila.lev : build/lev_comp.exe dat/Knight.des
+	cd dat && ..\build\lev_comp.exe Knight.des
+
+dat/Kni-filb.lev : build/lev_comp.exe dat/Knight.des
+	cd dat && ..\build\lev_comp.exe Knight.des
+
+dat/Kni-goal.lev : build/lev_comp.exe dat/Knight.des
+	cd dat && ..\build\lev_comp.exe Knight.des
+
+dat/Mon-strt.lev : build/lev_comp.exe dat/Monk.des
+	cd dat && ..\build\lev_comp.exe Monk.des
+
+dat/Mon-loca.lev : build/lev_comp.exe dat/Monk.des
+	cd dat && ..\build\lev_comp.exe Monk.des
+
+dat/Mon-fila.lev : build/lev_comp.exe dat/Monk.des
+	cd dat && ..\build\lev_comp.exe Monk.des
+
+dat/Mon-filb.lev : build/lev_comp.exe dat/Monk.des
+	cd dat && ..\build\lev_comp.exe Monk.des
+
+dat/Mon-goal.lev : build/lev_comp.exe dat/Monk.des
+	cd dat && ..\build\lev_comp.exe Monk.des
+
+dat/Pri-strt.lev : build/lev_comp.exe dat/Priest.des
+	cd dat && ..\build\lev_comp.exe Priest.des
+
+dat/Pri-loca.lev : build/lev_comp.exe dat/Priest.des
+	cd dat && ..\build\lev_comp.exe Priest.des
+
+dat/Pri-fila.lev : build/lev_comp.exe dat/Priest.des
+	cd dat && ..\build\lev_comp.exe Priest.des
+
+dat/Pri-filb.lev : build/lev_comp.exe dat/Priest.des
+	cd dat && ..\build\lev_comp.exe Priest.des
+
+dat/Pri-goal.lev : build/lev_comp.exe dat/Priest.des
+	cd dat && ..\build\lev_comp.exe Priest.des
+
+dat/Ran-strt.lev : build/lev_comp.exe dat/Ranger.des
+	cd dat && ..\build\lev_comp.exe Ranger.des
+
+dat/Ran-loca.lev : build/lev_comp.exe dat/Ranger.des
+	cd dat && ..\build\lev_comp.exe Ranger.des
+
+dat/Ran-fila.lev : build/lev_comp.exe dat/Ranger.des
+	cd dat && ..\build\lev_comp.exe Ranger.des
+
+dat/Ran-filb.lev : build/lev_comp.exe dat/Ranger.des
+	cd dat && ..\build\lev_comp.exe Ranger.des
+
+dat/Ran-goal.lev : build/lev_comp.exe dat/Ranger.des
+	cd dat && ..\build\lev_comp.exe Ranger.des
+
+dat/Rog-strt.lev : build/lev_comp.exe dat/Rogue.des
+	cd dat && ..\build\lev_comp.exe Rogue.des
+
+dat/Rog-loca.lev : build/lev_comp.exe dat/Rogue.des
+	cd dat && ..\build\lev_comp.exe Rogue.des
+
+dat/Rog-fila.lev : build/lev_comp.exe dat/Rogue.des
+	cd dat && ..\build\lev_comp.exe Rogue.des
+
+dat/Rog-filb.lev : build/lev_comp.exe dat/Rogue.des
+	cd dat && ..\build\lev_comp.exe Rogue.des
+
+dat/Rog-goal.lev : build/lev_comp.exe dat/Rogue.des
+	cd dat && ..\build\lev_comp.exe Rogue.des
+
+dat/Sam-strt.lev : build/lev_comp.exe dat/Samurai.des
+	cd dat && ..\build\lev_comp.exe Samurai.des
+
+dat/Sam-loca.lev : build/lev_comp.exe dat/Samurai.des
+	cd dat && ..\build\lev_comp.exe Samurai.des
+
+dat/Sam-fila.lev : build/lev_comp.exe dat/Samurai.des
+	cd dat && ..\build\lev_comp.exe Samurai.des
+
+dat/Sam-filb.lev : build/lev_comp.exe dat/Samurai.des
+	cd dat && ..\build\lev_comp.exe Samurai.des
+
+dat/Sam-goal.lev : build/lev_comp.exe dat/Samurai.des
+	cd dat && ..\build\lev_comp.exe Samurai.des
+
+dat/Tou-strt.lev : build/lev_comp.exe dat/Tourist.des
+	cd dat && ..\build\lev_comp.exe Tourist.des
+
+dat/Tou-loca.lev : build/lev_comp.exe dat/Tourist.des
+	cd dat && ..\build\lev_comp.exe Tourist.des
+
+dat/Tou-fila.lev : build/lev_comp.exe dat/Tourist.des
+	cd dat && ..\build\lev_comp.exe Tourist.des
+
+dat/Tou-filb.lev : build/lev_comp.exe dat/Tourist.des
+	cd dat && ..\build\lev_comp.exe Tourist.des
+
+dat/Tou-goal.lev : build/lev_comp.exe dat/Tourist.des
+	cd dat && ..\build\lev_comp.exe Tourist.des
+
+dat/Val-strt.lev : build/lev_comp.exe dat/Valkyrie.des
+	cd dat && ..\build\lev_comp.exe Valkyrie.des
+
+dat/Val-loca.lev : build/lev_comp.exe dat/Valkyrie.des
+	cd dat && ..\build\lev_comp.exe Valkyrie.des
+
+dat/Val-fila.lev : build/lev_comp.exe dat/Valkyrie.des
+	cd dat && ..\build\lev_comp.exe Valkyrie.des
+
+dat/Val-filb.lev : build/lev_comp.exe dat/Valkyrie.des
+	cd dat && ..\build\lev_comp.exe Valkyrie.des
+
+dat/Val-goal.lev : build/lev_comp.exe dat/Valkyrie.des
+	cd dat && ..\build\lev_comp.exe Valkyrie.des
+
+dat/Wiz-strt.lev : build/lev_comp.exe dat/Wizard.des
+	cd dat && ..\build\lev_comp.exe Wizard.des
+
+dat/Wiz-loca.lev : build/lev_comp.exe dat/Wizard.des
+	cd dat && ..\build\lev_comp.exe Wizard.des
+
+dat/Wiz-fila.lev : build/lev_comp.exe dat/Wizard.des
+	cd dat && ..\build\lev_comp.exe Wizard.des
+
+dat/Wiz-filb.lev : build/lev_comp.exe dat/Wizard.des
+	cd dat && ..\build\lev_comp.exe Wizard.des
+
+dat/Wiz-goal.lev : build/lev_comp.exe dat/Wizard.des
+	cd dat && ..\build\lev_comp.exe Wizard.des
+
+dat/bigrm-1.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/bigrm-2.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/bigrm-3.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/bigrm-4.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/bigrm-5.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/bigrm-6.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/bigrm-7.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/bigrm-8.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/bigrm-9.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/bigrm-10.lev : build/lev_comp.exe dat/bigroom.des
+	cd dat && ..\build\lev_comp.exe bigroom.des
+
+dat/castle.lev : build/lev_comp.exe dat/castle.des
+	cd dat && ..\build\lev_comp.exe castle.des
+
+dat/air.lev : build/lev_comp.exe dat/endgame.des
+	cd dat && ..\build\lev_comp.exe endgame.des
+
+dat/astral.lev : build/lev_comp.exe dat/endgame.des
+	cd dat && ..\build\lev_comp.exe endgame.des
+
+dat/earth.lev : build/lev_comp.exe dat/endgame.des
+	cd dat && ..\build\lev_comp.exe endgame.des
+
+dat/fire.lev : build/lev_comp.exe dat/endgame.des
+	cd dat && ..\build\lev_comp.exe endgame.des
+
+dat/water.lev : build/lev_comp.exe dat/endgame.des
+	cd dat && ..\build\lev_comp.exe endgame.des
+
+dat/asmodeus.lev : build/lev_comp.exe dat/gehennom.des
+	cd dat && ..\build\lev_comp.exe gehennom.des
+
+dat/baalz.lev : build/lev_comp.exe dat/gehennom.des
+	cd dat && ..\build\lev_comp.exe gehennom.des
+
+dat/juiblex.lev : build/lev_comp.exe dat/gehennom.des
+	cd dat && ..\build\lev_comp.exe gehennom.des
+
+dat/orcus.lev : build/lev_comp.exe dat/gehennom.des
+	cd dat && ..\build\lev_comp.exe gehennom.des
+
+dat/sanctum.lev : build/lev_comp.exe dat/gehennom.des
+	cd dat && ..\build\lev_comp.exe gehennom.des
+
+dat/valley.lev : build/lev_comp.exe dat/gehennom.des
+	cd dat && ..\build\lev_comp.exe gehennom.des
+
+dat/knox.lev : build/lev_comp.exe dat/knox.des
+	cd dat && ..\build\lev_comp.exe knox.des
+
+dat/medusa-1.lev : build/lev_comp.exe dat/medusa.des
+	cd dat && ..\build\lev_comp.exe medusa.des
+
+dat/medusa-2.lev : build/lev_comp.exe dat/medusa.des
+	cd dat && ..\build\lev_comp.exe medusa.des
+
+dat/medusa-3.lev : build/lev_comp.exe dat/medusa.des
+	cd dat && ..\build\lev_comp.exe medusa.des
+
+dat/medusa-4.lev : build/lev_comp.exe dat/medusa.des
+	cd dat && ..\build\lev_comp.exe medusa.des
+
+dat/minefill.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minetn-1.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minetn-2.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minetn-3.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minetn-4.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minetn-5.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minetn-6.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minetn-7.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minend-1.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minend-2.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/minend-3.lev : build/lev_comp.exe dat/mines.des
+	cd dat && ..\build\lev_comp.exe mines.des
+
+dat/oracle.lev : build/lev_comp.exe dat/oracle.des
+	cd dat && ..\build\lev_comp.exe oracle.des
+
+dat/soko1-1.lev : build/lev_comp.exe dat/sokoban.des
+	cd dat && ..\build\lev_comp.exe sokoban.des
+
+dat/soko1-2.lev : build/lev_comp.exe dat/sokoban.des
+	cd dat && ..\build\lev_comp.exe sokoban.des
+
+dat/soko2-1.lev : build/lev_comp.exe dat/sokoban.des
+	cd dat && ..\build\lev_comp.exe sokoban.des
+
+dat/soko2-2.lev : build/lev_comp.exe dat/sokoban.des
+	cd dat && ..\build\lev_comp.exe sokoban.des
+
+dat/soko3-1.lev : build/lev_comp.exe dat/sokoban.des
+	cd dat && ..\build\lev_comp.exe sokoban.des
+
+dat/soko3-2.lev : build/lev_comp.exe dat/sokoban.des
+	cd dat && ..\build\lev_comp.exe sokoban.des
+
+dat/soko4-1.lev : build/lev_comp.exe dat/sokoban.des
+	cd dat && ..\build\lev_comp.exe sokoban.des
+
+dat/soko4-2.lev : build/lev_comp.exe dat/sokoban.des
+	cd dat && ..\build\lev_comp.exe sokoban.des
+
+dat/tower1.lev : build/lev_comp.exe dat/tower.des
+	cd dat && ..\build\lev_comp.exe tower.des
+
+dat/tower2.lev : build/lev_comp.exe dat/tower.des
+	cd dat && ..\build\lev_comp.exe tower.des
+
+dat/tower3.lev : build/lev_comp.exe dat/tower.des
+	cd dat && ..\build\lev_comp.exe tower.des
+
+dat/fakewiz1.lev : build/lev_comp.exe dat/yendor.des
+	cd dat && ..\build\lev_comp.exe yendor.des
+
+dat/fakewiz2.lev : build/lev_comp.exe dat/yendor.des
+	cd dat && ..\build\lev_comp.exe yendor.des
+
+dat/wizard1.lev : build/lev_comp.exe dat/yendor.des
+	cd dat && ..\build\lev_comp.exe yendor.des
+
+dat/wizard2.lev : build/lev_comp.exe dat/yendor.des
+	cd dat && ..\build\lev_comp.exe yendor.des
+
+dat/wizard3.lev : build/lev_comp.exe dat/yendor.des
+	cd dat && ..\build\lev_comp.exe yendor.des
+
+##############################################################################
+#                  Implicit and explicit compilation rules                   #
+##############################################################################
+
+build/%.o : src/%.c
+	-@if not exist build mkdir build
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+build/%.o : util/%.c
+	-@if not exist build mkdir build
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+build/%.o : sys/os2/%.c
+	-@if not exist build mkdir build
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+build/%.o : sys/share/%.c
+	-@if not exist build mkdir build
+	$(CC) $(CFLAGS) -Isys/share -c -o $@ $<
+
+build/%.o : win/tty/%.c
+	-@if not exist build mkdir build
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+CONFIG_H = \
+ include/config.h include/config1.h include/tradstdc.h include/global.h \
+ include/coord.h include/os2conf.h include/micro.h include/system.h
+
+HACK_H = \
+ include/hack.h $(CONFIG_H) include/lint.h include/align.h include/dungeon.h \
+ include/monsym.h include/mkroom.h include/objclass.h include/youprop.h \
+ include/prop.h include/permonst.h include/monattk.h include/monflag.h \
+ include/mondata.h include/wintype.h include/context.h include/decl.h \
+ include/quest.h include/spell.h include/color.h include/obj.h include/you.h \
+ include/attrib.h include/monst.h include/mextra.h include/skills.h \
+ include/onames.h include/pm.h include/timeout.h include/trap.h \
+ include/flag.h include/rm.h include/vision.h include/display.h \
+ include/engrave.h include/rect.h include/region.h include/extern.h \
+ include/winprocs.h include/botl.h include/sys.h
+
+build/allmain.o: src/allmain.c $(HACK_H)
+build/apply.o: src/apply.c $(HACK_H)
+build/artifact.o: src/artifact.c $(HACK_H) include/artifact.h \
+ include/artilist.h
+build/attrib.o: src/attrib.c $(HACK_H)
+build/ball.o: src/ball.c $(HACK_H)
+build/bones.o: src/bones.c $(HACK_H) include/lev.h
+build/botl.o: src/botl.c $(HACK_H)
+build/cmd.o: src/cmd.c $(HACK_H) include/func_tab.h
+build/dbridge.o: src/dbridge.c $(HACK_H)
+build/decl.o: src/decl.c $(HACK_H)
+build/detect.o: src/detect.c $(HACK_H) include/artifact.h
+build/dig.o: src/dig.c $(HACK_H)
+build/display.o: src/display.c $(HACK_H)
+build/do.o: src/do.c $(HACK_H) include/lev.h
+build/dog.o: src/dog.c $(HACK_H)
+build/dogmove.o: src/dogmove.c $(HACK_H) include/mfndpos.h
+build/dokick.o: src/dokick.c $(HACK_H)
+build/dothrow.o: src/dothrow.c $(HACK_H)
+build/do_name.o: src/do_name.c $(HACK_H)
+build/do_wear.o: src/do_wear.c $(HACK_H)
+build/drawing.o: src/drawing.c $(HACK_H) include/tcap.h
+build/dungeon.o: src/dungeon.c $(HACK_H) include/dgn_file.h include/dlb.h \
+ include/lev.h
+build/eat.o: src/eat.c $(HACK_H)
+build/end.o: src/end.c $(HACK_H) include/lev.h include/dlb.h
+build/engrave.o: src/engrave.c $(HACK_H) include/lev.h
+build/exper.o: src/exper.c $(HACK_H)
+build/explode.o: src/explode.c $(HACK_H)
+build/extralev.o: src/extralev.c $(HACK_H)
+build/files.o: src/files.c $(HACK_H) include/dlb.h include/wintty.h
+build/fountain.o: src/fountain.c $(HACK_H)
+build/hack.o: src/hack.c $(HACK_H)
+build/hacklib.o: src/hacklib.c $(HACK_H)
+build/invent.o: src/invent.c $(HACK_H)
+build/light.o: src/light.c $(HACK_H) include/lev.h
+build/lock.o: src/lock.c $(HACK_H)
+build/mail.o: src/mail.c $(HACK_H)
+build/makemon.o: src/makemon.c $(HACK_H)
+build/mapglyph.o: src/mapglyph.c $(HACK_H) include/wintty.h
+build/mcastu.o: src/mcastu.c $(HACK_H)
+build/mhitm.o: src/mhitm.c $(HACK_H) include/artifact.h
+build/mhitu.o: src/mhitu.c $(HACK_H) include/artifact.h
+build/minion.o: src/minion.c $(HACK_H)
+build/mklev.o: src/mklev.c $(HACK_H)
+build/mkmap.o: src/mkmap.c $(HACK_H) include/sp_lev.h
+build/mkmaze.o: src/mkmaze.c $(HACK_H) include/sp_lev.h include/lev.h
+build/mkobj.o: src/mkobj.c $(HACK_H)
+build/mkroom.o: src/mkroom.c $(HACK_H)
+build/mon.o: src/mon.c $(HACK_H) include/mfndpos.h
+build/mondata.o: src/mondata.c $(HACK_H)
+build/monmove.o: src/monmove.c $(HACK_H) include/mfndpos.h include/artifact.h
+build/mplayer.o: src/mplayer.c $(HACK_H)
+build/mthrowu.o: src/mthrowu.c $(HACK_H)
+build/muse.o: src/muse.c $(HACK_H)
+build/music.o: src/music.c $(HACK_H)
+build/objnam.o: src/objnam.c $(HACK_H)
+build/options.o: src/options.c $(HACK_H) include/tcap.h
+build/o_init.o: src/o_init.c $(HACK_H) include/lev.h
+build/pager.o: src/pager.c $(HACK_H) include/dlb.h
+build/pickup.o: src/pickup.c $(HACK_H)
+build/pline.o: src/pline.c $(HACK_H)
+build/polyself.o: src/polyself.c $(HACK_H)
+build/potion.o: src/potion.c $(HACK_H)
+build/pray.o: src/pray.c $(HACK_H)
+build/priest.o: src/priest.c $(HACK_H) include/mfndpos.h
+build/quest.o: src/quest.c $(HACK_H) include/qtext.h
+build/questpgr.o: src/questpgr.c $(HACK_H) include/dlb.h include/qtext.h \
+ include/wintty.h
+build/read.o: src/read.c $(HACK_H)
+build/rect.o: src/rect.c $(HACK_H)
+build/region.o: src/region.c $(HACK_H) include/lev.h
+build/restore.o: src/restore.c $(HACK_H) include/lev.h include/tcap.h
+build/rip.o: src/rip.c $(HACK_H)
+build/rnd.o: src/rnd.c $(HACK_H)
+build/role.o: src/role.c $(HACK_H)
+build/rumors.o: src/rumors.c $(HACK_H) include/lev.h include/dlb.h
+build/save.o: src/save.c $(HACK_H) include/lev.h
+build/shk.o: src/shk.c $(HACK_H)
+build/shknam.o: src/shknam.c $(HACK_H)
+build/sit.o: src/sit.c $(HACK_H) include/artifact.h
+build/sounds.o: src/sounds.c $(HACK_H)
+build/spell.o: src/spell.c $(HACK_H)
+build/sp_lev.o: src/sp_lev.c $(HACK_H) include/dlb.h include/sp_lev.h
+build/steal.o: src/steal.c $(HACK_H)
+build/steed.o: src/steed.c $(HACK_H)
+build/sys.o: src/sys.c $(HACK_H)
+build/teleport.o: src/teleport.c $(HACK_H)
+build/timeout.o: src/timeout.c $(HACK_H) include/lev.h
+build/topten.o: src/topten.c $(HACK_H) include/dlb.h $(PATCHLEV_H)
+build/track.o: src/track.c $(HACK_H)
+build/trap.o: src/trap.c $(HACK_H)
+build/uhitm.o: src/uhitm.c $(HACK_H)
+build/u_init.o: src/u_init.c $(HACK_H)
+build/vault.o: src/vault.c $(HACK_H)
+build/version.o: src/version.c $(HACK_H) include/dlb.h include/date.h \
+ $(PATCHLEV_H)
+build/vision.o: src/vision.c $(HACK_H)
+build/weapon.o: src/weapon.c $(HACK_H)
+build/were.o: src/were.c $(HACK_H)
+build/wield.o: src/wield.c $(HACK_H)
+build/windows.o: src/windows.c $(HACK_H) include/wintty.h
+build/wizard.o: src/wizard.c $(HACK_H) include/qtext.h
+build/worm.o: src/worm.c $(HACK_H) include/lev.h
+build/worn.o: src/worn.c $(HACK_H)
+build/write.o: src/write.c $(HACK_H)
+build/zap.o: src/zap.c $(HACK_H)
+
+build/alloc.o: src/alloc.c $(CONFIG_H)
+build/dlb.o: src/dlb.c $(CONFIG_H) include/dlb.h
+build/monst.o: src/monst.c $(CONFIG_H) include/permonst.h include/align.h \
+ include/monattk.h include/monflag.h include/monsym.h include/color.h
+build/objects.o: src/objects.c $(CONFIG_H) include/obj.h include/objclass.h \
+ include/prop.h include/skills.h src/objects.c include/color.h
+
+build/dgn_main.o: util/dgn_main.c $(CONFIG_H) include/dlb.h
+build/dlb_main.o: util/dlb_main.c $(CONFIG_H) include/dlb.h
+build/lev_main.o: util/lev_main.c $(HACK_H) include/date.h include/sp_lev.h
+build/makedefs.o: util/makedefs.c $(CONFIG_H) include/permonst.h \
+ include/align.h include/monattk.h include/monflag.h include/objclass.h \
+ include/monsym.h include/artilist.h include/dungeon.h include/obj.h \
+ include/monst.h include/mextra.h include/you.h include/attrib.h \
+ include/prop.h include/skills.h include/context.h include/flag.h \
+ include/dlb.h $(PATCHLEV_H) util/mdgrep.h include/qtext.h
+build/panic.o: util/panic.c $(CONFIG_H)
+build/recover.o: util/recover.c $(CONFIG_H)
+
+build/ioctl.o: sys/share/ioctl.c $(HACK_H)
+build/nhlan.o: sys/share/nhlan.c $(HACK_H)
+build/pcmain.o: sys/share/pcmain.c $(HACK_H) include/dlb.h
+build/pcsys.o: sys/share/pcsys.c $(HACK_H) include/wintty.h
+build/pctty.o: sys/share/pctty.c $(HACK_H) include/wintty.h
+build/pcunix.o: sys/share/pcunix.c $(HACK_H) include/wintty.h
+build/$(REGEX).o: sys/share/$(REGEX).c $(HACK_H)
+build/posixregex.o: sys/share/posixregex.c $(HACK_H)
+build/random.o: sys/share/random.c $(HACK_H)
+build/tclib.o: sys/share/tclib.c $(CONFIG_H)
+build/unixtty.o: sys/share/unixtty.c $(HACK_H)
+build/uudecode.o: sys/share/uudecode.c
+
+build/os2.o: sys/os2/os2.c $(HACK_H) include/tcap.h include/def_os2.h
+
+build/getline.o: win/tty/getline.c $(HACK_H) include/wintty.h \
+ include/func_tab.h
+build/termcap.o: win/tty/termcap.c $(HACK_H) include/wintty.h include/tcap.h
+build/topl.o: win/tty/topl.c $(HACK_H) include/tcap.h include/wintty.h
+build/wintty.o: win/tty/wintty.c $(HACK_H) include/dlb.h include/tcap.h \
+ include/wintty.h
+
+ifeq ($(strip $(HAVE_BISON)), Y)
+build/dgn_lex.o: util/dgn_lex.c $(CONFIG_H) include/dgn_comp.h \
+ include/dgn_file.h include/align.h
+build/dgn_yacc.o: util/dgn_yacc.c $(CONFIG_H) include/date.h \
+ include/dgn_file.h include/align.h
+build/lev_lex.o: util/lev_lex.c $(HACK_H) include/lev_comp.h \
+ include/sp_lev.h
+build/lev_yacc.o: util/lev_yacc.c $(HACK_H) include/sp_lev.h
+
+util/dgn_lex.c : util/dgn_comp.l
+	$(LEX) $<
+	move lexyy.c $(subst /,\\,$@)
+
+util/dgn_yacc.c : util/dgn_comp.y
+	$(YACC) -d $< -o $@
+	move util\dgn_yacc.h include\dgn_comp.h
+
+util/lev_lex.c : util/lev_comp.l
+	$(LEX) $<
+	move lexyy.c $(subst /,\\,$@)
+
+util/lev_yacc.c : util/lev_comp.y
+	$(YACC) -d $< -o $@
+	move util\lev_yacc.h include\lev_comp.h
+
+# $(YACC) -d generates the header
+include/dgn_comp.h: util/dgn_yacc.c
+include/lev_comp.h: util/lev_yacc.c
+else
+build/dgn_lex.o: sys/share/dgn_lex.c $(CONFIG_H) sys/share/dgn_comp.h \
+ include/dgn_file.h include/align.h
+build/dgn_yacc.o: sys/share/dgn_yacc.c $(CONFIG_H) include/date.h \
+ include/dgn_file.h include/align.h
+build/lev_lex.o: sys/share/lev_lex.c $(HACK_H) sys/share/lev_comp.h \
+ include/sp_lev.h
+build/lev_yacc.o: sys/share/lev_yacc.c $(HACK_H) include/sp_lev.h
+endif
+
+##############################################################################
+#                                   clean                                    #
+##############################################################################
+
+clean:
+	-if exist build\*.o del build\*.o
+	-if exist build\*.exe del build\*.exe
+	-if exist include\pm.h del include\pm.h
+	-if exist include\onames.h del include\onames.h
+	-if exist include\date.h del include\date.h
+	-if exist include\dgn_comp.h del include\dgn_comp.h
+	-if exist include\lev_comp.h del include\lev_comp.h
+	-if exist src\monstr.c del src\monstr.c
+	-if exist dat\bogusmon del dat\bogusmon
+	-if exist dat\dungeon del dat\dungeon
+	-if exist dat\dungeon.pdf del dat\dungeon.pdf
+	-if exist dat\engrave del dat\engrave
+	-if exist dat\epitaph del dat\epitaph
+	-if exist dat\options del dat\options
+	-if exist dat\data del dat\data
+	-if exist dat\oracles del dat\oracles
+	-if exist dat\quest.dat del dat\quest.dat
+	-if exist dat\rumors del dat\rumors
+	-if exist dat\dlb.lst del dat\dlb.lst
+	-if exist dat\*.lev del dat\*.lev
+	-if exist util\dgn_lex.c del util\dgn_lex.c
+	-if exist util\dgn_yacc.c del util\dgn_yacc.c
+	-if exist util\lev_lex.c del util\lev_lex.c
+	-if exist util\lev_yacc.c del util\lev_yacc.c
