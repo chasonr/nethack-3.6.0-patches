@@ -279,7 +279,9 @@ NEARDATA extern coord bhitpos; /* place where throw or zap hits or stops */
 #define TEST_TRAV 2 /* test a future travel location */
 
 /*** some utility macros ***/
+#ifndef __cplusplus /* resolve conflict with math.h */
 #define yn(query) yn_function(query, ynchars, 'n')
+#endif
 #define ynq(query) yn_function(query, ynqchars, 'q')
 #define ynaq(query) yn_function(query, ynaqchars, 'y')
 #define nyaq(query) yn_function(query, ynaqchars, 'n')

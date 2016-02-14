@@ -189,7 +189,7 @@ STATIC_DCL boolean FDECL(make_compressed_name, (const char *, char *));
 STATIC_DCL char *FDECL(make_lockname, (const char *, char *));
 #endif
 STATIC_DCL FILE *FDECL(fopen_config_file, (const char *, int));
-STATIC_DCL int FDECL(get_uchars, (FILE *, char *, char *, uchar *, BOOLEAN_P,
+STATIC_DCL int FDECL(get_uchars, (FILE *, char *, char *, nhsym *, BOOLEAN_P,
                                   int, const char *));
 int FDECL(parse_config_line, (FILE *, char *, int));
 STATIC_DCL FILE *NDECL(fopen_sym_file);
@@ -2002,12 +2002,12 @@ get_uchars(fp, buf, bufp, list, modlist, size, name)
 FILE *fp;         /* input file pointer */
 char *buf;        /* read buffer, must be of size BUFSZ */
 char *bufp;       /* current pointer */
-uchar *list;      /* return list */
+nhsym *list;      /* return list */
 boolean modlist;  /* TRUE: list is being modified in place */
 int size;         /* return list size */
 const char *name; /* name of option for error message */
 {
-    unsigned int num = 0;
+    nhsym num = 0;
     int count = 0;
     boolean havenum = FALSE;
 
@@ -2101,7 +2101,7 @@ int src;
     int n;
 #endif
     char *bufp, *altp, buf[BUFSZ];
-    uchar translate[MAXPCHARS];
+    nhsym translate[MAXPCHARS];
     int len;
 
     /* convert any tab to space, condense consecutive spaces into one,

@@ -38,6 +38,12 @@
 extern unsigned _stklen = STKSIZ;
 #endif
 
+/* Produce only a planar file if building the overview file; with packed
+   files, we can make overview-size tiles on the fly */
+#if defined(OVERVIEW_FILE) && defined(PACKED_FILE)
+#undef PACKED_FILE
+#endif
+
 extern char *FDECL(tilename, (int, int));
 
 #ifdef PLANAR_FILE
@@ -62,7 +68,7 @@ struct tibhdr_struct tibheader;
 
 static void FDECL(write_tibtile, (int));
 static void FDECL(write_tibheader, (FILE *, struct tibhdr_struct *));
-static void FDECL(build_tibtile, (pixel(*) [TILE_X]));
+static void FDECL(build_tibtile, (pixel(*) [TILE_X], BOOLEAN_P));
 static void NDECL(remap_colors);
 
 #ifndef OVERVIEW_FILE
@@ -86,6 +92,7 @@ char *argv[];
     struct tm *newtime;
     time_t aclock;
     char *paletteptr;
+    unsigned num_monsters = 0;
 
     if (argc != 1) {
         Fprintf(stderr, "usage: tile2bin (from the util directory)\n");
@@ -147,14 +154,32 @@ char *argv[];
         }
 
         while (read_text_tile(pixels)) {
-            build_tibtile(pixels);
+            build_tibtile(pixels, FALSE);
             write_tibtile(tilecount);
             tilecount++;
         }
 
         (void) fclose_text_file();
+        if (filenum == 0) {
+            num_monsters = tilecount;
+        }
         ++filenum;
     }
+
+    /* Build the statue glyphs */
+    if (!fopen_text_file(tilefiles[0], RDTMODE)) {
+        Fprintf(stderr,
+                "usage: tile2bin (from the util or src directory)\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (read_text_tile(pixels)) {
+        build_tibtile(pixels, TRUE);
+        write_tibtile(tilecount);
+        tilecount++;
+    }
+
+    (void) fclose_text_file();
 
 #if defined(_MSC_VER)
     tibheader.compiler = MSC_COMP;
@@ -209,17 +234,24 @@ struct tibhdr_struct *tibhdr;
 }
 
 static void
-build_tibtile(pixels)
+build_tibtile(pixels, statues)
 pixel (*pixels)[TILE_X];
+boolean statues;
 {
+    static int graymappings[] = {
+        /* .  A  B  C  D  E  F  G  H  I  J  K  L  M  N  O  P  */
+        0, 1, 17, 18, 19, 20, 27, 22, 23, 24, 25, 26, 21, 15, 13, 14, 14
+    };
     int i, j, k, co_off;
     unsigned char co_mask, tmp;
 
+#ifdef PLANAR_FILE
 #ifndef OVERVIEW_FILE
     memset((void *) &planetile, 0, sizeof(struct planar_cell_struct));
 #else
     memset((void *) &planetile, 0,
            sizeof(struct overview_planar_cell_struct));
+#endif
 #endif
     for (j = 0; j < TILE_Y; j++) {
         for (i = 0; i < TILE_X; i++) {
@@ -231,6 +263,15 @@ pixel (*pixels)[TILE_X];
             }
             if (k >= num_colors)
                 Fprintf(stderr, "color not in colormap!\n");
+            if (statues) {
+                k = graymappings[k];
+            } else {
+                if (k == 16) {
+                    k = 13;
+                } else if (k == 13) {
+                    k = 16;
+                }
+            }
 #ifdef PACKED_FILE
             packtile[j][i] = k;
 #endif
@@ -244,13 +285,13 @@ pixel (*pixels)[TILE_X];
                 co_mask = masktable[i];
             }
 
-            if (k == 16) {
-                k = 13;
-            } else if (k == 28) {
-                k = 0;
-            }
-            if (k >= 16) {
-                fprintf(stderr, "Warning: pixel value %d in 16 color bitmap\n", k);
+            if (!statues) {
+                if (k == 28) {
+                    k = 0;
+                }
+                if (k >= 16) {
+                    fprintf(stderr, "Warning: pixel value %d in 16 color bitmap\n", k);
+                }
             }
             tmp = planetile.plane[0].image[j][co_off];
             planetile.plane[0].image[j][co_off] =
