@@ -147,6 +147,7 @@ build/sp_lev.o \
 build/spell.o \
 build/steal.o \
 build/steed.o \
+build/string.o \
 build/sys.o \
 build/teleport.o \
 build/timeout.o \
@@ -155,6 +156,7 @@ build/track.o \
 build/trap.o \
 build/u_init.o \
 build/uhitm.o \
+build/unicode.o \
 build/vault.o \
 build/version.o \
 build/vision.o \
@@ -966,6 +968,7 @@ build/spell.o: src/spell.c $(HACK_H)
 build/sp_lev.o: src/sp_lev.c $(HACK_H) include/dlb.h include/sp_lev.h
 build/steal.o: src/steal.c $(HACK_H)
 build/steed.o: src/steed.c $(HACK_H)
+build/string.o: src/string.c $(HACK_H)
 build/sys.o: src/sys.c $(HACK_H)
 build/teleport.o: src/teleport.c $(HACK_H)
 build/timeout.o: src/timeout.c $(HACK_H) include/lev.h
@@ -973,6 +976,7 @@ build/topten.o: src/topten.c $(HACK_H) include/dlb.h $(PATCHLEV_H)
 build/track.o: src/track.c $(HACK_H)
 build/trap.o: src/trap.c $(HACK_H)
 build/uhitm.o: src/uhitm.c $(HACK_H)
+build/unicode.o: src/unicode.c $(HACK_H)
 build/u_init.o: src/u_init.c $(HACK_H)
 build/vault.o: src/vault.c $(HACK_H)
 build/version.o: src/version.c $(HACK_H) include/dlb.h include/date.h \
