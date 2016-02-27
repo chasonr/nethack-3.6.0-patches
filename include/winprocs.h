@@ -85,6 +85,10 @@ struct window_procs {
 #endif
 #endif
     boolean NDECL((*win_can_suspend));
+
+    /* Functions beyond this point need not be specified. They will not be
+     * called if they are NULL. */
+    void FDECL((*win_shieldeff), (int, int));
 };
 
 extern

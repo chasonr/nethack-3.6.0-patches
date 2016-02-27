@@ -862,6 +862,9 @@ class NetHackQtBind : NetHackQtBindBase
     static void qt_wait_synch();
 
     static void qt_cliparound(int x, int y);
+#ifdef POSITIONBAR
+    static void qt_positionbar(char *);
+#endif
     static void qt_cliparound_window(winid wid, int x, int y);
     static void qt_print_glyph(winid wid, XCHAR_P x, XCHAR_P y,
                                int glyph, int bkglyph);
