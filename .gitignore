@@ -15,8 +15,10 @@ dat/dungeon
 dat/dungeon.pdf
 dat/engrave
 dat/epitaph
+dat/msdoshlp.txt
 dat/nhdat
 dat/nhtiles.bmp
+dat/NetHack?.tib
 dat/options
 dat/oracles
 dat/quest.dat
@@ -40,6 +42,7 @@ src/monstr.c
 src/nethack
 src/tile.c
 src/vis_tab.c
+src/temp.a
 util/dgn_comp
 util/dgn_lex.c
 util/dgn_yacc.c
@@ -53,6 +56,7 @@ util/tile2bmp
 util/tile2x11
 util/tilemap
 util/tiletxt.c
+util/*.exe
 NetHack.sln
 binary
 build
@@ -74,6 +78,7 @@ util/makedefs.exe
 util/tile2bmp.exe
 util/tilemap.exe
 util/uudecode.exe
+win/share/*thin.txt
 win/win32/NetHack.ico
 win/win32/mnsel.bmp
 win/win32/mnselcnt.bmp
