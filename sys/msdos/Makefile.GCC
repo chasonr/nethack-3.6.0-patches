@@ -173,7 +173,7 @@ endif
 #================ RULES ==================
 #==========================================
 
-.SUFFIXES: .exe .o .tib .til .uu .c .y .l
+.SUFFIXES: .exe .o .til .uu .c .y .l
 
 #==========================================
 # Rules for files in src
@@ -271,8 +271,6 @@ TILOBJ2      =
 TEXTIO       =
 TEXTIO2      =
 TILE_BMP     =
-PLANAR_TIB   =
-OVERVIEW_TIB =
 TILEUTIL     = 
 TILEFILES    = 
 TILEFILES2   = 
@@ -283,7 +281,7 @@ PPMWRIT2     =
 
 else
 
-TILOBJ      = $(O)tile.o $(O)pctiles.o $(VGAOBJ)
+TILOBJ      = $(O)tile.o $(VGAOBJ)
 
 TILOBJ2     = $(O)tileset.o $(O)bmptiles.o
 
@@ -295,11 +293,7 @@ TEXTIO2     = $(O)tiletex2.o $(O)tiletxt2.o $(O)drawing.o $(O)decl.o $(O)monst.o
 
 TILE_BMP    = $(DAT)/nhtiles.bmp
 
-PLANAR_TIB  = $(DAT)/NetHack1.tib
-
-OVERVIEW_TIB = $(DAT)/NetHacko.tib
-
-TILEUTIL    = $(TILOBJ) $(U)tile2bin.exe $(U)til2bin2.exe $(TILE_BMP) $(PLANAR_TIB) $(OVERVIEW_TIB)
+TILEUTIL    = $(TILOBJ) $(U)tile2bin.exe $(U)til2bin2.exe $(TILE_BMP)
 
 TILEFILES   = $(WSHR)/monsters.txt $(WSHR)/objects.txt $(WSHR)/other.txt
 
@@ -397,7 +391,7 @@ DLB_H      = $(INCL)/dlb.h
 ifeq ($(SUPPRESS_GRAPHICS),Y)
 TILE_H     =
 else
-TILE_H	   = $(WSHR)/tile.h $(MSYS)/pctiles.h
+TILE_H	   = $(WSHR)/tile.h $(INCL)/tileset.h
 endif
 
 ifeq ($(USE_DLB),Y)
@@ -455,7 +449,6 @@ ifdef TERMLIB
 	@$(subst /,\,copy $(SSHR)/termcap $(GAMEDIR))
 endif
 	@$(subst /,\,if exist $(TILE_BMP) copy $(TILE_BMP) $(GAMEDIR))
-	@$(subst /,\,if exist $(DAT)/*.tib copy $(DAT)/*.tib $(GAMEDIR))
 	@$(subst /,\,if exist $(DAT)/symbols copy $(DAT)/symbols $(GAMEDIR))
 	@$(subst /,\,copy $(SSHR)/NetHack.cnf  $(GAMEDIR)/defaults.nh)
 	-@$(subst /,\,touch $(GAMEDIR)/record)
@@ -593,8 +586,6 @@ spotless: clean
 	$(subst /,\,if exist $(DAT)/nhdat del $(DAT)/nhdat)
 	$(subst /,\,if exist $(DAT)/*.lev del $(DAT)/*.lev)
 	$(subst /,\,if exist $(TILE_BMP) del $(TILE_BMP))
-	$(subst /,\,if exist $(PLANAR_TIB) del $(PLANAR_TIB))
-	$(subst /,\,if exist $(OVERVIEW_TIB) del $(OVERVIEW_TIB))
 	$(subst /,\,if exist $(WSHR)/monthin.txt del $(WSHR)/monthin.txt)
 	$(subst /,\,if exist $(WSHR)/objthin.txt del $(WSHR)/objthin.txt)
 	$(subst /,\,if exist $(WSHR)/oththin.txt del $(WSHR)/oththin.txt)
@@ -819,18 +810,6 @@ $(DAT)/nhtiles.bmp: $(TILEFILES) $(U)tile2bmp.exe
 	@echo Creating binary tile files (this may take some time)
 	@$(subst /,\,chdir $(DAT))
 	@$(subst /,\,$(U)tile2bmp.exe $@)
-	@$(subst /,\,chdir $(SRC))
-
-$(DAT)/NetHack1.tib: $(TILEFILES) $(U)tile2bin.exe
-	@echo Creating binary tile files (this may take some time)
-	@$(subst /,\,chdir $(DAT))
-	@$(subst /,\,$(U)tile2bin.exe)
-	@$(subst /,\,chdir $(SRC))
-
-$(DAT)/NetHacko.tib: $(O)thintile.tag $(TILEFILES2) $(U)til2bin2.exe
-	@echo Creating overview binary tile files (this may take some time)
-	@$(subst /,\,chdir $(DAT))
-	@$(subst /,\,$(U)til2bin2.exe)
 	@$(subst /,\,chdir $(SRC))
 
 $(U)tile2bmp.exe: $(O)tile2bmp.o $(TEXTIO)
