@@ -322,7 +322,6 @@
 #define POSITIONBAR
 /* Select appropriate tile file format, and map size */
 #define PLANAR_FILE
-#define PACKED_FILE
 #define SMALL_MAP
 #endif
 #endif /* End of sanity check block */
