@@ -15,6 +15,7 @@
 #include "pctiles.h"
 #include "vesa.h"
 #include "wintty.h"
+#include "tileset.h"
 
 #define BACKGROUND_VESA_COLOR 1
 #define FIRST_TEXT_COLOR 240
@@ -35,13 +36,13 @@ static void FDECL(vesa_FillRect, (
 
 static void NDECL(vesa_redrawmap);
 static void FDECL(vesa_cliparound, (int, int));
-static void FDECL(decal_packed, (char tile[TILE_Y][TILE_X], unsigned special));
+static void FDECL(decal_packed, (const struct TileImage *tile, unsigned special));
 static void FDECL(vesa_SwitchMode, (unsigned mode));
-static boolean FDECL(vesa_SetPalette, (const char *));
-static boolean FDECL(vesa_SetHardPalette, (const char *));
-static boolean FDECL(vesa_SetSoftPalette, (const char *));
-static void FDECL(vesa_DisplayCell, (char tile[TILE_Y][TILE_X], int, int));
-static void FDECL(vesa_DisplayCellInMemory, (char tile[TILE_Y][TILE_X],
+static boolean FDECL(vesa_SetPalette, (const struct Pixel *));
+static boolean FDECL(vesa_SetHardPalette, (const struct Pixel *));
+static boolean FDECL(vesa_SetSoftPalette, (const struct Pixel *));
+static void FDECL(vesa_DisplayCell, (const struct TileImage *tile, int, int));
+static void FDECL(vesa_DisplayCellInMemory, (const struct TileImage *tile,
         int, char buf[TILE_Y][640*2]));
 static unsigned FDECL(vesa_FindMode, (unsigned long mode_addr, unsigned bits));
 static void FDECL(vesa_WriteChar, (int, int, int, int, BOOLEAN_P));
@@ -91,23 +92,23 @@ static struct map_struct {
 
 static int viewport_size = 40;
 
-static char defpalette[] = {    /* Colors for text and the position bar */
-	0x18, 0x18, 0x18, /* CLR_BLACK */
-	0xaa, 0x00, 0x00, /* CLR_RED */
-	0x00, 0xaa, 0x00, /* CLR_GREEN */
-	0x99, 0x40, 0x00, /* CLR_BROWN */
-	0x00, 0x00, 0xaa, /* CLR_BLUE */
-	0xaa, 0x00, 0xaa, /* CLR_MAGENTA */
-	0x00, 0xaa, 0xaa, /* CLR_CYAN */
-	0xaa, 0xaa, 0xaa, /* CLR_GRAY */
-	0x55, 0x55, 0x55, /* NO_COLOR */
-	0xff, 0x90, 0x00, /* CLR_ORANGE */
-	0x00, 0xff, 0x00, /* CLR_BRIGHT_GREEN */
-	0xff, 0xff, 0x00, /* CLR_YELLOW */
-	0x00, 0x00, 0xff, /* CLR_BRIGHT_BLUE */
-	0xff, 0x00, 0xff, /* CLR_BRIGHT_MAGENTA */
-	0x00, 0xff, 0xff, /* CLR_BRIGHT_CYAN */
-	0xff, 0xff, 0xff  /* CLR_WHITE */
+static const struct Pixel defpalette[] = {    /* Colors for text and the position bar */
+	{ 0x18, 0x18, 0x18, 0xff }, /* CLR_BLACK */
+	{ 0xaa, 0x00, 0x00, 0xff }, /* CLR_RED */
+	{ 0x00, 0xaa, 0x00, 0xff }, /* CLR_GREEN */
+	{ 0x99, 0x40, 0x00, 0xff }, /* CLR_BROWN */
+	{ 0x00, 0x00, 0xaa, 0xff }, /* CLR_BLUE */
+	{ 0xaa, 0x00, 0xaa, 0xff }, /* CLR_MAGENTA */
+	{ 0x00, 0xaa, 0xaa, 0xff }, /* CLR_CYAN */
+	{ 0xaa, 0xaa, 0xaa, 0xff }, /* CLR_GRAY */
+	{ 0x55, 0x55, 0x55, 0xff }, /* NO_COLOR */
+	{ 0xff, 0x90, 0x00, 0xff }, /* CLR_ORANGE */
+	{ 0x00, 0xff, 0x00, 0xff }, /* CLR_BRIGHT_GREEN */
+	{ 0xff, 0xff, 0x00, 0xff }, /* CLR_YELLOW */
+	{ 0x00, 0x00, 0xff, 0xff }, /* CLR_BRIGHT_BLUE */
+	{ 0xff, 0x00, 0xff, 0xff }, /* CLR_BRIGHT_MAGENTA */
+	{ 0x00, 0xff, 0xff, 0xff }, /* CLR_BRIGHT_CYAN */
+	{ 0xff, 0xff, 0xff, 0xff }  /* CLR_WHITE */
 };
 
 /* Information about the selected VESA mode */
@@ -539,7 +540,7 @@ unsigned special; /* special feature: corpse, invis, detected, pet, ridden -
     int col, row;
     int attr;
     int ry;
-    char packcell[TILE_Y][TILE_X];
+    const struct TileImage *packcell;
 
     row = currow;
     col = curcol;
@@ -556,13 +557,10 @@ unsigned special; /* special feature: corpse, invis, detected, pet, ridden -
         vesa_WriteChar((unsigned char) ch, col, row, attr, FALSE);
     } else {
         if ((col >= clipx) && (col <= clipxmax)) {
-            if (!ReadPackedTileFile(glyph2tile[glyphnum], packcell)) {
-                if (!iflags.over_view && map[ry][col].special)
-                    decal_packed(packcell, special);
-                vesa_DisplayCell(packcell, col - clipx, row);
-            } else
-                pline("vesa_xputg: Error reading tile (%d,%d) from file",
-                      glyphnum, glyph2tile[glyphnum]);
+            packcell = get_tile(glyph2tile[glyphnum]);
+            if (!iflags.over_view && map[ry][col].special)
+                decal_packed(packcell, special);
+            vesa_DisplayCell(packcell, col - clipx, row);
         }
     }
     if (col < (CO - 1))
@@ -619,7 +617,7 @@ static void
 vesa_redrawmap()
 {
     int x, y, t;
-    char packcell[TILE_Y][TILE_X];
+    const struct TileImage *packcell;
 
     /* y here is in screen rows*/
     /* Build each row in local memory, then write, to minimize use of the
@@ -633,13 +631,10 @@ vesa_redrawmap()
                               buf, map[y][x].attr);
             } else {
                 t = map[y][x].glyph;
-                if (!ReadPackedTileFile(glyph2tile[t], packcell)) {
-                    if (!iflags.over_view && map[y][x].special)
-                        decal_packed(packcell, map[y][x].special);
-                    vesa_DisplayCellInMemory(packcell, x - clipx, buf);
-                } else
-                    pline("vesa_redrawmap: Error reading tile (%d,%d)",
-                          t, glyph2tile[t]);
+                packcell = get_tile(glyph2tile[t]);
+                if (!iflags.over_view && map[y][x].special)
+                    decal_packed(packcell, map[y][x].special);
+                vesa_DisplayCellInMemory(packcell, x - clipx, buf);
             }
         }
         if (iflags.over_view && vesa_pixel_size != 8) {
@@ -736,9 +731,11 @@ vesa_refresh()
 
 static void
 decal_packed(gp, special)
-char gp[TILE_Y][TILE_X];
+const struct TileImage *gp;
 unsigned special;
 {
+    /* FIXME: the tile array is fixed in memory and should not be changed;
+       if we ever implement this, we'll have to copy the pixels */
     if (special & MG_CORPSE) {
     } else if (special & MG_INVIS) {
     } else if (special & MG_DETECT) {
@@ -757,18 +754,22 @@ unsigned special;
 void
 vesa_Init(void)
 {
-    char *paletteptr;
+    const struct Pixel *paletteptr;
 #ifdef USE_TILES
-    struct tibhdr_struct tibheader;
+    const char *tile_file;
     int tilefailure = 0;
     /*
      * Attempt to open the required tile files. If we can't
      * don't perform the video mode switch, use TTY code instead.
      *
      */
-    if (OpenTileFile(NETHACK_PACKED_TILEFILE, FALSE))
+    tile_file = iflags.wc_tile_file;
+    if (tile_file == NULL || tile_file == '\0') {
+        tile_file = "nhtiles.bmp";
+    }
+    if (!read_tiles(tile_file, FALSE))
         tilefailure |= 1;
-    if (ReadTileFileHeader(&tibheader, FALSE))
+    if (get_palette() == NULL)
         tilefailure |= 4;
 
     if (tilefailure) {
@@ -791,7 +792,7 @@ vesa_Init(void)
     vesa_SwitchMode(vesa_mode);
     windowprocs.win_cliparound = vesa_cliparound;
 #ifdef USE_TILES
-    paletteptr = tibheader.palette;
+    paletteptr = get_palette();
     iflags.tile_view = TRUE;
     iflags.over_view = FALSE;
 #else
@@ -848,7 +849,7 @@ unsigned mode;
 void
 vesa_Finish(void)
 {
-    CloseTileFile(0);
+    free_tiles();
     vesa_SwitchMode(MODETEXT);
     windowprocs.win_cliparound = tty_cliparound;
     g_attribute = attrib_text_normal;
@@ -1135,7 +1136,7 @@ int colour;
  */
 static void
 vesa_DisplayCell(tile, col, row)
-char tile[TILE_Y][TILE_X];
+const struct TileImage *tile;
 int col, row;
 {
     int i, j, pixx, pixy;
@@ -1149,8 +1150,9 @@ int col, row;
         if (vesa_pixel_size != 8) {
             for (i = 0; i < TILE_Y; ++i) {
                 for (j = 0; j < TILE_X; j += 2) {
-                    unsigned long c1 = vesa_palette[tile[i][j + 0]];
-                    unsigned long c2 = vesa_palette[tile[j][j + 1]];
+                    unsigned index = i * tile->width + j;
+                    unsigned long c1 = vesa_palette[tile->indexes[index + 0]];
+                    unsigned long c2 = vesa_palette[tile->indexes[index + 1]];
                     unsigned char r1, r2, g1, g2, b1, b2;
 
                     vesa_GetRGB(c1, &r1, &g1, &b1);
@@ -1165,7 +1167,8 @@ int col, row;
         } else {
             for (i = 0; i < TILE_Y; ++i) {
                 for (j = 0; j < TILE_X; j += 2) {
-                    vesa_WritePixel(pixx + j / 2, pixy + i, tile[i][j]);
+                    unsigned index = i * tile->width + j;
+                    vesa_WritePixel(pixx + j / 2, pixy + i, tile->indexes[index]);
                 }
             }
         }
@@ -1174,7 +1177,8 @@ int col, row;
         pixy += vesa_y_center;
         for (i = 0; i < TILE_Y; ++i) {
             for (j = 0; j < TILE_X; ++j) {
-                vesa_WritePixel(pixx + j, pixy + i, tile[i][j]);
+                unsigned index = i * tile->width + j;
+                vesa_WritePixel(pixx + j, pixy + i, tile->indexes[index]);
             }
         }
     }
@@ -1191,7 +1195,7 @@ int col, row;
  */
 static void
 vesa_DisplayCellInMemory(tile, col, buf)
-char tile[TILE_Y][TILE_X];
+const struct TileImage *tile;
 int col;
 char buf[TILE_Y][640*2];
 {
@@ -1202,13 +1206,15 @@ char buf[TILE_Y][640*2];
         pixx /= 2;
         for (i = 0; i < TILE_Y; ++i) {
             for (j = 0; j < TILE_X; j += 2) {
-                buf[i][pixx + j / 2] = tile[i][j];
+                unsigned index = i * tile->width + j;
+                buf[i][pixx + j / 2] = tile->indexes[index];
             }
         }
     } else {
         for (i = 0; i < TILE_Y; ++i) {
             for (j = 0; j < TILE_X; ++j) {
-                buf[i][pixx + j] = tile[i][j];
+                unsigned index = i * tile->width + j;
+                buf[i][pixx + j] = tile->indexes[index];
             }
         }
     }
@@ -1250,7 +1256,7 @@ int len, col, row, colour;
  */
 static boolean
 vesa_SetPalette(palette)
-const char *palette;
+const struct Pixel *palette;
 {
     if (vesa_pixel_size == 8) {
         vesa_SetHardPalette(palette);
@@ -1261,9 +1267,9 @@ const char *palette;
 
 static boolean
 vesa_SetHardPalette(palette)
-const char *palette;
+const struct Pixel *palette;
 {
-    const char *p = palette;
+    const struct Pixel *p = palette;
     int palette_sel = -1; /* custodial */
     int palette_seg;
     unsigned long palette_ptr;
@@ -1293,28 +1299,30 @@ const char *palette;
     palette_ptr = palette_seg * 16L;
 #ifdef USE_TILES
     for (i = 0; i < FIRST_TEXT_COLOR; ++i) {
-        r = (unsigned char) (*p++) >> shift;
-        g = (unsigned char) (*p++) >> shift;
-        b = (unsigned char) (*p++) >> shift;
+        r = p->r >> shift;
+        g = p->g >> shift;
+        b = p->b >> shift;
         color =   ((unsigned long) r << 16)
                 | ((unsigned long) g <<  8)
                 | ((unsigned long) b <<  0);
         _farpokel(_dos_ds, palette_ptr, color);
         palette_ptr += 4;
+        ++p;
     }
 #else
     palette_ptr += FIRST_TEXT_COLOR * 4;
 #endif
     p = defpalette;
     for (i = FIRST_TEXT_COLOR; i < 256; ++i) {
-        r = (unsigned char) (*p++) >> shift;
-        g = (unsigned char) (*p++) >> shift;
-        b = (unsigned char) (*p++) >> shift;
+        r = p->r >> shift;
+        g = p->g >> shift;
+        b = p->b >> shift;
         color =   ((unsigned long) r << 16)
                 | ((unsigned long) g <<  8)
                 | ((unsigned long) b <<  0);
         _farpokel(_dos_ds, palette_ptr, color);
         palette_ptr += 4;
+        ++p;
     }
 
     memset(&regs, 0, sizeof(regs));
@@ -1336,9 +1344,9 @@ error:
 
 static boolean
 vesa_SetSoftPalette(palette)
-const char *palette;
+const struct Pixel *palette;
 {
-    const char *p;
+    const struct Pixel *p;
     unsigned i;
     unsigned char r, g, b;
 
@@ -1346,18 +1354,20 @@ const char *palette;
 #ifdef USE_TILES
     p = palette;
     for (i = 0; i < FIRST_TEXT_COLOR; ++i) {
-        r = (unsigned char) (*p++);
-        g = (unsigned char) (*p++);
-        b = (unsigned char) (*p++);
+        r = p->r;
+        g = p->g;
+        b = p->b;
         vesa_palette[i] = vesa_MakeColor(r, g, b);
+        ++p;
     }
 #endif
     p = defpalette;
     for (i = FIRST_TEXT_COLOR; i < 256; ++i) {
-        r = (unsigned char) (*p++);
-        g = (unsigned char) (*p++);
-        b = (unsigned char) (*p++);
+        r = p->r;
+        g = p->g;
+        b = p->b;
         vesa_palette[i] = vesa_MakeColor(r, g, b);
+        ++p;
     }
 }
 
