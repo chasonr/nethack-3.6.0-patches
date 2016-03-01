@@ -1374,7 +1374,7 @@ const struct Pixel *palette;
 #ifdef POSITIONBAR
 
 #define PBAR_ROW (LI - 4)
-#define PBAR_COLOR_ON 13    /* slate grey background colour of tiles */
+#define PBAR_COLOR_ON 16    /* slate grey background colour of tiles */
 #define PBAR_COLOR_OFF 0    /* bluish grey, used in old style only */
 #define PBAR_COLOR_STAIRS CLR_BROWN /* brown */
 #define PBAR_COLOR_HERO CLR_WHITE  /* creamy white */
