@@ -436,15 +436,17 @@ void
 vesa_cl_eos(cy)
 int cy;
 {
-    unsigned left = vesa_x_center;
-    unsigned top  = vesa_y_center + cy * 16;
-    unsigned width = 640;
-    unsigned height = (LI - 2 - cy) * 16;
-
     int count;
 
     cl_end();
-    vesa_FillRect(left, top, width, height, BACKGROUND_VESA_COLOR);
+    if (cy < LI - 1) {
+        unsigned left = vesa_x_center;
+        unsigned top  = vesa_y_center + cy * 16;
+        unsigned width = 640;
+        unsigned height = (LI - 1 - cy) * 16;
+
+        vesa_FillRect(left, top, width, height, BACKGROUND_VESA_COLOR);
+    }
 }
 
 void
