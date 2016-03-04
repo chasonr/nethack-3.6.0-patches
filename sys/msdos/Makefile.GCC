@@ -161,8 +161,8 @@ LFLAGS =
 else
 
 # Debugging
-#cflags = -pg -c -I../include $(DLBFLG) -DUSE_TILES
-#LFLAGS = -pg
+#cflags = -g -c -I../include $(DLBFLG) -DUSE_TILES
+#LFLAGS = -g
 
 #    Normal
 cflags = -c -O -I../include $(DLBFLG) -DUSE_TILES
@@ -173,7 +173,7 @@ endif
 #================ RULES ==================
 #==========================================
 
-.SUFFIXES: .exe .o .tib .til .uu .c .y .l
+.SUFFIXES: .exe .o .til .uu .c .y .l
 
 #==========================================
 # Rules for files in src
@@ -241,7 +241,7 @@ U  = $(UTIL)/
 #  Utility Objects.
 #==========================================
 
-VGAOBJ      = $(O)vidvga.o
+VGAOBJ      = $(O)vidvga.o $(O)vidvesa.o
 
 MAKESRC	    = makedefs.c
 
@@ -267,10 +267,10 @@ RECOVOBJS   = $(O)recover.o
 
 ifeq ($(SUPPRESS_GRAPHICS),Y)
 TILOBJ       =
+TILOBJ2      =
 TEXTIO       =
 TEXTIO2      =
-PLANAR_TIB   =
-OVERVIEW_TIB =
+TILE_BMP     =
 TILEUTIL     = 
 TILEFILES    = 
 TILEFILES2   = 
@@ -281,7 +281,9 @@ PPMWRIT2     =
 
 else
 
-TILOBJ      = $(O)tile.o $(O)pctiles.o $(VGAOBJ)
+TILOBJ      = $(O)tile.o $(VGAOBJ)
+
+TILOBJ2     = $(O)tileset.o $(O)bmptiles.o
 
 TEXTIO      = $(O)tiletext.o $(O)tiletxt.o $(O)drawing.o $(O)decl.o $(O)monst.o \
 		$(O)objects.o $(O)stubvid.o
@@ -289,11 +291,9 @@ TEXTIO      = $(O)tiletext.o $(O)tiletxt.o $(O)drawing.o $(O)decl.o $(O)monst.o 
 TEXTIO2     = $(O)tiletex2.o $(O)tiletxt2.o $(O)drawing.o $(O)decl.o $(O)monst.o \
 		$(O)objects.o $(O)stubvid.o
 
-PLANAR_TIB  = $(DAT)/NetHack1.tib
+TILE_BMP    = $(DAT)/nhtiles.bmp
 
-OVERVIEW_TIB = $(DAT)/NetHacko.tib
-
-TILEUTIL    = $(TILOBJ) $(U)tile2bin.exe $(U)til2bin2.exe $(PLANAR_TIB) $(OVERVIEW_TIB)
+TILEUTIL    = $(TILOBJ) $(U)tile2bin.exe $(U)til2bin2.exe $(TILE_BMP)
 
 TILEFILES   = $(WSHR)/monsters.txt $(WSHR)/objects.txt $(WSHR)/other.txt
 
@@ -336,7 +336,7 @@ VOBJ19 = $(O)trap.o     $(O)u_init.o  $(O)uhitm.o    $(O)vault.o    $(O)vision.o
 VOBJ20 = $(O)vis_tab.o  $(O)weapon.o  $(O)were.o     $(O)wield.o    $(O)windows.o
 VOBJ21 = $(O)wintty.o   $(O)wizard.o  $(O)worm.o     $(O)worn.o     $(O)write.o
 VOBJ22 = $(O)zap.o      $(O)light.o   $(O)dlb.o      $(O)dig.o      $(O)teleport.o
-VOBJ23 = $(O)region.o $(O)sys.o $(O)pmatchre.o
+VOBJ23 = $(O)region.o $(O)sys.o $(O)pmatchre.o $(O)string.o $(O)unicode.o
 
 SOBJ   = $(O)msdos.o    $(O)sound.o   $(O)pcsys.o    $(O)tty.o	    $(O)unix.o \
 	 $(O)video.o    $(O)vidtxt.o  $(O)pckeys.o
@@ -349,7 +349,7 @@ VOBJ  = $(VOBJ01) $(VOBJ02) $(VOBJ03) $(VOBJ04) $(VOBJ05) \
 	$(VOBJ16) $(VOBJ17) $(VOBJ18) $(VOBJ19) $(VOBJ20) \
 	$(VOBJ21) $(VOBJ22) $(VOBJ23)
 
-ALLOBJ = $(VOBJ) $(SOBJ) $(TILOBJ) $(VVOBJ)
+ALLOBJ = $(VOBJ) $(SOBJ) $(TILOBJ) $(TILOBJ2) $(VVOBJ)
 
 #==========================================
 # Header file macros
@@ -391,7 +391,7 @@ DLB_H      = $(INCL)/dlb.h
 ifeq ($(SUPPRESS_GRAPHICS),Y)
 TILE_H     =
 else
-TILE_H	   = $(WSHR)/tile.h $(MSYS)/pctiles.h
+TILE_H	   = $(WSHR)/tile.h $(INCL)/tileset.h
 endif
 
 ifeq ($(USE_DLB),Y)
@@ -448,7 +448,7 @@ endif
 ifdef TERMLIB
 	@$(subst /,\,copy $(SSHR)/termcap $(GAMEDIR))
 endif
-	@$(subst /,\,if exist $(DAT)/*.tib copy $(DAT)/*.tib $(GAMEDIR))
+	@$(subst /,\,if exist $(TILE_BMP) copy $(TILE_BMP) $(GAMEDIR))
 	@$(subst /,\,if exist $(DAT)/symbols copy $(DAT)/symbols $(GAMEDIR))
 	@$(subst /,\,copy $(SSHR)/NetHack.cnf  $(GAMEDIR)/defaults.nh)
 	-@$(subst /,\,touch $(GAMEDIR)/record)
@@ -493,6 +493,7 @@ $(GAMEFILE): $(O)obj.tag $(PATCHLEV_H) $(O)utility.tag $(ALLOBJ) $(O)$(GAME).lnk
 	 @ar ru temp.a $(VOBJ23)
 	 @ar ru temp.a $(SOBJ)
 	 @ar ru temp.a $(TILOBJ)
+	 @ar ru temp.a $(TILOBJ2)
 	 @ar ru temp.a $(VVOBJ)
 	$(LINK) $(LFLAGS) -o$(GAME).exe temp.a $(LIBRARIES) $(ZLIB)
 	@$(subst /,\,stubedit $(GAME).exe minstack=2048K)
@@ -525,6 +526,7 @@ $(O)$(GAME).lnk: $(ALLOBJ)
 	 echo $(VOBJ23) >> $(subst /,\,$@)
 	 echo $(SOBJ)   >> $(subst /,\,$@)
 	 echo $(TILOBJ) >> $(subst /,\,$@)
+	 echo $(TILOBJ2) >> $(subst /,\,$@)
 	 echo $(VVOBJ)  >> $(subst /,\,$@)
 
 
@@ -556,6 +558,7 @@ spotless: clean
 	$(subst /,\,if exist $(U)dgn_comp.exe del $(U)dgn_comp.exe)
 	$(subst /,\,if exist $(U)recover.exe del $(U)recover.exe)
 	$(subst /,\,if exist $(U)tilemap.exe del $(U)tilemap.exe)
+	$(subst /,\,if exist $(U)tile2bmp.exe del $(U)tile2bmp.exe)
 	$(subst /,\,if exist $(U)tile2bin.exe del $(U)tile2bin.exe)
 	$(subst /,\,if exist $(U)til2bin2.exe del $(U)til2bin2.exe)
 	$(subst /,\,if exist $(U)thintile.exe del $(U)thintile.exe)
@@ -582,8 +585,7 @@ spotless: clean
 	$(subst /,\,if exist $(DAT)/dlb.lst del $(DAT)/dlb.lst)
 	$(subst /,\,if exist $(DAT)/nhdat del $(DAT)/nhdat)
 	$(subst /,\,if exist $(DAT)/*.lev del $(DAT)/*.lev)
-	$(subst /,\,if exist $(PLANAR_TIB) del $(PLANAR_TIB))
-	$(subst /,\,if exist $(OVERVIEW_TIB) del $(OVERVIEW_TIB))
+	$(subst /,\,if exist $(TILE_BMP) del $(TILE_BMP))
 	$(subst /,\,if exist $(WSHR)/monthin.txt del $(WSHR)/monthin.txt)
 	$(subst /,\,if exist $(WSHR)/objthin.txt del $(WSHR)/objthin.txt)
 	$(subst /,\,if exist $(WSHR)/oththin.txt del $(WSHR)/oththin.txt)
@@ -804,17 +806,16 @@ $(O)tilemap.o: $(WSHR)/tilemap.c $(HACK_H) $(TILE_H)
 #  Required for tile support
 #==========================================
 
-$(DAT)/NetHack1.tib: $(TILEFILES) $(U)tile2bin.exe
+$(DAT)/nhtiles.bmp: $(TILEFILES) $(U)tile2bmp.exe
 	@echo Creating binary tile files (this may take some time)
 	@$(subst /,\,chdir $(DAT))
-	@$(subst /,\,$(U)tile2bin.exe)
+	@$(subst /,\,$(U)tile2bmp.exe $@)
 	@$(subst /,\,chdir $(SRC))
 
-$(DAT)/NetHacko.tib: $(O)thintile.tag $(TILEFILES2) $(U)til2bin2.exe
-	@echo Creating overview binary tile files (this may take some time)
-	@$(subst /,\,chdir $(DAT))
-	@$(subst /,\,$(U)til2bin2.exe)
-	@$(subst /,\,chdir $(SRC))
+$(U)tile2bmp.exe: $(O)tile2bmp.o $(TEXTIO)
+	@rm -f temp.a
+	@ar ru temp.a $(TEXTIO)
+	$(LINK) $(LFLAGS) -o$@ $(O)tile2bmp.o temp.a
 
 $(U)tile2bin.exe: $(O)tile2bin.o $(TEXTIO)
 	@rm -f temp.a
@@ -835,6 +836,9 @@ $(O)thintile.o:  $(HACK_H) $(WSHR)/tile.h $(WSHR)/thintile.c
 $(O)thintile.tag: $(U)thintile.exe $(TILEFILES)
 	@$(subst /,\,$(U)thintile.exe)
 	@$(subst /,\,echo thintiles created >$@)
+
+$(O)tile2bmp.o:  $(HACK_H) $(TILE_H) $(WSHR)/tile2bmp.c
+	$(CC) $(cflags) -I$(MSYS) -I$(WSHR) -o$@ $(WSHR)/tile2bmp.c
 
 $(O)tile2bin.o:  $(HACK_H) $(TILE_H) $(MSYS)/pctiles.h $(MSYS)/pcvideo.h $(MSYS)/tile2bin.c
 	$(CC) $(cflags) -I$(MSYS) -I$(WSHR) -o$@ $(MSYS)/tile2bin.c
@@ -1049,6 +1053,9 @@ $(O)video.o : $(HACK_H)  $(MSYS)/pcvideo.h $(MSYS)/portio.h $(MSYS)/video.c
 
 $(O)vidvga.o : $(HACK_H)  $(MSYS)/pcvideo.h $(MSYS)/portio.h $(TILE_H) $(MSYS)/vidvga.c
 	$(CC) $(cflags) -I$(MSYS) -I$(WSHR) -o$@ $(MSYS)/vidvga.c
+
+$(O)vidvesa.o : $(HACK_H)  $(MSYS)/pcvideo.h $(MSYS)/portio.h $(TILE_H) $(MSYS)/vidvesa.c
+	$(CC) $(cflags) -I$(MSYS) -I$(WSHR) -o$@ $(MSYS)/vidvesa.c
 
 $(O)vidtxt.o : $(HACK_H)  $(MSYS)/pcvideo.h $(MSYS)/portio.h $(TILE_H) $(MSYS)/vidtxt.c
 #	$(CC) $(cflags) -o$@ -I$(MSYS) $(MSYS)/vidtxt.c
@@ -1287,6 +1294,7 @@ $(O)sp_lev.o: sp_lev.c $(HACK_H) $(INCL)/dlb.h $(INCL)/sp_lev.h
 $(O)spell.o: spell.c $(HACK_H)
 $(O)steal.o: steal.c $(HACK_H)
 $(O)steed.o: steed.c $(HACK_H)
+$(O)string.o: string.c $(HACK_H)
 $(O)sys.o: sys.c $(HACK_H)
 $(O)teleport.o: teleport.c $(HACK_H)
 $(O)timeout.o: timeout.c $(HACK_H) $(INCL)/lev.h
@@ -1295,6 +1303,7 @@ $(O)track.o: track.c $(HACK_H)
 $(O)trap.o: trap.c $(HACK_H)
 $(O)u_init.o: u_init.c $(HACK_H)
 $(O)uhitm.o: uhitm.c $(HACK_H)
+$(O)unicode.o: unicode.c $(HACK_H)
 $(O)vault.o: vault.c $(HACK_H)
 $(O)version.o: version.c $(HACK_H) $(INCL)/date.h $(PATCHLEV_H)
 $(O)vision.o: vision.c $(HACK_H) $(INCL)/vis_tab.h
@@ -1308,6 +1317,8 @@ $(O)worn.o: worn.c $(HACK_H)
 $(O)write.o: write.c $(HACK_H)
 $(O)zap.o: zap.c $(HACK_H)
 $(O)pmatchre.o: $(SSHR)/pmatchre.c $(HACK_H)
+$(O)tileset.o: $(WSHR)/tileset.c $(HACK_H)
+$(O)bmptiles.o: $(WSHR)/bmptiles.c $(INCL)/config.h $(INCL)/tileset.h $(INCL)/integer.h
 
 # end of file
 

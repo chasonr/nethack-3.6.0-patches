@@ -220,8 +220,8 @@ struct instance_flags {
 				   as defined in the special font HackFont */
 #endif
 #endif
-    uchar bouldersym; /* symbol for boulder display */
-#ifdef TTY_GRAPHICS
+    nhsym bouldersym; /* symbol for boulder display */
+#if defined(TTY_GRAPHICS) || defined(CURSES_GRAPHICS)
     char prevmsg_window; /* type of old message window to use */
     boolean extmenu;     /* extended commands use menu interface */
 #endif
@@ -252,6 +252,8 @@ struct instance_flags {
 #ifdef MSDOS
     boolean hasvga; /* has a vga adapter */
     boolean usevga; /* use the vga adapter */
+    boolean hasvesa; /* has a VESA-capable VGA adapter */
+    boolean usevesa; /* use the VESA-capable VGA adapter */
     boolean grmode; /* currently in graphics mode */
 #endif
 #ifdef LAN_FEATURES

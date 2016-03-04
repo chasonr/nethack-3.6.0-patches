@@ -8,6 +8,33 @@
 # This hints file provides a single-user tty build for Linux, specifically
 # for Ubuntu dapper.
 
+# 1. Which window system(s) should be included in this binary?
+#WANT_WIN_TTY=1
+#WANT_WIN_X11=1
+#WANT_WIN_QT3=1  # Qt 3
+WANT_WIN_QT4=1  # Qt 4 or 5
+WANT_WIN_SDL2=1
+WANT_WIN_CURSES=1
+
+# 1a. What is the default window system?
+#WANT_DEFAULT=tty
+#WANT_DEFAULT=x11
+#WANT_DEFAULT=Qt    # 3, 4 or 5
+#WANT_DEFAULT=sdl2
+WANT_DEFAULT=curses
+#WANT_DEFAULT=curses
+
+# For Qt, define this if linking to Qt 5
+#HAVE_QT5=1
+
+# For Qt 3, 4 or 5:
+# If pkg-config correctly locates the Qt installation, and the correct moc
+# is in /usr/bin, this can probably be left as is; otherwise this should point
+# to the root of the Qt installation
+QTDIR = /usr
+
+# For curses, define this if a wide ncurses is not installed
+#NO_WIDE_CURSES=1
 
 #PREFIX=/usr
 PREFIX=$(wildcard ~)/nh/install
@@ -20,7 +47,7 @@ VARDIR = $(HACKDIR)
 
 POSTINSTALL=cp -n sys/unix/sysconf $(INSTDIR)/sysconf; $(CHOWN) $(GAMEUID) $(INSTDIR)/sysconf; $(CHGRP) $(GAMEGRP) $(INSTDIR)/sysconf; chmod $(VARFILEPERM) $(INSTDIR)/sysconf;
 
-CFLAGS=-g -O -I../include -DNOTPARMDECL $(CFLAGS1) -DDLB
+CFLAGS=-g -O -I../include -DNOTPARMDECL $(CFLAGS1) -DDEFAULT_WINDOW_SYS=\"$(WANT_DEFAULT)\" -DDLB -DNOUSER_SOUNDS -DSTATUES_LOOK_LIKE_MONSTERS
 CFLAGS1=-DCOMPRESS=\"/bin/gzip\" -DCOMPRESS_EXTENSION=\".gz\"
 CFLAGS+=-DSYSCF -DSYSCF_FILE=\"$(HACKDIR)/sysconf\" -DSECURE
 CFLAGS+=-DHACKDIR=\"$(HACKDIR)\"
@@ -29,11 +56,72 @@ LINK=$(CC)
 # Only needed for GLIBC stack trace:
 LFLAGS=-rdynamic
 
-WINSRC = $(WINTTYSRC)
-WINOBJ = $(WINTTYOBJ)
-WINLIB = $(WINTTYLIB)
+ifdef WANT_WIN_TTY
+WINSRC += $(WINTTYSRC)
+WINOBJ0 += $(WINTTYOBJ)
+WINLIB += $(WINTTYLIB)
 
 WINTTYLIB=-lcurses
+else	# !WANT_WIN_TTY
+CFLAGS += -DNOTTYGRAPHICS
+endif	# !WANT_WIN_TTY
+
+ifdef WANT_WIN_CURSES
+WINSRC = $(WINCURSESSRC)
+WINOBJ0 = $(WINCURSESOBJ)
+WINLIB = $(WINCURSESLIB)
+ifdef NO_WIDE_CURSES
+    WINTTYLIB=-lncurses
+    CFLAGS += -DCURSES_GRAPHICS -DNO_WIDE_CURSES
+else
+    WINTTYLIB=-lncursesw
+    CFLAGS += -DCURSES_GRAPHICS
+endif
+endif	# !WANT_WIN_CURSES
+
+ifdef WANT_WIN_X11
+    POSTINSTALL+= bdftopcf win/X11/nh10.bdf > $(INSTDIR)/nh10.pcf; (cd $(INSTDIR); mkfontdir);
+    CFLAGS += -DX11_GRAPHICS
+    WINSRC += $(WINX11SRC)
+    WINOBJ0 += $(WINX11OBJ)
+    WINLIB += $(WINX11LIB)
+    VARDATND = x11tiles NetHack.ad pet_mark.xbm pilemark.xbm
+endif
+
+ifdef WANT_WIN_QT3
+    CFLAGS += -DQT_GRAPHICS -DQT_NO_SOUND -fPIC `pkg-config --cflags qt`
+    WINSRC += $(WINQTSRC)
+    WINOBJ0 += $(WINQTOBJ)
+    WINLIB += `pkg-config --libs qt` -fPIC
+    LINK=$(CXX)
+    VARDATND += nhtiles.bmp rip.xpm
+endif
+
+ifdef WANT_WIN_QT4
+    ifdef HAVE_QT5
+        QT_PACKAGES = Qt5Gui Qt5Widgets
+    else
+        QT_PACKAGES = QtGui
+    endif
+    CFLAGS += -DQT_GRAPHICS -DQT_NO_SOUND -fPIC `pkg-config --cflags $(QT_PACKAGES)`
+    WINSRC += $(WINQT4SRC)
+    WINOBJ0 += $(WINQT4OBJ)
+    WINLIB += `pkg-config --libs $(QT_PACKAGES)` -fPIC
+    LINK=$(CXX)
+    VARDATND += nhtiles.bmp rip.xpm
+endif # WANT_WIN_QT4
+
+ifdef WANT_WIN_SDL2
+CFLAGS += -DSDL2_GRAPHICS -DPOSITIONBAR `pkg-config --cflags pangoft2 SDL2_image` `sdl2-config --cflags`
+WINSRC += $(WINSDL2SRC)
+WINOBJ0 += $(WINSDL2OBJ)
+WINLIB += $(WINSDL2LIB) `pkg-config --libs pangoft2 SDL2_image` `sdl2-config --libs`
+LINK=$(CXX)
+VARDATND += nhtiles.bmp
+endif # WANT_WIN_SDL2
+
+# prevent duplicate tile.o in WINOBJ
+WINOBJ = $(sort $(WINOBJ0))
 
 CHOWN=true
 CHGRP=true

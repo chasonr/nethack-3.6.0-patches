@@ -353,6 +353,7 @@ VOBJ24 = $(O)track.o    $(O)trap.o     $(O)u_init.o   $(O)uhitm.o
 VOBJ25 = $(O)vault.o    $(O)vis_tab.o  $(O)vision.o   $(O)weapon.o
 VOBJ26 = $(O)were.o     $(O)wield.o    $(O)windows.o  $(O)wizard.o
 VOBJ27 = $(O)worm.o     $(O)worn.o     $(O)write.o    $(O)zap.o     
+VOBJ28 = $(O)string.o   $(O)unicode.o
 
 DLBOBJ = $(O)dlb.o
 
@@ -1567,6 +1568,8 @@ $(O)worm.o: worm.c $(HACK_H) $(INCL)\lev.h
 $(O)worn.o: worn.c $(HACK_H)
 $(O)write.o: write.c $(HACK_H)
 $(O)zap.o: zap.c $(HACK_H)
+$(O)string.o: string.c $(HACK_H)
+$(O)unicode.o: unicode.c $(HACK_H)
 
 # end of file
 

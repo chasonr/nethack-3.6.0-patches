@@ -83,6 +83,8 @@ boolean resuming;
 
     program_state.in_moveloop = 1;
     for (;;) {
+        str_clear();
+
 #ifdef SAFERHANGUP
         if (program_state.done_hup)
             end_of_input();
