@@ -242,7 +242,6 @@ void txt_cl_eos() /* clear to end of screen */
         regs.h.cl = 0;               /* X  of upper left */
                                      /* Y (row)  of upper left */
         regs.h.ch = (char) (row < (LI - 1) ? row + 1 : (LI - 1));
-        regs.x.cx = 0;
         regs.x.ax = 0;
         regs.x.bx = 0;
         regs.h.bh = (char) attrib_text_normal;
