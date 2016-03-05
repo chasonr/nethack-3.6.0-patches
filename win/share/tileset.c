@@ -2,7 +2,7 @@
 #include "tileset.h"
 
 static void FDECL(get_tile_map, (const char *));
-static char **FDECL(split_tiles, (const struct TileSetImage *));
+static void FDECL(split_tiles, (const struct TileSetImage *));
 static void FDECL(free_image, (struct TileSetImage *));
 
 static struct TileImage *tiles;
@@ -150,7 +150,7 @@ unsigned tile_index;
     }
 }
 
-static char **
+static void
 split_tiles(image)
 const struct TileSetImage *image;
 {
@@ -209,15 +209,6 @@ const struct TileSetImage *image;
         blank_tile.indexes = (unsigned char *) alloc(tile_size);
         memset(blank_tile.indexes, 0, tile_size);
     }
-}
-
-boolean
-read_gif_tiles(filename, image)
-const char *filename;
-struct TileSetImage *image;
-{
-    /* stub */
-    return FALSE;
 }
 
 boolean
