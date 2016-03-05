@@ -204,6 +204,10 @@ struct TileSetImage *image;
                                 ++x;
                             }
                         }
+                        if (b2 & 1) {
+                            b1 = fgetc(fp);
+                            if (b1 == EOF) break;
+                        }
                     }
                 }
             } else {
