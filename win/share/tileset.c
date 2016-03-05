@@ -62,6 +62,9 @@ boolean true_color;
     have_palette = image.indexes != NULL;
     memcpy(palette, image.palette, sizeof(palette));
 
+    /* Parse the tile map */
+    get_tile_map(image.image_desc);
+
     /* Set defaults for tile metadata */
     if (image.tile_width == 0) {
         image.tile_width = image.width / 40;
@@ -76,9 +79,6 @@ boolean true_color;
     if (iflags.wc_tile_height == 0) {
         iflags.wc_tile_height = image.tile_height;
     }
-
-    /* Parse the tile map */
-    get_tile_map(image.image_desc);
 
     /* Split the image into tiles */
     split_tiles(&image);
@@ -209,13 +209,4 @@ const struct TileSetImage *image;
         blank_tile.indexes = (unsigned char *) alloc(tile_size);
         memset(blank_tile.indexes, 0, tile_size);
     }
-}
-
-boolean
-read_png_tiles(filename, image)
-const char *filename;
-struct TileSetImage *image;
-{
-    /* stub */
-    return FALSE;
 }

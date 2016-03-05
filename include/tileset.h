@@ -35,5 +35,6 @@ struct TileSetImage {
 boolean FDECL(read_bmp_tiles, (const char *filename, struct TileSetImage *image));
 boolean FDECL(read_gif_tiles, (const char *filename, struct TileSetImage *image));
 boolean FDECL(read_png_tiles, (const char *filename, struct TileSetImage *image));
+boolean FDECL(do_read_png_tiles, (FILE *fp, struct TileSetImage *image));
 
 #endif
