@@ -19,7 +19,6 @@ struct Bitstream {
     unsigned char num_bits;
     unsigned char bit_width;
     unsigned char initial_bit_width;
-    unsigned char block_size;
 
     /* The dictionary */
     struct {
@@ -316,7 +315,6 @@ unsigned bit_width;
     gif->bits = 0;
     gif->num_bits = 0;
     gif->initial_bit_width = bit_width;
-    gif->block_size = 0;
 
     clear = 1 << bit_width;
     gif->dict_size = clear + 2;
