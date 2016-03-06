@@ -165,7 +165,7 @@ clear_screen()
 #endif
 #ifdef SCREEN_VESA
     } else if (iflags.usevesa) {
-        vesa_clear_screen(BACKGROUND_VGA_COLOR);
+        vesa_clear_screen(BACKGROUND_VESA_COLOR);
 #endif
     }
 }
