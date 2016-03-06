@@ -181,6 +181,10 @@ struct overview_planar_cell_struct {
 #define ATTRIB_VGA_INTENSE 14      /* Intense White 94/06/07 palette chg*/
 #endif                             /*SCREEN_VGA || SCREEN_8514*/
 
+#if defined(SCREEN_VESA)
+#define BACKGROUND_VESA_COLOR 240
+#endif                             /*SCREEN_VESA*/
+
 #if defined(PC9800)
 static unsigned char attr98[CLR_MAX] = {
     0xe1, /*  0 white            */

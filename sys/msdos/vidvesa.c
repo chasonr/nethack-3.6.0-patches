@@ -17,7 +17,6 @@
 #include "wintty.h"
 #include "tileset.h"
 
-#define BACKGROUND_VESA_COLOR 1
 #define FIRST_TEXT_COLOR 240
 
 static unsigned long FDECL(vesa_SetWindow, (int window, unsigned long offset));
@@ -1439,7 +1438,7 @@ positionbar()
         for (x = 0; x < 640; ++x) {
             k = x / 8;
             if ((k < startk) || (k > stopk))
-                colour = BACKGROUND_VGA_COLOR;
+                colour = BACKGROUND_VESA_COLOR;
             else
                 colour = PBAR_COLOR_ON;
             vesa_WritePixel(x + vesa_x_center, y + vesa_y_center, colour);
