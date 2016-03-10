@@ -40,6 +40,9 @@ endif	# WANT_WIN_QT
 # 1d. Was QT installed via Homebrew?
 #WANT_QT_FROM_HOMEBREW=1
 
+# For all tiled window systems: define this to support PNG
+WANT_PNG=1
+
 # 2. Is this a build for a binary that will be shared among different users
 #    or will it be private to you?
 #    If it is shared:
@@ -84,6 +87,9 @@ CFLAGS+= -DNOMAIL -DNOTPARMDECL -DHACKDIR=\"$(HACKDIR)\"
 CFLAGS+= -DDEFAULT_WINDOW_SYS=\"$(WANT_DEFAULT)\" -DDLB
 
 CFLAGS+= -DGREPPATH=\"/usr/bin/grep\"
+ifdef WANT_PNG
+    CFLAGS += -DHAVE_PNG
+endif
 
 ifdef WANT_WIN_CHAIN
 CFLAGS+= -DWINCHAIN

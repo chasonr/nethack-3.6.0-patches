@@ -34,6 +34,9 @@ ifdef WANT_WIN_QT
 QTDIR=/usr
 endif	# WANT_WIN_QT
 
+# For all tiled window systems: define this to support PNG
+WANT_PNG=1
+
 # 2. Is this a build for a binary that will be shared among different users
 #    or will it be private to you?
 #    If it is shared:
@@ -76,6 +79,9 @@ CFLAGS+=-g -I../include
 #CFLAGS+=-DNOCLIPPING
 CFLAGS+= -DNOMAIL -DNOTPARMDECL -DHACKDIR=\"$(HACKDIR)\"
 CFLAGS+= -DDEFAULT_WINDOW_SYS=\"$(WANT_DEFAULT)\" -DDLB
+ifdef WANT_PNG
+    CFLAGS += -DHAVE_PNG
+endif
 
 CFLAGS+= -DGREPPATH=\"/usr/bin/grep\"
 

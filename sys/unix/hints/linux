@@ -36,6 +36,9 @@ QTDIR = /usr
 # For curses, define this if a wide ncurses is not installed
 #NO_WIDE_CURSES=1
 
+# For all tiled window systems: define this to support PNG
+WANT_PNG=1
+
 #PREFIX=/usr
 PREFIX=$(wildcard ~)/nh/install
 HACKDIR=$(PREFIX)/games/lib/$(GAME)dir
@@ -51,6 +54,9 @@ CFLAGS=-g -O -I../include -DNOTPARMDECL $(CFLAGS1) -DDEFAULT_WINDOW_SYS=\"$(WANT
 CFLAGS1=-DCOMPRESS=\"/bin/gzip\" -DCOMPRESS_EXTENSION=\".gz\"
 CFLAGS+=-DSYSCF -DSYSCF_FILE=\"$(HACKDIR)/sysconf\" -DSECURE
 CFLAGS+=-DHACKDIR=\"$(HACKDIR)\"
+ifdef WANT_PNG
+    CFLAGS += -DHAVE_PNG `pkg-config --cflags libpng`
+endif
 
 LINK=$(CC)
 # Only needed for GLIBC stack trace:
@@ -119,6 +125,10 @@ WINLIB += $(WINSDL2LIB) `pkg-config --libs pangoft2 SDL2_image` `sdl2-config --l
 LINK=$(CXX)
 VARDATND += nhtiles.bmp
 endif # WANT_WIN_SDL2
+
+ifdef WANT_PNG
+WINLIB += `pkg-config --libs libpng`
+endif
 
 # prevent duplicate tile.o in WINOBJ
 WINOBJ = $(sort $(WINOBJ0))
