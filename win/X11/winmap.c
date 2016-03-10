@@ -279,10 +279,18 @@ struct xwindow *wp;
     boolean result = TRUE;
     XGCValues values;
     XtGCMask mask;
+    const char *tile_file;
 
     /* already have tile information */
     if (tile_pixmap != None)
         goto tiledone;
+
+    /* honor the user's tile file setting */
+    if (iflags.wc_tile_file != NULL && iflags.wc_tile_file[0] != '\0') {
+        tile_file = iflags.wc_tile_file;
+    } else {
+        tile_file = appResources.tile_file;
+    }
 
     map_info = wp->map_information;
     tile_info = &map_info->tile_map;
@@ -290,7 +298,7 @@ struct xwindow *wp;
                   sizeof(struct tile_map_info_t));
 
     /* no tile file name, no tile information */
-    if (!appResources.tile_file[0]) {
+    if (!tile_file[0]) {
         result = FALSE;
         goto tiledone;
     }
@@ -299,27 +307,26 @@ struct xwindow *wp;
     attributes.valuemask = XpmCloseness;
     attributes.closeness = 25000;
 
-    errorcode = XpmReadFileToImage(dpy, appResources.tile_file, &tile_image,
+    errorcode = XpmReadFileToImage(dpy, tile_file, &tile_image,
                                    0, &attributes);
 
     if (errorcode == XpmColorFailed) {
-        Sprintf(buf, "Insufficient colors available to load %s.",
-                appResources.tile_file);
+        Sprintf(buf, "Insufficient colors available to load %s.", tile_file);
         X11_raw_print(buf);
         X11_raw_print("Try closing other colorful applications and restart.");
         X11_raw_print("Attempting to load with inferior colors.");
         attributes.closeness = 50000;
-        errorcode = XpmReadFileToImage(dpy, appResources.tile_file,
+        errorcode = XpmReadFileToImage(dpy, tile_file,
                                        &tile_image, 0, &attributes);
     }
 
     if (errorcode != XpmSuccess) {
         if (errorcode == XpmColorFailed) {
             Sprintf(buf, "Insufficient colors available to load %s.",
-                    appResources.tile_file);
+                    tile_file);
             X11_raw_print(buf);
         } else {
-            Sprintf(buf, "Failed to load %s: %s", appResources.tile_file,
+            Sprintf(buf, "Failed to load %s: %s", tile_file,
                     XpmGetErrorString(errorcode));
             X11_raw_print(buf);
         }
@@ -333,7 +340,7 @@ struct xwindow *wp;
         || tile_image->width <= TILES_PER_ROW) {
         Sprintf(buf,
                "%s is not a multiple of %d (number of tiles/row) pixels wide",
-                appResources.tile_file, TILES_PER_ROW);
+                tile_file, TILES_PER_ROW);
         X11_raw_print(buf);
         XDestroyImage(tile_image);
         tile_image = 0;
@@ -360,7 +367,7 @@ struct xwindow *wp;
         goto tiledone;
     }
 
-    fp = fopen_datafile(appResources.tile_file, RDBMODE, FALSE);
+    fp = fopen_datafile(tile_file, RDBMODE, FALSE);
     if (!fp) {
         X11_raw_print("can't open tile file");
         result = FALSE;
