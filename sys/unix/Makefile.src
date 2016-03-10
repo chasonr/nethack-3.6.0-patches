@@ -177,7 +177,12 @@ REGEXOBJ = posixregex.o
 # Set the WINSRC, WINOBJ, and WINLIB lines to correspond to your desired
 # combination of windowing systems.  Also set windowing systems in config.h.
 # Note that if you are including multiple tiled window systems, you don't
-# want two copies of tile.o, so comment out all but the first.
+# want two copies of WINTILEOBJ, so comment out all but the first.
+#
+# files for all tiled interfaces
+# (tile.c is a generated source file)
+WINTILESRC = bmptiles.c giftiles.c pngtiles.c tileset.c tile.c
+WINTILEOBJ = bmptiles.o giftiles.o pngtiles.o tileset.o tile.o
 #
 # files for a straight tty port using no native windowing system
 WINTTYSRC = ../win/tty/getline.c ../win/tty/termcap.c ../win/tty/topl.c \
@@ -185,18 +190,17 @@ WINTTYSRC = ../win/tty/getline.c ../win/tty/termcap.c ../win/tty/topl.c \
 WINTTYOBJ = getline.o termcap.o topl.o wintty.o
 #
 # files for an X11 port
-# (tile.c is a generated source file)
 WINX11SRC = ../win/X11/Window.c ../win/X11/dialogs.c ../win/X11/winX.c \
 	../win/X11/winmap.c  ../win/X11/winmenu.c ../win/X11/winmesg.c \
 	../win/X11/winmisc.c ../win/X11/winstat.c ../win/X11/wintext.c \
-	../win/X11/winval.c tile.c
+	../win/X11/winval.c $(WINTILESRC)
 WINX11OBJ = Window.o dialogs.o winX.o winmap.o winmenu.o winmesg.o \
-	winmisc.o winstat.o wintext.o winval.o tile.o
+	winmisc.o winstat.o wintext.o winval.o $(WINTILEOBJ)
 #
 # Files for a Qt 2 or 3 port
 #
 WINQTSRC = ../win/Qt/qt_win.cpp ../win/Qt/qt_clust.cpp ../win/Qt/qttableview.cpp
-WINQTOBJ = qt_win.o qt_clust.o qttableview.o tile.o
+WINQTOBJ = qt_win.o qt_clust.o qttableview.o $(WINTILEOBJ)
 #
 # Files for a Qt 4 or 5 port
 #
@@ -212,7 +216,7 @@ WINQT4SRC = ../win/Qt4/qt4bind.cpp ../win/Qt4/qt4click.cpp \
 WINQT4OBJ = qt4bind.o qt4click.o qt4clust.o qt4delay.o qt4glyph.o qt4icon.o \
 	qt4inv.o qt4key.o qt4line.o qt4main.o qt4map.o qt4menu.o qt4msg.o \
 	qt4plsel.o qt4rip.o qt4set.o qt4stat.o qt4str.o qt4streq.o qt4svsel.o \
-	qt4win.o qt4xcmd.o qt4yndlg.o tile.o
+	qt4win.o qt4xcmd.o qt4yndlg.o $(WINTILEOBJ)
 #
 # Files for an SDL2 port
 #
@@ -222,10 +226,11 @@ WINSDL2SRC = ../win/sdl2/sdl2bind.cpp ../win/sdl2/sdl2extcmd.cpp \
 	../win/sdl2/sdl2map.cpp ../win/sdl2/sdl2menu.cpp \
 	../win/sdl2/sdl2message.cpp ../win/sdl2/sdl2plsel.cpp \
 	../win/sdl2/sdl2posbar.cpp ../win/sdl2/sdl2status.cpp \
-	../win/sdl2/sdl2text.cpp ../win/sdl2/sdl2window.cpp
+	../win/sdl2/sdl2text.cpp ../win/sdl2/sdl2window.cpp \
+	../win/share/bmptiles.c ../win/share/giftiles.c ../win/share/tileset.c
 WINSDL2OBJ = sdl2bind.o sdl2extcmd.o sdl2font_mac.o sdl2font_pango.o \
 	sdl2getlin.o sdl2interface.o sdl2map.o sdl2menu.o sdl2message.o \
-	sdl2plsel.o sdl2posbar.o sdl2status.o sdl2text.o sdl2window.o tile.o
+	sdl2plsel.o sdl2posbar.o sdl2status.o sdl2text.o sdl2window.o $(WINTILESOBJ)
 #
 # Files for a Curses port
 #
@@ -247,19 +252,19 @@ WINGNOMESRC = ../win/gnome/gnaskstr.c ../win/gnome/gnbind.c \
 	../win/gnome/gnworn.c
 WINGNOMEOBJ = gnaskstr.o gnbind.o gnglyph.o gnmain.o gnmap.o gnmenu.o \
 	gnmesg.o gnopts.o gnplayer.o gnsignal.o gnstatus.o gntext.o \
-	gnyesno.o gnworn.o tile.o
+	gnyesno.o gnworn.o $(WINTILEOBJ)
 #
 # Files for a Gem port
 WINGEMSRC = ../win/gem/wingem.c ../win/gem/wingem1.c ../win/gem/load_img.c \
-	../win/gem/gr_rect.c tile.c
-WINGEMOBJ = wingem.o wingem1.o load_img.o gr_rect.o tile.o
+	../win/gem/gr_rect.c $(WINTILESRC)
+WINGEMOBJ = wingem.o wingem1.o load_img.o gr_rect.o $(WINTILEOBJ)
 #
 # Files for a BeOS InterfaceKit port -- not ready for prime time
 WINBESRC =
 WINBEOBJ =
 #WINBESRC = ../win/BeOS/winbe.cpp ../win/BeOS/NHWindow.cpp \
-#	../win/BeOS/NHMenuWindow.cpp ../win/BeOS/NHMapWindow.cpp tile.c
-#WINBEOBJ = winbe.o NHWindow.o NHMenuWindow.o NHMapWindow.o tile.o
+#	../win/BeOS/NHMenuWindow.cpp ../win/BeOS/NHMapWindow.cpp $(WINTILESRC)
+#WINBEOBJ = winbe.o NHWindow.o NHMenuWindow.o NHMapWindow.o $(WINTILEOBJ)
 
 #
 #
@@ -731,6 +736,12 @@ wintext.o: ../win/X11/wintext.c $(HACK_H) ../include/winX.h ../include/xwindow.h
 	$(CC) $(CFLAGS) -c ../win/X11/wintext.c
 winval.o: ../win/X11/winval.c $(HACK_H) ../include/winX.h
 	$(CC) $(CFLAGS) -c ../win/X11/winval.c
+bmptiles.o: ../win/share/bmptiles.c ../include/config.h ../include/integer.h ../include/tileset.h
+	$(CC) $(CFLAGS) -c ../win/share/bmptiles.c
+giftiles.o: ../win/share/giftiles.c ../include/config.h ../include/integer.h ../include/tileset.h
+	$(CC) $(CFLAGS) -c ../win/share/giftiles.c
+tileset.o: ../win/share/tileset.c $(HACK_H) ../include/tileset.h
+	$(CC) $(CFLAGS) -c ../win/share/tileset.c
 tile.o: tile.c $(HACK_H)
 gnaskstr.o: ../win/gnome/gnaskstr.c ../win/gnome/gnaskstr.h \
 		../win/gnome/gnmain.h
