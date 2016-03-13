@@ -16,13 +16,10 @@ NetHack*map*font:			fixed
 
 ! tile_file names a file containing full-color tiles for the map.
 ! If you use a 100dpi (or greater) monitor you may wish to double the
-! tile size so you can see the figures.  If NetHack was compiled to
-! use XPM (USE_XPM in config.h), the tile_file is a standard XPM file.
-! Otherwise, it is a custom format.  double_tile_size only applies to
-! the custom format - to enlarge an XPM file, use processing tools
-! such as XV or preferably PBMplus.
+! tile size so you can see the figures.  The tile file is a Windows-style
+! BMP file.  Any program that edits BMP files can edit it.
 !
-NetHack.tile_file: x11tiles
+NetHack.tile_file: nhtiles.bmp
 !NetHack.double_tile_size: True
 !
 ! The annotation of pets.
