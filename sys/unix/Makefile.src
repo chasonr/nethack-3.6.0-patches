@@ -181,8 +181,10 @@ REGEXOBJ = posixregex.o
 #
 # files for all tiled interfaces
 # (tile.c is a generated source file)
-WINTILESRC = bmptiles.c giftiles.c pngtiles.c tileset.c tile.c
-WINTILEOBJ = bmptiles.o giftiles.o pngtiles.o tileset.o tile.o
+WINTILESRC = ../win/share/bmptiles.c ../win/share/giftiles.c \
+			 ../win/share/pngtiles.c ../win/share/xpmtiles.c \
+			 ../win/share/tileset.c tile.c
+WINTILEOBJ = bmptiles.o giftiles.o pngtiles.o xpmtiles.o tileset.o tile.o
 #
 # files for a straight tty port using no native windowing system
 WINTTYSRC = ../win/tty/getline.c ../win/tty/termcap.c ../win/tty/topl.c \
@@ -740,6 +742,10 @@ bmptiles.o: ../win/share/bmptiles.c ../include/config.h ../include/integer.h ../
 	$(CC) $(CFLAGS) -c ../win/share/bmptiles.c
 giftiles.o: ../win/share/giftiles.c ../include/config.h ../include/integer.h ../include/tileset.h
 	$(CC) $(CFLAGS) -c ../win/share/giftiles.c
+pngtiles.o: ../win/share/pngtiles.c ../include/config.h ../include/integer.h ../include/tileset.h
+	$(CC) $(CFLAGS) -c ../win/share/pngtiles.c
+xpmtiles.o: ../win/share/xpmtiles.c ../include/config.h ../include/integer.h ../include/tileset.h
+	$(CC) $(CFLAGS) -c ../win/share/xpmtiles.c
 tileset.o: ../win/share/tileset.c $(HACK_H) ../include/tileset.h
 	$(CC) $(CFLAGS) -c ../win/share/tileset.c
 tile.o: tile.c $(HACK_H)

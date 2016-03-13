@@ -18,11 +18,10 @@ WANT_WIN_CURSES=1
 
 # 1a. What is the default window system?
 #WANT_DEFAULT=tty
-#WANT_DEFAULT=x11
+#WANT_DEFAULT=X11
 #WANT_DEFAULT=Qt    # 3, 4 or 5
 #WANT_DEFAULT=sdl2
 WANT_DEFAULT=curses
-#WANT_DEFAULT=curses
 
 # For Qt, define this if linking to Qt 5
 #HAVE_QT5=1
@@ -39,6 +38,9 @@ QTDIR = /usr
 # For all tiled window systems: define this to support PNG
 WANT_PNG=1
 
+# For all tiled window systems: define this to support XPM
+WANT_XPM=1
+
 #PREFIX=/usr
 PREFIX=$(wildcard ~)/nh/install
 HACKDIR=$(PREFIX)/games/lib/$(GAME)dir
@@ -50,12 +52,15 @@ VARDIR = $(HACKDIR)
 
 POSTINSTALL=cp -n sys/unix/sysconf $(INSTDIR)/sysconf; $(CHOWN) $(GAMEUID) $(INSTDIR)/sysconf; $(CHGRP) $(GAMEGRP) $(INSTDIR)/sysconf; chmod $(VARFILEPERM) $(INSTDIR)/sysconf;
 
-CFLAGS=-g -O -I../include -DNOTPARMDECL $(CFLAGS1) -DDEFAULT_WINDOW_SYS=\"$(WANT_DEFAULT)\" -DDLB -DNOUSER_SOUNDS -DSTATUES_LOOK_LIKE_MONSTERS
+CFLAGS=-g -Og -Wall -I../include -DNOTPARMDECL $(CFLAGS1) -DDEFAULT_WINDOW_SYS=\"$(WANT_DEFAULT)\" -DDLB -DNOUSER_SOUNDS -DSTATUES_LOOK_LIKE_MONSTERS
 CFLAGS1=-DCOMPRESS=\"/bin/gzip\" -DCOMPRESS_EXTENSION=\".gz\"
 CFLAGS+=-DSYSCF -DSYSCF_FILE=\"$(HACKDIR)/sysconf\" -DSECURE
 CFLAGS+=-DHACKDIR=\"$(HACKDIR)\"
 ifdef WANT_PNG
     CFLAGS += -DHAVE_PNG `pkg-config --cflags libpng`
+endif
+ifdef WANT_XPM
+    CFLAGS += -DHAVE_XPM $(shell pkg-config --cflags xpm)
 endif
 
 LINK=$(CC)
@@ -91,7 +96,7 @@ ifdef WANT_WIN_X11
     WINSRC += $(WINX11SRC)
     WINOBJ0 += $(WINX11OBJ)
     WINLIB += $(WINX11LIB)
-    VARDATND = x11tiles NetHack.ad pet_mark.xbm pilemark.xbm
+    VARDATND = nhtiles.bmp NetHack.ad pet_mark.xbm pilemark.xbm
 endif
 
 ifdef WANT_WIN_QT3
@@ -127,7 +132,10 @@ VARDATND += nhtiles.bmp
 endif # WANT_WIN_SDL2
 
 ifdef WANT_PNG
-WINLIB += `pkg-config --libs libpng`
+WINLIB += $(shell pkg-config --libs libpng)
+endif
+ifdef WANT_XPM
+WINLIB += $(shell pkg-config --libs xpm)
 endif
 
 # prevent duplicate tile.o in WINOBJ
