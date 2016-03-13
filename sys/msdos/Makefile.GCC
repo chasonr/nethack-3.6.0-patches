@@ -283,7 +283,7 @@ else
 
 TILOBJ      = $(O)tile.o $(VGAOBJ)
 
-TILOBJ2     = $(O)tileset.o $(O)bmptiles.o $(O)giftiles.o $(O)pngtiles.o
+TILOBJ2     = $(O)tileset.o $(O)bmptiles.o $(O)giftiles.o $(O)pngtiles.o $(O)xpmtiles.o
 
 TEXTIO      = $(O)tiletext.o $(O)tiletxt.o $(O)drawing.o $(O)decl.o $(O)monst.o \
 		$(O)objects.o $(O)stubvid.o
@@ -1321,6 +1321,7 @@ $(O)tileset.o: $(WSHR)/tileset.c $(HACK_H)
 $(O)bmptiles.o: $(WSHR)/bmptiles.c $(INCL)/config.h $(INCL)/tileset.h $(INCL)/integer.h
 $(O)giftiles.o: $(WSHR)/giftiles.c $(INCL)/config.h $(INCL)/tileset.h $(INCL)/integer.h
 $(O)pngtiles.o: $(WSHR)/pngtiles.c $(INCL)/config.h $(INCL)/tileset.h $(INCL)/integer.h
+$(O)xpmtiles.o: $(WSHR)/xpmtiles.c $(INCL)/config.h $(INCL)/tileset.h $(INCL)/integer.h
 
 # end of file
 
