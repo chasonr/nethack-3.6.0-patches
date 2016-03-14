@@ -17,6 +17,7 @@
 #ifndef __GNUC__
 #include "win32api.h"
 #endif
+#include "integer.h"
 
 #if (TILE_X == 32)
 #define COLORS_IN_USE 256
@@ -73,34 +74,26 @@ lelong(long x)
 }
 
 #ifdef __GNUC__
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199101L
-#include <stdint.h>
-#else
-typedef unsigned uint32_t;
-typedef short int16_t;
-typedef unsigned short uint16_t;
-#endif
-
 typedef struct tagBMIH {
-    uint32_t biSize;
-    int32_t biWidth;
-    int32_t biHeight;
-    uint16_t biPlanes;
-    uint16_t biBitCount;
-    uint32_t biCompression;
-    uint32_t biSizeImage;
-    int32_t biXPelsPerMeter;
-    int32_t biYPelsPerMeter;
-    uint32_t biClrUsed;
-    uint32_t biClrImportant;
+    uint32 biSize;
+    int32 biWidth;
+    int32 biHeight;
+    uint16 biPlanes;
+    uint16 biBitCount;
+    uint32 biCompression;
+    uint32 biSizeImage;
+    int32 biXPelsPerMeter;
+    int32 biYPelsPerMeter;
+    uint32 biClrUsed;
+    uint32 biClrImportant;
 } PACK BITMAPINFOHEADER;
 
 typedef struct tagBMFH {
-    uint16_t bfType;
-    uint32_t bfSize;
-    uint16_t bfReserved1;
-    uint16_t bfReserved2;
-    uint32_t bfOffBits;
+    uint16 bfType;
+    uint32 bfSize;
+    uint16 bfReserved1;
+    uint16 bfReserved2;
+    uint32 bfOffBits;
 } PACK BITMAPFILEHEADER;
 
 typedef struct tagRGBQ {
@@ -110,9 +103,9 @@ typedef struct tagRGBQ {
     unsigned char rgbReserved;
 } PACK RGBQUAD;
 #define UINT unsigned int
-#define DWORD uint32_t
-#define LONG int32_t
-#define WORD uint16_t
+#define DWORD uint32
+#define LONG int32
+#define WORD uint16
 #define BI_RGB 0L
 #define BI_RLE8 1L
 #define BI_RLE4 2L
