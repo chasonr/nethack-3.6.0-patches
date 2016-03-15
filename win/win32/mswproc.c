@@ -10,6 +10,7 @@
 #include "hack.h"
 #include "dlb.h"
 #include "func_tab.h" /* for extended commands */
+#include "tileset.h"
 #include "winMS.h"
 #include <assert.h>
 #include <mmsystem.h>
@@ -46,6 +47,7 @@ logDebug(const char *fmt, ...)
 
 static void mswin_main_loop(void);
 static BOOL initMapTiles(void);
+static HBITMAP loadMapTiles(void);
 static void mswin_color_from_string(char *colorstring, HBRUSH *brushptr,
                                     COLORREF *colorptr);
 static void prompt_for_player_selection(void);
@@ -2080,6 +2082,9 @@ initMapTiles(void)
                      NH_A2W(iflags.wc_tile_file, wbuf, MAX_PATH),
                      IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
     if (hBmp == NULL) {
+        hBmp = loadMapTiles();
+    }
+    if (hBmp == NULL) {
         raw_print(
             "Cannot load tiles from the file. Reverting back to default.");
         return FALSE;
@@ -2118,6 +2123,63 @@ initMapTiles(void)
     map_size.cy = GetNHApp()->mapTile_Y * ROWNO;
     mswin_map_stretch(mswin_hwnd_from_winid(WIN_MAP), &map_size, TRUE);
     return TRUE;
+}
+
+static HBITMAP
+loadMapTiles(void)
+{
+    struct TileSetImage image; /* custodial */
+    HBITMAP hbmp = NULL;       /* custodial, returned */
+    unsigned x, y;
+    size_t i, j;
+    BITMAPINFO bmi;
+    unsigned char *bits;
+
+    /* Load the image data */
+    if (!read_tile_image(&image, iflags.wc_tile_file, TRUE))
+        return NULL;
+
+    /* Create a bitmap to receive the image */
+    /* TODO: Alpha is not supported */
+    /* TODO: Use a palette if image.indexes is not NULL */
+    memset(&bmi, 0, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = image.width;
+    bmi.bmiHeader.biHeight = image.height;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 24;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    hbmp = CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, (void *) &bits,
+                            NULL, 0);
+    if (hbmp == NULL) goto error;
+
+    /* Copy the pixels into the bitmap */
+    for (y = 0; y < image.height; ++y) {
+        i = y * image.width;
+        j = 3 * (image.height - 1 - y) * image.width;
+        for (x = 0; x < image.width; ++x) {
+            bits[j++] = image.pixels[i].b;
+            bits[j++] = image.pixels[i].g;
+            bits[j++] = image.pixels[i].r;
+            ++i;
+        }
+    }
+
+    /* Set the tile dimensions if the image specified them */
+    //if (iflags.wc_tile_width <= 0)
+        iflags.wc_tile_width = image.tile_width;
+    //if (iflags.wc_tile_height <= 0)
+        iflags.wc_tile_height = image.tile_height;
+
+    /* Free stuff that we don't need anymore */
+    free_tile_image(&image);
+
+    return hbmp;
+
+error:
+    free_tile_image(&image);
+    DeleteObject(hbmp);
+    return NULL;
 }
 
 void
