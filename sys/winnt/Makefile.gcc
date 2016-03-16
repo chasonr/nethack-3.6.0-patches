@@ -126,8 +126,9 @@ ifeq "${SHELL}" "sh.exe"
     slash = $(subst /,\, $(1))
     copy = $(subst /,\, copy $(1) $(2))
     del = $(subst /,\, if exist $(1) del $(1))
-    rmdir = $(subst /,\, rmdir $(1)) /s /Q
+    rmdir = $(subst /,\, if exist $(1) rmdir $(1)) /s /Q
     mkdir = $(subst /,\, mkdir $(1))
+    touch = echo. >>$(1)
     ls = dir /l /b /-p $(subst /,\,$(1))
     if_file = $(subst /,\, if exist $(1) $(2))
     if_not_file = $(subst /,\, if not exist $(1) $(2))
@@ -139,6 +140,7 @@ else
     del = rm -f $(1)
     rmdir = rm -rf $(1)
     mkdir = mkdir $(1)
+    touch = touch $(1)
     ls = ls -1 $(1)
     if_file = if [ -f $(1) ]; then $(2); fi
     if_not_file = if [ ! -f $(1) ]; then $(2); fi
@@ -212,15 +214,15 @@ endif
 # the lower two.
 #
 
-DO_YACC = YACC_MSG
-DO_LEX  = LEX_MSG
-#DO_YACC  = YACC_ACT
-#DO_LEX   = LEX_ACT
+#DO_YACC = YACC_MSG
+#DO_LEX  = LEX_MSG
+DO_YACC  = YACC_ACT
+DO_LEX   = LEX_ACT
 
 # - Specify your yacc and lex programs (or work-alikes) here.
 
-#YACC   = bison -y
-YACC   = byacc
+YACC   = bison -y
+#YACC   = byacc
 #YACC   = yacc
 
 #LEX    = lex
@@ -233,9 +235,9 @@ LEX     = flex
 FLEXSKEL =
 #FLEXSKEL = -S../tools/flex.ske
 
-YTABC   = y_tab.c
-YTABH   = y_tab.h
-LEXYYC  = lexyy.c
+YTABC   = y.tab.c
+YTABH   = y.tab.h
+LEXYYC  = lex.yy.c
 
 #==========================================
 # Exe File Info.
@@ -823,7 +825,7 @@ $(GAMEDIR)/nhraykey.dll : $(O)nhraykey.o $(O)gamedir.tag
 		-Wl,--add-stdcall-alias -o $@ $<
 
 $(GAME)_.ico : $(MSWSYS)/$(GAME).ico
-	$(subst /,\,@copy $(MSWSYS)/$(GAME).ico $@)
+	@$(call copy, $(MSWSYS)/$(GAME).ico, $@)
 
 #==========================================
 # Create directory for holding object files
@@ -833,7 +835,7 @@ graphicschk:
 	@echo ----
 	@echo NOTE: This build will include tile support.
 	@echo ----
-	$(subst /,\,@echo graphicschk > graphicschk)
+	@echo graphicschk > graphicschk
 
 #
 #  Secondary Targets.
@@ -964,11 +966,11 @@ $(O)lev_main.o:   $(U)lev_main.c $(HACK_H)   $(SP_LEV_H)
 
 $(U)lev_yacc.c $(INCL)/lev_comp.h : $(U)lev_comp.y
 ifeq  "$(DO_YACC)" "YACC_ACT"
-	$(subst /,\,$(YACC) -d $(U)lev_comp.y)
+	$(YACC) -d $(U)lev_comp.y
 	$(call copy, $(YTABC), $(U)lev_yacc.c)
 	$(call copy, $(YTABH), $(INCL)/lev_comp.h)
-	$(subst /,\,@del $(YTABC))
-	$(subst /,\,@del $(YTABH))
+	@$(call del, $(YTABC))
+	@$(call del, $(YTABH))
 
 else
 	@echo $(U)lev_comp.y has changed.
@@ -976,24 +978,24 @@ else
 	@echo ---
 	@echo For now, we will copy the prebuilt lev_yacc.c and
 	@echo lev_comp.h from $(SSYS) into $(UTIL) and use them.
-	$(subst /,\,@copy $(SSYS)/lev_yacc.c $(U)lev_yacc.c >nul)
-	$(subst /,\,@copy $(SSYS)/lev_comp.h $(INCL)/lev_comp.h >nul)
-	$(subst /,\,echo.>>$(U)lev_yacc.c)
-	$(subst /,\,echo.>>$(INCL)/lev_comp.h)
+	@$(call copy, $(SSYS)/lev_yacc.c, $(U)lev_yacc.c)
+	@$(call copy, $(SSYS)/lev_comp.h, $(INCL)/lev_comp.h)
+	@$(call touch, $(U)lev_yacc.c)
+	@$(call touch, $(INCL)/lev_comp.h)
 endif
 
 $(U)lev_$(LEX).c: $(U)lev_comp.l
 ifeq  "$(DO_LEX)" "LEX_ACT"
-	$(subst /,\,$(LEX) $(FLEXSKEL) $(U)lev_comp.l)
+	$(LEX) $(FLEXSKEL) $(U)lev_comp.l
 	$(call copy, $(LEXYYC), $@)
-	$(subst /,\,@del $(LEXYYC))
+	@$(call del, $(LEXYYC))
 else
 	@echo $(U)lev_comp.l has changed. To update $@ run $(LEX).
 	@echo ---
 	@echo For now, we will copy the prebuilt lev_lex.c
 	@echo from $(SSYS) into $(UTIL) and use it.
-	$(subst /,\,@copy $(SSYS)/lev_lex.c $@ >nul)
-	$(subst /,\,echo.>>$@)
+	@$(call copy, $(SSYS)/lev_lex.c, $@)
+	@$(call touch, $@)
 endif
 
 #==========================================
@@ -1017,35 +1019,35 @@ $(O)dgn_main.o:   $(HACK_H) $(U)dgn_main.c
 
 $(U)dgn_yacc.c $(INCL)/dgn_comp.h : $(U)dgn_comp.y
 ifeq  "$(DO_YACC)" "YACC_ACT"
-	$(subst /,\,$(YACC) -d $(U)dgn_comp.y)
+	$(YACC) -d $(U)dgn_comp.y
 	$(call copy, $(YTABC), $(U)dgn_yacc.c)
 	$(call copy, $(YTABH), $(INCL)/dgn_comp.h)
-	$(subst /,\,@del $(YTABC))
-	$(subst /,\,@del $(YTABH))
+	@$(call del, $(YTABC))
+	@$(call del, $(YTABH))
 else
 	@echo $(U)dgn_comp.y has changed. To update dgn_yacc.c and
 	@echo $(INCL)/dgn_comp.h run $(YACC).
 	@echo ---
 	@echo For now, we will copy the prebuilt $(U)dgn_yacc.c and
 	@echo dgn_comp.h from $(SSYS) into $(UTIL) and use them.
-	$(subst /,\,@copy $(SSYS)/dgn_yacc.c $(U)dgn_yacc.c >nul)
-	$(subst /,\,@copy $(SSYS)/dgn_comp.h $(INCL)/dgn_comp.h >nul)
-	$(subst /,\,echo.>>$(U)dgn_yacc.c)
-	$(subst /,\,echo.>>$(INCL)/dgn_comp.h)
+	@$(call copy, $(SSYS)/dgn_yacc.c, $(U)dgn_yacc.c)
+	@$(call copy, $(SSYS)/dgn_comp.h, $(INCL)/dgn_comp.h)
+	@$(call touch, $(U)dgn_yacc.c)
+	@$(call touch, $(INCL)/dgn_comp.h)
 endif
 
 $(U)dgn_$(LEX).c: $(U)dgn_comp.l
 ifeq  "$(DO_LEX)" "LEX_ACT"
-	$(subst /,\,$(LEX) $(FLEXSKEL) $(U)dgn_comp.l)
+	$(LEX) $(FLEXSKEL) $(U)dgn_comp.l
 	$(call copy, $(LEXYYC), $@)
-	$(subst /,\,@del $(LEXYYC))
+	@$(call del, $(LEXYYC))
 else
 	@echo $(U)dgn_comp.l has changed. To update $@ run $(LEX).
 	@echo ---
 	@echo For now, we will copy the prebuilt dgn_lex.c
 	@echo from $(SSYS) into $(UTIL) and use it.
-	$(subst /,\,@copy $(SSYS)/dgn_lex.c $@ >nul)
-	$(subst /,\,echo.>>$@)
+	@$(call copy, $(SSYS)/dgn_lex.c, $@)
+	@$(call touch, $@)
 endif
 
 #==========================================
@@ -1085,7 +1087,7 @@ $(O)dlb_main.o: $(UTIL)/dlb_main.c $(INCL)/config.h $(INCL)/dlb.h
 	$(cc) $(CFLAGS) -o$@ $(UTIL)/dlb_main.c
 
 $(DAT)/porthelp: $(MSWSYS)/porthelp
-	$(subst /,\,@copy $(MSWSYS)/porthelp $@ >nul)
+	@$(call copy, $(MSWSYS)/porthelp, $@)
 
 nhdat:  $(U)dlb_main.exe $(DAT)/data $(DAT)/oracles $(OPTIONS_FILE) \
 	 $(DAT)/quest.dat $(DAT)/rumors $(DAT)/help $(DAT)/hh $(DAT)/cmdhelp \
@@ -1183,7 +1185,7 @@ $(TILEBMP16): $(TILEUTIL16) $(TILEFILES)
 
 #$(TILEBMP32): $(TILEUTIL32) $(TILEFILES32)
 #	@echo "Creating 32x32 binary tile files (this may take some time)"
-#	$(subst /,\,@$(U)til2bm32 $(TILEBMP32))
+#	@$(call slash, $(U)til2bm32 $(TILEBMP32))
 
 $(U)tile2bmp.exe: $(O)tile2bmp.o $(TEXT_IO)
 	@echo Linking $@...
@@ -1256,6 +1258,30 @@ spotless: clean
 	$(call del, $(DAT)/dlb.lst)
 	$(call del, nhdat.)
 	$(call del, $(QT4)/*.moc)
+	$(call del, $(DAT)/bogusmon)
+	$(call del, $(DAT)/engrave)
+	$(call del, $(DAT)/epitaph)
+	$(call del, $(DAT)/porthelp)
+	$(call del, $(INCL)/dgn_comp.h)
+	$(call del, $(INCL)/lev_comp.h)
+	$(call del, $(INCL)/win32api.h)
+	$(call del, $(MSWSYS)/NetHack.ico)
+	$(call del, $(U)dgn_flex.c)
+	$(call del, $(U)dgn_yacc.c)
+	$(call del, $(U)dlb_main.exe)
+	$(call del, $(U)lev_flex.c)
+	$(call del, $(U)lev_yacc.c)
+	$(call del, $(U)tile2bmp.exe)
+	$(call del, $(U)tilemap.exe)
+	$(call del, $(U)uudecode.exe)
+	$(call del, $(MSWIN)/NetHack.ico)
+	$(call del, $(MSWIN)/mnsel.bmp)
+	$(call del, $(MSWIN)/mnselcnt.bmp)
+	$(call del, $(MSWIN)/mnunsel.bmp)
+	$(call del, $(MSWIN)/petmark.bmp)
+	$(call del, $(MSWIN)/pilemark.bmp)
+	$(call del, $(MSWIN)/rip.bmp)
+	$(call del, $(MSWIN)/splash.bmp)
 ifneq "$(OBJ)" ""
 	$(call rmdir, $(OBJ))
 endif
