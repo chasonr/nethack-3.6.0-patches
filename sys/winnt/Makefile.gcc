@@ -92,12 +92,9 @@ WANT_PNG = Y
 # home directory:
 LIBRARIES = $(subst \,/,$(USERPROFILE))/$(TARGET_CPU)libs
 
-# WANT_WIN_SDL2 requires SDL2 and SDL2_image
+# WANT_WIN_SDL2 requires SDL2
 # SDL2 under SDL2-2.0.3, see https://libsdl.org/download-2.0.php
 SDL2_DIRECTORY = $(LIBRARIES)/SDL2-2.0.3
-# SDL2_image under SDL2_image-2.0.0, see
-# https://www.libsdl.org/projects/SDL_image/
-SDL2_IMAGE_DIRECTORY = $(LIBRARIES)/SDL2_image-2.0.0
 
 # WANT_WIN_CURSES requires win32a (a fork of PDCurses, see
 # http://www.projectpluto.com/win32a.htm).
@@ -178,7 +175,7 @@ CURSES = ../win/curses
 # Tile support files
 WSHR  = ../win/share
 
-# Need this to build include and library paths for SDL2 and SDL2_image
+# Need this to build include and library paths for SDL2
 ifeq "$(TARGET_CPU)" "x86"
     SDL2_ARCH = i686-w64-mingw32
 else
@@ -311,7 +308,6 @@ ifdef WANT_WIN_QT4
 endif
 ifdef WANT_WIN_SDL2
     guilibs += $(SDL2_DIRECTORY)/$(SDL2_ARCH)/lib/libSDL2.a
-    guilibs += $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/lib/libSDL2_image.a
     guilibs +=-limm32 -lole32 -loleaut32 -lversion
 endif
 ifdef WANT_WIN_CURSES
@@ -337,12 +333,6 @@ ifdef WANT_WIN_QT4
         DLLS += $(GAMEDIR)/QtGui4.dll
     endif
     DLLS += $(GAMEDIR)/rip.xpm
-endif
-ifdef WANT_WIN_SDL2
-    DLLS += $(GAMEDIR)/libjpeg-9.dll
-    DLLS += $(GAMEDIR)/libpng16-16.dll
-    DLLS += $(GAMEDIR)/libtiff-5.dll
-    DLLS += $(GAMEDIR)/libwebp-4.dll
 endif
 
 #==========================================
@@ -664,7 +654,7 @@ $(QT4)/%.moc : $(QT4)/%.h
 #==========================================
 
 $(OBJ)/%.o : $(SDL2)/%.cpp
-	$(cxx) $(CXXFLAGS) -I$(MSWIN) -I$(SDL2_DIRECTORY)/include -I$(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/include -o$@  $<
+	$(cxx) $(CXXFLAGS) -I$(MSWIN) -I$(SDL2_DIRECTORY)/include -o$@  $<
 
 #==========================================
 # Rules for files in win/curses
@@ -716,7 +706,7 @@ endif
 	$(call if_file, $(DOC)/guidebook.txt, $(call copy, $(DOC)/guidebook.txt, $(GAMEDIR)/Guidebook.txt))
 	$(call if_file, $(DOC)/nethack.txt, $(call copy, $(DOC)/nethack.txt, $(GAMEDIR)/NetHack.txt))
 	$(call copy, $(MSWSYS)/defaults.nh,   $(GAMEDIR)/defaults.nh)
-	$(subst /,\,echo install done > $@)
+	@echo install done > $@
 
 #  copy $(MSWSYS)/winnt.hlp    $(GAMEDIR)
 
@@ -763,7 +753,7 @@ $(O)sp_lev.tag: $(O)utility.tag $(DAT)/bigroom.des  $(DAT)/castle.des \
 $(O)utility.tag: $(INCL)/date.h $(INCL)/onames.h $(INCL)/pm.h \
 	 $(SRC)/monstr.c $(SRC)/vis_tab.c $(U)levcomp.exe $(INCL)/vis_tab.h \
 	 $(U)dgncomp.exe $(TILEUTIL16)
-	$(subst /,\,@echo utilities made >$@)
+	@echo utilities made >$@
 	@echo utilities made.
 
 tileutil: $(U)gif2txt.exe $(U)gif2tx32.exe $(U)txt2ppm.exe
@@ -1323,18 +1313,6 @@ $(GAMEDIR)/QtGui4.dll : $(QT4_DIRECTORY)/bin/QtGui4.dll
 $(GAMEDIR)/rip.xpm : ../win/X11/rip.xpm
 	$(call copy, $<, $@)
 
-$(GAMEDIR)/libjpeg-9.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libjpeg-9.dll
-	$(call copy, $<, $@)
-
-$(GAMEDIR)/libpng16-16.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libpng16-16.dll
-	$(call copy, $<, $@)
-
-$(GAMEDIR)/libtiff-5.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libtiff-5.dll
-	$(call copy, $<, $@)
-
-$(GAMEDIR)/libwebp-4.dll : $(SDL2_IMAGE_DIRECTORY)/$(SDL2_ARCH)/bin/libwebp-4.dll
-	$(call copy, $<, $@)
-
 
 # Dependencies on .moc files (for Qt 4 or 5)
 $(OBJ)/qt4main.o : $(QT4)/qt4main.cpp $(QT4)/qt4main.moc $(QT4)/qt4kde0.moc
@@ -1647,5 +1625,7 @@ $(O)write.o: write.c $(HACK_H)
 $(O)zap.o: zap.c $(HACK_H)
 $(O)string.o: string.c $(HACK_H)
 $(O)unicode.o: unicode.c $(HACK_H)
+$(O)tileset.o: $(WSHR)/tileset.c $(HACK_H) $(MSWIN)/winMS.h $(MSWIN)/resource.h
+	$(cc) $(CFLAGS) -I$(MSWIN) -c $< -o $@
 
 # end of file
