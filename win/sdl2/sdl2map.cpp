@@ -2,23 +2,17 @@
 
 extern "C" {
 #include "hack.h"
+#include "tileset.h"
 }
-#ifdef WIN32
-// Need Windows APIs to load the default bitmap
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <stdint.h>
-extern "C" {
-#include "winMS.h"
-#include "resource.h"
-}
-#endif
 #include "sdl2.h"
 #include "sdl2map.h"
 #include "sdl2interface.h"
 #include "sdl2font.h"
 
 extern short glyph2tile[];
+extern int total_tiles_used;
+
+static SDL_Surface *FDECL(convert_tile, (int));
 
 namespace NH_SDL2
 {
@@ -43,10 +37,6 @@ const SDL_Color SDL2MapWindow::colors[] =
     { 255, 255, 255, 255 }  // white
 };
 
-#ifdef WIN32
-SDL_Surface *loadDefaultBitmap(void);
-#endif
-
 SDL2MapWindow::SDL2MapWindow(SDL2Interface *interface) :
     SDL2Window(interface),
     m_tile_mode(iflags.wc_tiled_map),
@@ -54,7 +44,7 @@ SDL2MapWindow::SDL2MapWindow(SDL2Interface *interface) :
     m_tile_w(0), m_tile_h(0),
     m_scroll_x(0), m_scroll_y(0),
     m_cursor_x(0), m_cursor_y(0),
-    m_tilemap(NULL),
+    m_tiles(NULL),
     m_tilemap_w(iflags.wc_tile_width), m_tilemap_h(iflags.wc_tile_height),
     m_map_image(NULL),
     m_zoom_mode(SDL2_ZOOMMODE_NORMAL)
@@ -68,38 +58,15 @@ SDL2MapWindow::SDL2MapWindow(SDL2Interface *interface) :
     m_text_h = rect.h;
 
     // Tile map file
-    const char *tilemap = iflags.wc_tile_file;
-    SDL_Surface *tilemap_img;
-    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG | IMG_INIT_TIF | IMG_INIT_WEBP);
-#ifdef WIN32
-    // On Win32, if no tilemap given, load the resource from the executable
-    if (tilemap == NULL || tilemap[0] == '\0') {
-        tilemap_img = loadDefaultBitmap();
-    } else {
-        tilemap_img = IMG_Load(tilemap);
+    if (read_tiles(iflags.wc_tile_file, TRUE)) {
+        m_tiles = (SDL_Surface **) alloc(sizeof(SDL_Surface *)
+                                         * total_tiles_used);
+        for (int i = 0; i < total_tiles_used; ++i) {
+            m_tiles[i] = NULL;
+        }
     }
-#else
-    if (tilemap == NULL || tilemap[0] == '\0') {
-        tilemap = "nhtiles.bmp";
-    }
-    tilemap_img = IMG_Load(tilemap);
-#endif
-    if (tilemap_img != NULL) {
-        // We need to convert the tile map if it uses a palette;
-        // it doesn't hurt to convert the tile map anyway
-        //SDL_SetSurfaceBlendMode(tilemap_img, SDL_BLENDMODE_BLEND);
-        m_tilemap = SDL_ConvertSurface(tilemap_img, interface->pixelFormat(), 0);
-        //SDL_SetSurfaceBlendMode(m_tilemap, SDL_BLENDMODE_BLEND);
-        SDL_FreeSurface(tilemap_img);
-    }
-    if (m_tilemap == NULL) {
-        // Failed to load the tile map; fall back to text mode
-        m_tile_mode = false;
-    } else {
-        // Tile size
-        if (m_tilemap_w == 0) { m_tilemap_w = m_tilemap->w / 40; }
-        if (m_tilemap_h == 0) { m_tilemap_h = m_tilemap_w; }
-    }
+    m_tilemap_w = iflags.wc_tile_width;
+    m_tilemap_h = iflags.wc_tile_height;
 
     // Cells are initially unstretched
     m_tile_w = m_tile_mode ? m_tilemap_w : m_text_w;
@@ -118,69 +85,16 @@ SDL2MapWindow::SDL2MapWindow(SDL2Interface *interface) :
     clear();
 }
 
-#ifdef WIN32
-SDL_Surface *loadDefaultBitmap(void)
-{
-    HDC memory_dc = NULL; // custodial
-    HBITMAP hbitmap = NULL; // custodial
-    BITMAP bm;
-    SDL_Surface *surface = NULL; // custodial, returned
-
-    // We'll render to this device context
-    memory_dc = CreateCompatibleDC(NULL);
-
-    // Load the bitmap
-    hbitmap = (HBITMAP) LoadImage(GetNHApp()->hApp,
-            MAKEINTRESOURCE(IDB_TILES), IMAGE_BITMAP,
-            0, 0, LR_DEFAULTSIZE);
-    if (hbitmap == NULL) goto error;
-
-    // Render in the device context
-    if (!SelectObject(memory_dc, (HGDIOBJ)hbitmap)) goto error;
-
-    // Get the size of the bitmap
-    GetObject(hbitmap, sizeof(BITMAP), &bm);
-
-    // Create the SDL2 surface
-    surface = SDL_CreateRGBSurface(
-            SDL_SWSURFACE,
-            bm.bmWidth, bm.bmHeight, 32,
-            0x000000FF,  // red
-            0x0000FF00,  // green
-            0x00FF0000,  // blue
-            0xFF000000); // alpha
-    if (surface == NULL) goto error;
-
-    for (LONG y = 0; y < bm.bmHeight; ++y) {
-        uint32_t *row2 = (uint32_t *) surface->pixels
-                       + bm.bmWidth * y;
-        for (LONG x = 0; x < bm.bmWidth; ++x) {
-            COLORREF color = GetPixel(memory_dc, x, y);
-            unsigned r = GetRValue(color);
-            unsigned g = GetGValue(color);
-            unsigned b = GetBValue(color);
-            row2[x] = (static_cast<uint32_t>(r) <<  0)
-                    | (static_cast<uint32_t>(g) <<  8)
-                    | (static_cast<uint32_t>(b) << 16)
-                    | (static_cast<uint32_t>(0xFF) << 24);
-        }
-    }
-
-    DeleteDC(memory_dc);
-    DeleteObject(hbitmap);
-    return surface;
-
-error:
-    DeleteDC(memory_dc);
-    DeleteObject(hbitmap);
-    if (surface) SDL_FreeSurface(surface);
-    return NULL;
-}
-#endif
-
 SDL2MapWindow::~SDL2MapWindow(void)
 {
-    if (m_tilemap) { SDL_FreeSurface(m_tilemap); }
+    if (m_tiles) {
+        for (int i = 0; i < total_tiles_used; ++i) {
+            if (m_tiles[i]) {
+                SDL_FreeSurface(m_tiles[i]);
+            }
+        }
+        free(m_tiles);
+    }
     if (m_map_image) { SDL_FreeSurface(m_map_image); }
 }
 
@@ -381,7 +295,7 @@ void SDL2MapWindow::clipAround(int x, int y)
 void SDL2MapWindow::toggleTileMode(void)
 {
     // Disable tile mode if no tile map
-    if (m_tilemap == NULL) {
+    if (m_tiles == NULL) {
         interface()->setMessage("No tile set available");
         return;
     }
@@ -508,8 +422,7 @@ void SDL2MapWindow::mapDraw(unsigned x, unsigned y, bool cursor)
     }
 
     if (m_tile_mode) {
-        int tile_cols = m_tilemap->w / m_tilemap_w;
-        unsigned tilenum, tx, ty;
+        int tilenum;
 
         // Fill background just in case
         bg = SDL_MapRGBA(m_map_image->format, 0, 0, 0, 255);
@@ -519,13 +432,21 @@ void SDL2MapWindow::mapDraw(unsigned x, unsigned y, bool cursor)
         for (i = 0; i < SIZE(glyphs); ++i) {
             if (glyphs[i] != NO_GLYPH) {
                 tilenum = glyph2tile[glyphs[i]];
-                tx = tilenum % tile_cols;
-                ty = tilenum / tile_cols;
-                tile.x = tx * m_tilemap_w;
-                tile.y = ty * m_tilemap_h;
-                tile.w = m_tilemap_w;
-                tile.h = m_tilemap_h;
-                SDL_BlitScaled(m_tilemap, &tile, m_map_image, &cell);
+                if (0 <= tilenum && tilenum < total_tiles_used) {
+                    // If the tile is used for the first time, convert it to
+                    // an SDL_Surface
+                    if (m_tiles[tilenum] == NULL) {
+                        m_tiles[tilenum] = convert_tile(tilenum);
+                    }
+                    if (m_tiles[tilenum] != NULL) {
+                        tile.x = 0;
+                        tile.y = 0;
+                        tile.w = m_tilemap_w;
+                        tile.h = m_tilemap_h;
+                        SDL_BlitScaled(m_tiles[tilenum], &tile,
+                                       m_map_image, &cell);
+                    }
+                }
             }
         }
     } else {
@@ -886,4 +807,45 @@ void SDL2MapWindow::shieldEffect(int x, int y)
     }
 }
 
+}
+
+static SDL_Surface *
+convert_tile(int tilenum)
+{
+    const struct TileImage *tile = get_tile(tilenum);
+    SDL_Surface *sdltile;
+    Uint32 *pixels;
+    unsigned x, y;
+    size_t i;
+
+    sdltile = SDL_CreateRGBSurface(
+            SDL_SWSURFACE,
+            tile->width,
+            tile->height,
+            32,
+            0x000000FF,  // red
+            0x0000FF00,  // green
+            0x00FF0000,  // blue
+            0xFF000000); // alpha
+    if (sdltile == NULL) {
+        char buf[BUFSZ];
+        sprintf(buf, "Failed to create tile %d", tilenum);
+        paniclog("GUI", buf);
+        return NULL;
+    }
+
+    pixels = (Uint32 *) sdltile->pixels;
+    i = 0;
+    for (y = 0; y < tile->height; ++y) {
+        for (x = 0; x < tile->width; ++x) {
+            unsigned r, g, b, a;
+            r = tile->pixels[i].r;
+            g = tile->pixels[i].g;
+            b = tile->pixels[i].b;
+            a = tile->pixels[i].a;
+            pixels[i++] = SDL_MapRGBA(sdltile->format, r, g, b, a);
+        }
+    }
+
+    return sdltile;
 }

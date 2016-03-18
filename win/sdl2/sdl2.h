@@ -7,17 +7,13 @@
 #ifdef __APPLE__
 #ifdef SDL2_FROM_HOMEBREW
 #include <SDL.h>
-#include <SDL_image.h>
 #else
 #include <SDL2/SDL.h>
-#include <SDL2_image/SDL_image.h>
 #endif
 #elif defined(_WIN32)
 #include <SDL.h>
-#include <SDL2/SDL_image.h>
 #else
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #endif
 
 #endif

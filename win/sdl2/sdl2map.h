@@ -71,7 +71,7 @@ private:
     int m_scroll_x, m_scroll_y;
     int m_cursor_x, m_cursor_y;
 
-    SDL_Surface *m_tilemap;
+    SDL_Surface **m_tiles;
     int m_tilemap_w, m_tilemap_h;
 
     SDL_Surface *m_map_image;
