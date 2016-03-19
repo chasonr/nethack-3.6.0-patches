@@ -232,7 +232,7 @@ WINSDL2SRC = ../win/sdl2/sdl2bind.cpp ../win/sdl2/sdl2extcmd.cpp \
 	../win/share/bmptiles.c ../win/share/giftiles.c ../win/share/tileset.c
 WINSDL2OBJ = sdl2bind.o sdl2extcmd.o sdl2font_mac.o sdl2font_pango.o \
 	sdl2getlin.o sdl2interface.o sdl2map.o sdl2menu.o sdl2message.o \
-	sdl2plsel.o sdl2posbar.o sdl2status.o sdl2text.o sdl2window.o $(WINTILESOBJ)
+	sdl2plsel.o sdl2posbar.o sdl2status.o sdl2text.o sdl2window.o $(WINTILEOBJ)
 #
 # Files for a Curses port
 #
