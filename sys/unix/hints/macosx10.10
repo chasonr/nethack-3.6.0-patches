@@ -16,16 +16,16 @@
 # 1. Which window system(s) should be included in this binary?
 #WANT_WIN_TTY=1
 #WANT_WIN_X11=1
-#WANT_WIN_QT=1
+WANT_WIN_QT=1
 WANT_WIN_SDL2=1
-#WANT_WIN_CURSES=1
+WANT_WIN_CURSES=1
 
 # 1a. What is the default window system?
 #WANT_DEFAULT=tty
-#WANT_DEFAULT=x11
+#WANT_DEFAULT=X11
 #WANT_DEFAULT=Qt
-WANT_DEFAULT=sdl2
-#WANT_DEFAULT=curses
+#WANT_DEFAULT=sdl2
+WANT_DEFAULT=curses
 
 # 1b. If you set WANT_WIN_QT, you need to
 #  A) set QTDIR either here or in the environment to point to the Qt4 or Qt5
@@ -38,10 +38,13 @@ endif	# WANT_WIN_QT
 #WANT_SDL2_FROM_HOMEBREW=1
 
 # 1d. Was QT installed via Homebrew?
-#WANT_QT_FROM_HOMEBREW=1
+WANT_QT_FROM_HOMEBREW=1
 
 # For all tiled window systems: define this to support PNG
 WANT_PNG=1
+
+# For all tiled window systems: define this to support XPM
+#WANT_XPM=1
 
 # 2. Is this a build for a binary that will be shared among different users
 #    or will it be private to you?
@@ -73,6 +76,10 @@ CXX=clang++
 # You shouldn't need to change anything below here.
 #
 
+ifdef WANT_WIN_X11
+WANT_XPM=1
+endif
+
 #CFLAGS+=-W -Wimplicit -Wreturn-type -Wunused -Wformat -Wswitch -Wshadow -Wcast-qual -Wwrite-strings -DGCC_WARN
 CFLAGS+=-Wall -Wextra -Wno-missing-field-initializers -Wimplicit -Wreturn-type -Wunused -Wformat -Wswitch -Wshadow -Wwrite-strings -DGCC_WARN -ansi -pedantic
 # As of LLVM build 2336.1.00, this gives dozens of spurious messages, so
@@ -88,7 +95,10 @@ CFLAGS+= -DDEFAULT_WINDOW_SYS=\"$(WANT_DEFAULT)\" -DDLB
 
 CFLAGS+= -DGREPPATH=\"/usr/bin/grep\"
 ifdef WANT_PNG
-    CFLAGS += -DHAVE_PNG
+    CFLAGS += -DHAVE_PNG $(shell pkg-config --cflags libpng)
+endif
+ifdef WANT_XPM
+    CFLAGS += -DHAVE_XPM -I/opt/X11/include
 endif
 
 ifdef WANT_WIN_CHAIN
@@ -124,7 +134,7 @@ WINSRC += $(WINX11SRC)
 WINOBJ0 += $(WINX11OBJ)
 WINLIB += $(WINX11LIB)
 LFLAGS=-L/opt/X11/lib
-VARDATND += x11tiles NetHack.ad pet_mark.xbm pilemark.xbm
+VARDATND += nhtiles.bmp NetHack.ad pet_mark.xbm pilemark.xbm rip.xpm
 POSTINSTALL+= bdftopcf win/X11/nh10.bdf > $(HACKDIR)/nh10.pcf; (cd $(HACKDIR); mkfontdir);
 CFLAGS += -DX11_GRAPHICS -I/opt/X11/include
 endif	# WANT_WIN_X11
@@ -133,42 +143,39 @@ ifdef WANT_WIN_QT
 QT_FRAMEWORKS_DIR = /Library/Frameworks
 CFLAGS += -DQT_GRAPHICS -DNOUSER_SOUNDS -DZLIB_COMP -mmacosx-version-min=10.5
 ifdef WANT_QT_FROM_HOMEBREW
-CFLAGS += `pkg-config --cflags QtCore` `pkg-config --cflags QtGui`
-WINLIB += `pkg-config --libs QtCore` `pkg-config --libs QtGui`
-QTDIR = `pkg-config --variable=prefix QtCore`
+CFLAGS += $(shell pkg-config --cflags QtCore QtGui)
+WINLIB += $(shell pkg-config --libs QtCore QtGui)
+QTDIR = $(shell pkg-config --variable=prefix QtCore)
 else # !WANT_QT_FROM_HOMEBREW
 CFLAGS += -F$(QT_FRAMEWORKS_DIR)
 WINLIB += -F$(QT_FRAMEWORKS_DIR) -framework QtCore -framework QtGui
 endif # !WANT_QT_FROM_HOMEBREW
 LINK=$(CXX)
 WINSRC += $(WINQT4SRC)
-ifdef WANT_WIN_X11
-ifdef WANT_WIN_TTY
-WINOBJ0 += $(WINTTYOBJ)
-endif	# WANT_WIN_TTY
-else	# !WANT_WIN_X11
 WINOBJ0 += $(WINQT4OBJ) /usr/lib/libz.dylib
-endif	# !WANT_WIN_X11
 
+# XXX make sure QTDIR points to something reasonable
 # XXX if /Developer/qt exists and QTDIR not set, use that
 ifndef QTDIR
 $(error QTDIR not defined in the environment or Makefile)
 endif	# QTDIR
-# XXX make sure QTDIR points to something reasonable
-VARDATND += x11tiles rip.xpm
 else	# !WANT_WIN_QT
 CFLAGS += -DCOMPRESS='"/usr/bin/gzip"' -DCOMPRESS_EXTENSION='".gz"'
 endif	# !WANT_WIN_QT
 
+ifdef WANT_WIN_TTY
+WINOBJ0 += $(WINTTYOBJ)
+endif	# WANT_WIN_TTY
+
 ifdef WANT_WIN_SDL2
 CFLAGS += -DSDL2_GRAPHICS -DPOSITIONBAR
 ifdef WANT_SDL2_FROM_HOMEBREW
-CFLAGS += -DSDL2_FROM_HOMEBREW `sdl2-config --cflags` `pkg-config --cflags SDL2_image`
-WINLIB += `sdl2-config --static-libs` `pkg-config --libs SDL2_image`
+CFLAGS += -DSDL2_FROM_HOMEBREW $(shell sdl2-config --cflags)
+WINLIB += $(shell sdl2-config --static-libs)
 else # !WANT_SDL2_FROM_HOMEBREW
 SDL_FRAMEWORKS_DIR = /Library/Frameworks
 CFLAGS += -F$(SDL_FRAMEWORKS_DIR)
-WINLIB += -F$(SDL_FRAMEWORKS_DIR) -framework SDL2 -framework SDL2_image -framework CoreFoundation -framework CoreGraphics -framework CoreText
+WINLIB += -F$(SDL_FRAMEWORKS_DIR) -framework SDL2 -framework CoreFoundation -framework CoreGraphics -framework CoreText
 endif # !WANT_SDL2_FROM_HOMEBREW
 WINSRC += $(WINSDL2SRC)
 WINOBJ0 += $(WINSDL2OBJ)
@@ -176,6 +183,13 @@ WINLIB += $(WINSDL2LIB)
 LINK=$(CXX)
 VARDATND += nhtiles.bmp
 endif	# WANT_WIN_SDL2
+
+ifdef WANT_PNG
+WINLIB += $(shell pkg-config --libs libpng)
+endif
+ifdef WANT_XPM
+WINLIB += /opt/X11/lib/libXpm.4.dylib
+endif
 
 # prevent duplicate tile.o in WINOBJ
 WINOBJ = $(sort $(WINOBJ0))
