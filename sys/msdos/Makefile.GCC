@@ -98,6 +98,12 @@ LEXYYC = lexyy~1.c
 
 USE_DLB = Y
 
+# Enable this to support tiles in PNG format; this requires the png1621b and
+# zlib128br2.zip (or later) packages from DJGPP.
+# If your DOS supports long file names (FreeDOS does, "real" MS-DOS doesn't),
+# then you'll need to rename djgpp\include\pnglibco.h to pnglibconf.h.
+WANT_PNG = Y
+
 # djgpp includes ls.exe and touch.exe in fil41b.zip from the v2gnu 
 # folder so be sure to include that when downloading djgpp. Doing
 # so will make changing this unnecessary.
@@ -167,6 +173,11 @@ else
 #    Normal
 cflags = -c -O -I../include $(DLBFLG) -DUSE_TILES
 LFLAGS =
+endif
+
+ifeq ($(WANT_PNG),Y)
+cflags += -DHAVE_PNG
+LIBRARIES += -lpng -lz
 endif
 
 #==========================================
