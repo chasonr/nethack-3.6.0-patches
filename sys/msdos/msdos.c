@@ -41,7 +41,11 @@
 /*
  * Keyboard BIOS functions
  */
+#ifdef PC9800
 #define READCHAR 0x00       /* Read Character from Keyboard */
+#else
+#define READCHAR 0x10       /* Read Character from Keyboard */
+#endif
 #define GETKEYFLAGS 0x02    /* Get Keyboard Flags */
 /*#define KEY_DEBUG	 */ /* print values of unexpected key codes - devel*/
 
