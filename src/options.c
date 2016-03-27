@@ -376,6 +376,10 @@ static struct Comp_Opt {
 #ifdef MSDOS
     { "video", "method of video updating", 20, SET_IN_FILE },
 #endif
+#if defined(MSDOS) || defined(SDL2_GRAPHICS)
+    { "video_width", "X resolution of video mode", 10, SET_IN_FILE },
+    { "video_height", "Y resolution of video mode", 10, SET_IN_FILE },
+#endif
 #ifdef VIDEOSHADES
     { "videocolors", "color mappings for internal screen routines", 40,
       DISP_IN_GAME },
@@ -2883,6 +2887,32 @@ boolean tinitial, tfrom_file;
         return;
     }
 #endif /* VIDEOSHADES */
+#if defined(MSDOS) || defined(SDL2_GRAPHICS)
+    fullname = "video_width";
+    if (match_optname(opts, fullname, 7, TRUE)) {
+        if (duplicate)
+            complain_about_duplicate(opts, 1);
+        if (negated) {
+            bad_negation(fullname, FALSE);
+            return;
+        }
+        op = string_for_opt(opts, negated);
+        iflags.wc_video_width = strtol(op, NULL, 10);
+        return;
+    }
+    fullname = "video_height";
+    if (match_optname(opts, fullname, 7, TRUE)) {
+        if (duplicate)
+            complain_about_duplicate(opts, 1);
+        if (negated) {
+            bad_negation(fullname, FALSE);
+            return;
+        }
+        op = string_for_opt(opts, negated);
+        iflags.wc_video_height = strtol(op, NULL, 10);
+        return;
+    }
+#endif /* MSDOS || SDL2_GRAPHICS */
 #ifdef MSDOS
 #ifdef NO_TERMS
     /* video:string -- must be after longer tests */

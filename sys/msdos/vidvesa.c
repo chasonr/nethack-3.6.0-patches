@@ -89,9 +89,6 @@ static struct map_struct {
 static int viewport_cols = 40;
 static int viewport_rows = ROWNO;
 
-static unsigned min_x_res = 1024;
-static unsigned min_y_res = 768;
-
 static const struct Pixel defpalette[] = {    /* Colors for text and the position bar */
     { 0x00, 0x00, 0x00, 0xff }, /* CLR_BLACK */
     { 0xaa, 0x00, 0x00, 0xff }, /* CLR_RED */
@@ -1196,6 +1193,17 @@ unsigned bits;
     struct ModeInfoBlock mode_info0, mode_info;
     unsigned model = (bits == 8) ? 4 : 6;
 
+    if (iflags.wc_video_width <= 0) {
+        iflags.wc_video_width = 1024;
+    } else if (iflags.wc_video_width < 640) {
+        iflags.wc_video_width = 640;
+    }
+    if (iflags.wc_video_height <= 0) {
+        iflags.wc_video_height = 768;
+    } else if (iflags.wc_video_height < 480) {
+        iflags.wc_video_height = 480;
+    }
+
     memset(&mode_info, 0, sizeof(mode_info));
     selected_mode = 0xFFFF;
     while (1) {
@@ -1207,8 +1215,8 @@ unsigned bits;
         if (!vesa_GetModeInfo(mode, &mode_info0)) continue;
 
         /* Check that the mode is acceptable */
-        if (mode_info0.XResolution < min_x_res) continue;
-        if (mode_info0.YResolution < min_y_res) continue;
+        if (mode_info0.XResolution < iflags.wc_video_width) continue;
+        if (mode_info0.YResolution < iflags.wc_video_height) continue;
         if (mode_info0.NumberOfPlanes != 1) continue;
         if (mode_info0.BitsPerPixel != bits) continue;
         if (mode_info0.NumberOfBanks != 1) continue;
