@@ -144,8 +144,7 @@ static unsigned long *undercursor;
  * drawing any text, we stop updating the map until more text is drawn, then
  * redraw the entire map.
  */
-static unsigned tiles_drawn = 0;
-#define MAX_TILES_DRAWN 10 /* Draw this many before suspending update */
+static boolean redraw_scheduled = FALSE;
 
 struct OldModeInfo {
     unsigned mode;
@@ -560,9 +559,9 @@ unsigned special; /* special feature: corpse, invis, detected, pet, ridden -
     map[ry][col].attr = attr;
     if (iflags.traditional_view) {
         vesa_WriteChar((unsigned char) ch, col, row, attr);
-    } else if (tiles_drawn < MAX_TILES_DRAWN
+    } else if (!redraw_scheduled
     || (GLYPH_EXPLODE_OFF <= glyphnum && glyphnum < GLYPH_SWALLOW_OFF)) {
-        if (tiles_drawn >= MAX_TILES_DRAWN) {
+        if (redraw_scheduled) {
             vesa_redrawmap();
         }
         if ((col >= clipx) && (col <= clipxmax)
@@ -572,7 +571,6 @@ unsigned special; /* special feature: corpse, invis, detected, pet, ridden -
                 decal_packed(packcell, special);
             vesa_DisplayCell(packcell, col - clipx, ry - clipy);
         }
-        ++tiles_drawn;
     }
     if (col < (CO - 1))
         ++col;
@@ -644,7 +642,7 @@ int x, y;
 void
 vesa_schedule_redraw()
 {
-    tiles_drawn = MAX_TILES_DRAWN;
+    redraw_scheduled = TRUE;
 }
 
 static void
@@ -740,7 +738,7 @@ vesa_redrawmap()
         vesa_FillRect(0, y, vesa_x_res, y_bottom - y, BACKGROUND_VESA_COLOR);
     }
 
-    tiles_drawn = 0;
+    redraw_scheduled = FALSE;
 }
 #endif /* USE_TILES && CLIPPING */
 
@@ -1635,7 +1633,7 @@ vesa_DrawCursor()
         (isrogue || iflags.over_view || iflags.traditional_view || !inmap);
     int curtyp;
 
-    if (tiles_drawn >= MAX_TILES_DRAWN && inmap) {
+    if (redraw_scheduled && inmap) {
         vesa_redrawmap();
     }
 
