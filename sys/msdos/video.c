@@ -634,6 +634,13 @@ struct WinDesc *cw;
     else cursor_flag = 0;
 #else
     if (cw->type == NHW_MAP) {
+#ifdef SCREEN_VESA
+        /* Lines overwritten by a menu may not be the ones that wintty.c
+           assumes */
+        if (iflags.usevesa) {
+            vesa_schedule_redraw();
+        }
+#endif
         inmap = 1;
         cursor_flag = 1;
     } else {
