@@ -153,6 +153,7 @@ endif # !WANT_QT_FROM_HOMEBREW
 LINK=$(CXX)
 WINSRC += $(WINQT4SRC)
 WINOBJ0 += $(WINQT4OBJ) /usr/lib/libz.dylib
+VARDATND += nhtiles.bmp rip.xpm
 
 # XXX make sure QTDIR points to something reasonable
 # XXX if /Developer/qt exists and QTDIR not set, use that
