@@ -805,17 +805,24 @@ void NetHackQtMenuOrTextWindow::StartMenu()
 void NetHackQtMenuOrTextWindow::AddMenu(int glyph, const ANY_P* identifier, char ch, char gch, int attr,
 	const QString& str, bool presel)
 {
-    if (!actual) impossible("AddMenu called before we know if Menu or Text");
-    actual->AddMenu(glyph,identifier,ch,gch,attr,str,presel);
+    if (!actual)
+        impossible("AddMenu called before we know if Menu or Text");
+    else
+        actual->AddMenu(glyph,identifier,ch,gch,attr,str,presel);
 }
 void NetHackQtMenuOrTextWindow::EndMenu(const QString& prompt)
 {
-    if (!actual) impossible("EndMenu called before we know if Menu or Text");
-    actual->EndMenu(prompt);
+    if (!actual)
+        impossible("EndMenu called before we know if Menu or Text");
+    else
+        actual->EndMenu(prompt);
 }
 int NetHackQtMenuOrTextWindow::SelectMenu(int how, MENU_ITEM_P **menu_list)
 {
-    if (!actual) impossible("SelectMenu called before we know if Menu or Text");
+    if (!actual) {
+        impossible("SelectMenu called before we know if Menu or Text");
+        return NULL;
+    }
     return actual->SelectMenu(how,menu_list);
 }
 
