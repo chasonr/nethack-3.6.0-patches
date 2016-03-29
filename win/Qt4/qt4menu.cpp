@@ -769,13 +769,17 @@ QWidget* NetHackQtMenuOrTextWindow::Widget()
 // Text
 void NetHackQtMenuOrTextWindow::Clear()
 {
-    if (!actual) impossible("Clear called before we know if Menu or Text");
-    else actual->Clear();
+    if (!actual)
+        impossible("Clear called before we know if Menu or Text");
+    else
+        actual->Clear();
 }
 void NetHackQtMenuOrTextWindow::Display(bool block)
 {
-    if (!actual) impossible("Display called before we know if Menu or Text");
-    else actual->Display(block);
+    if (!actual)
+        impossible("Display called before we know if Menu or Text");
+    else
+        actual->Display(block);
 }
 bool NetHackQtMenuOrTextWindow::Destroy()
 {
