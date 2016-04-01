@@ -40,6 +40,11 @@ boolean FDECL(read_tile_image, (struct TileSetImage *image,
             const char *filename, BOOLEAN_P true_color));
 void FDECL(free_tile_image, (struct TileSetImage *image));
 
+/* For resizing tiles */
+struct TileImage *FDECL(stretch_tile, (const struct TileImage *,
+                                       unsigned, unsigned));
+void FDECL(free_tile, (struct TileImage *));
+
 /* Used internally by the tile set code */
 boolean FDECL(read_bmp_tiles, (const char *filename, struct TileSetImage *image));
 boolean FDECL(read_gif_tiles, (const char *filename, struct TileSetImage *image));

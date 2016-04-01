@@ -132,6 +132,7 @@ static unsigned char vesa_blue_pos;
 static unsigned char vesa_blue_size;
 static unsigned long vesa_palette[256];
 static unsigned vesa_char_width = 8, vesa_char_height = 16;
+static unsigned vesa_oview_width, vesa_oview_height;
 #ifdef SIMULATE_CURSOR
 static unsigned long *undercursor;
 #endif
@@ -676,34 +677,40 @@ vesa_redrawmap()
         }
     } else if (iflags.over_view) {
         /* Overview mode */
+        struct TileImage *tile_row[COLNO];
         const struct TileImage *tile;
-        for (y = y_top; y < y_bottom; ++y) {
-            cy = (y - y_top) / iflags.wc_tile_height + clipy;
-            if (cy > clipymax || cy >= ROWNO) break;
-            py = (y - y_top) % iflags.wc_tile_height;
-            for (x = 0; x < vesa_x_res; ++x) {
-                cx = x / (iflags.wc_tile_width / 2) + clipx;
-                if (cx > clipxmax || cx >= COLNO) break;
-                px = x % (iflags.wc_tile_width / 2);
+        for (cy = 0; cy < ROWNO; ++cy) {
+            for (cx = 0; cx < COLNO; ++cx) {
                 tile = get_tile(glyph2tile[map[cy][cx].glyph]);
-                if (vesa_pixel_size == 8) {
-                    color = tile->indexes[py * tile->width + px * 2];
-                } else {
-                    struct Pixel p1, p2;
-                    unsigned char r, g, b;
-                    p1 = tile->pixels[py * tile->width + px * 2 + 0];
-                    p2 = tile->pixels[py * tile->width + px * 2 + 1];
-                    r = (p1.r + p2.r) / 2;
-                    g = (p1.g + p2.g) / 2;
-                    b = (p1.b + p2.b) / 2;
-                    color = vesa_MakeColor(r, g, b);
-                }
-                vesa_WritePixel32(x, y, color);
+                tile_row[cx] = stretch_tile(tile,
+                                            vesa_oview_width,
+                                            vesa_oview_height);
             }
-            if (x < vesa_x_res) {
-                vesa_FillRect(x, y, vesa_x_res - x, 1, BACKGROUND_VESA_COLOR);
+            for (py = 0; py < vesa_oview_height; ++py) {
+                y = cy * vesa_oview_height + py + y_top;
+                for (x = 0; x < vesa_x_res; ++x) {
+                    cx = x / vesa_oview_width + clipx;
+                    if (cx > clipxmax || cx >= COLNO) break;
+                    px = x % vesa_oview_width;
+                    tile = tile_row[cx];
+                    if (vesa_pixel_size == 8) {
+                        color = tile->indexes[py * tile->width + px];
+                    } else {
+                        struct Pixel p;
+                        p = tile->pixels[py * tile->width + px];
+                        color = vesa_MakeColor(p.r, p.g, p.b);
+                    }
+                    vesa_WritePixel32(x, y, color);
+                }
+                if (x < vesa_x_res) {
+                    vesa_FillRect(x, y, vesa_x_res - x, 1, BACKGROUND_VESA_COLOR);
+                }
+            }
+            for (cx = 0; cx < COLNO; ++cx) {
+                free_tile(tile_row[cx]);
             }
         }
+        y = ROWNO * vesa_oview_height + y_top;
     } else {
         /* Normal tiled mode */
         const struct TileImage *tile;
@@ -954,6 +961,17 @@ vesa_Init(void)
     clipxmax = clipx + (viewport_cols - 1);
     clipy = 0;
     clipymax = clipy + (viewport_rows - 1);
+
+    /* Set the size of the tiles for the overview mode */
+    vesa_oview_width = vesa_x_res / COLNO;
+    if (vesa_oview_width > iflags.wc_tile_width) {
+        vesa_oview_width = iflags.wc_tile_width;
+    }
+    vesa_oview_height = (vesa_y_res - (TOP_MAP_ROW + 4) * vesa_char_height)
+                      / ROWNO;
+    if (vesa_oview_height > iflags.wc_tile_height) {
+        vesa_oview_height = iflags.wc_tile_height;
+    }
 }
 
 /* Set the size of the map viewport */
@@ -1320,40 +1338,36 @@ int col, row;
 {
     int i, j, pixx, pixy;
 
-    pixx = col * tile->width;
-    pixy = row * tile->height + TOP_MAP_ROW * vesa_char_height;
     if (iflags.over_view) {
-        pixx /= 2;
+        struct TileImage *ov_tile = stretch_tile(
+                tile, vesa_oview_width, vesa_oview_height);
+        pixx = col * vesa_oview_width;
+        pixy = row * vesa_oview_height + TOP_MAP_ROW * vesa_char_height;
         pixx += vesa_x_center;
         pixy += vesa_y_center;
         if (vesa_pixel_size != 8) {
-            for (i = 0; i < tile->height; ++i) {
-                for (j = 0; j < tile->width; j += 2) {
-                    unsigned index = i * tile->width + j;
-                    unsigned char r1 = tile->pixels[index + 0].r;
-                    unsigned char r2 = tile->pixels[index + 1].r;
-                    unsigned char g1 = tile->pixels[index + 0].g;
-                    unsigned char g2 = tile->pixels[index + 1].g;
-                    unsigned char b1 = tile->pixels[index + 0].b;
-                    unsigned char b2 = tile->pixels[index + 1].b;
+            for (i = 0; i < ov_tile->height; ++i) {
+                for (j = 0; j < ov_tile->width; ++j) {
+                    unsigned index = i * ov_tile->width + j;
+                    struct Pixel p = ov_tile->pixels[index];
 
-                    r1 = (r1 + r2) / 2;
-                    g1 = (g1 + g2) / 2;
-                    b1 = (b1 + b2) / 2;
-                    vesa_WritePixel32(pixx + j / 2, pixy + i,
-                            vesa_MakeColor(r1, g1, b1));
+                    vesa_WritePixel32(pixx + j, pixy + i,
+                            vesa_MakeColor(p.r, p.g, p.b));
                 }
             }
         } else {
-            for (i = 0; i < tile->height; ++i) {
-                for (j = 0; j < tile->width; j += 2) {
-                    unsigned index = i * tile->width + j;
-                    vesa_WritePixel(pixx + j / 2, pixy + i, tile->indexes[index]);
+            for (i = 0; i < ov_tile->height; ++i) {
+                for (j = 0; j < ov_tile->width; ++j) {
+                    unsigned index = i * ov_tile->width + j;
+                    vesa_WritePixel(pixx + j, pixy + i, ov_tile->indexes[index]);
                 }
             }
         }
+        free_tile(ov_tile);
     } else {
         unsigned index = 0;
+        pixx = col * tile->width;
+        pixy = row * tile->height + TOP_MAP_ROW * vesa_char_height;
         pixx += vesa_x_center;
         pixy += vesa_y_center;
         if (vesa_pixel_size != 8) {
@@ -1668,16 +1682,16 @@ vesa_DrawCursor()
     if (!inmap || iflags.traditional_view) {
         width = vesa_char_width;
         height = vesa_char_height;
+    } else if (iflags.over_view) {
+        width = vesa_oview_width;
+        height = vesa_oview_height;
     } else {
         width = iflags.wc_tile_width;
         height = iflags.wc_tile_height;
-        if (halfwidth) {
-            width /= 2;
-        }
     }
     left = x * width  + vesa_x_center;
     top  = y * height + vesa_y_center;
-    if (x >= TOP_MAP_ROW) {
+    if (y >= TOP_MAP_ROW) {
         top -= (height - vesa_char_height) * TOP_MAP_ROW;
     }
     right = left + width - 1;
@@ -1770,16 +1784,16 @@ vesa_HideCursor()
     if (!inmap || iflags.traditional_view) {
         width = vesa_char_width;
         height = vesa_char_height;
+    } else if (iflags.over_view) {
+        width = vesa_oview_width;
+        height = vesa_oview_height;
     } else {
         width = iflags.wc_tile_width;
         height = iflags.wc_tile_height;
-        if (halfwidth) {
-            width /= 2;
-        }
     }
     left = x * width  + vesa_x_center;
     top  = y * height + vesa_y_center;
-    if (x >= TOP_MAP_ROW) {
+    if (y >= TOP_MAP_ROW) {
         top -= (height - vesa_char_height) * TOP_MAP_ROW;
     }
 
