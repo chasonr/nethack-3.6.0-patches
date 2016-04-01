@@ -976,9 +976,11 @@ char *sopt;
          * Auto-detect Priorities (arbitrary for now):
          *	VESA, VGA
          */
-        if (iflags.hasvesa) iflags.usevesa = 1;
-        else if (iflags.hasvga) {
+        if (iflags.hasvesa)
+            iflags.usevesa = 1;
+        else if (iflags.hasvga)
             iflags.usevga = 1;
+        if (iflags.hasvesa || iflags.hasvga) {
             /* VGA depends on BIOS to enable function keys*/
             iflags.BIOS = 1;
             iflags.rawio = 1;
