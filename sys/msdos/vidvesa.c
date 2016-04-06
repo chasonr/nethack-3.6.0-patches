@@ -991,6 +991,7 @@ vesa_Init(void)
         font_name = "ter-u16v.psf";
     if (iflags.wc_font_map != NULL && iflags.wc_font_map[0] != '\0')
         font_name = iflags.wc_font_map;
+    free_font(vesa_font);
     vesa_font = load_font(font_name);
     /* if load_font fails, vesa_font is NULL and we'll fall back to the font
        defined in ROM */
