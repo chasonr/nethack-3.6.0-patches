@@ -16,6 +16,7 @@
 #include "vesa.h"
 #include "wintty.h"
 #include "tileset.h"
+#include "font.h"
 
 #define FIRST_TEXT_COLOR 240
 
@@ -131,6 +132,7 @@ static unsigned char vesa_green_size;
 static unsigned char vesa_blue_pos;
 static unsigned char vesa_blue_size;
 static unsigned long vesa_palette[256];
+static struct BitmapFont *vesa_font = NULL;
 static unsigned vesa_char_width = 8, vesa_char_height = 16;
 static unsigned vesa_oview_width, vesa_oview_height;
 #ifdef SIMULATE_CURSOR
@@ -908,6 +910,7 @@ void
 vesa_Init(void)
 {
     const struct Pixel *paletteptr;
+    const char *font_name;
 #ifdef USE_TILES
     const char *tile_file;
     int tilefailure = 0;
@@ -943,6 +946,7 @@ vesa_Init(void)
     }
 #endif
 
+#if 1
     vesa_SwitchMode(vesa_mode);
     vesa_SetViewPort();
     windowprocs.win_cliparound = vesa_cliparound;
@@ -957,6 +961,7 @@ vesa_Init(void)
     g_attribute = attrib_gr_normal;
     font = vesa_FontPtrs();
     clear_screen();
+#endif
     clipx = 0;
     clipxmax = clipx + (viewport_cols - 1);
     clipy = 0;
@@ -971,6 +976,27 @@ vesa_Init(void)
                       / ROWNO;
     if (vesa_oview_height > iflags.wc_tile_height) {
         vesa_oview_height = iflags.wc_tile_height;
+    }
+
+    /* Load a font of size appropriate to the screen size */
+    if (vesa_x_res >= 1280 && vesa_y_res >= 960)
+        font_name = "ter-u32b.psf";
+    else if (vesa_x_res >= 1120 && vesa_y_res >= 840)
+        font_name = "ter-u28b.psf";
+    else if (vesa_x_res >= 960 && vesa_y_res >= 720)
+        font_name = "ter-u24b.psf";
+    else if (vesa_x_res >= 800 && vesa_y_res >= 600)
+        font_name = "ter-u20b.psf";
+    else
+        font_name = "ter-u16v.psf";
+    if (iflags.wc_font_map != NULL && iflags.wc_font_map[0] != '\0')
+        font_name = iflags.wc_font_map;
+    vesa_font = load_font(font_name);
+    /* if load_font fails, vesa_font is NULL and we'll fall back to the font
+       defined in ROM */
+    if (vesa_font != NULL) {
+        vesa_char_width = vesa_font->width;
+        vesa_char_height = vesa_font->height;
     }
 }
 
@@ -1304,21 +1330,30 @@ unsigned x, y;
 {
     unsigned fnt_width;
     unsigned x1, x2;
-    size_t offset;
-    unsigned char __far *fp;
     unsigned char fnt;
+    size_t offset;
 
-    if (ch < 0 || 255 < ch) return FALSE;
     if (x >= vesa_char_width) return FALSE;
     if (y >= vesa_char_height) return FALSE;
 
-    fnt_width = vesa_char_width / 8;
+    fnt_width = (vesa_char_width + 7) / 8;
     x1 = x / 8;
     x2 = x % 8;
-    offset = (ch * vesa_char_height + y) * fnt_width + x1;
 
-    fp = font;
-    fnt = READ_ABSOLUTE((fp + offset));
+    if (vesa_font != NULL) {
+        const unsigned char *fp;
+
+        offset = y * fnt_width + x1;
+        fp = get_font_glyph(vesa_font, ch, SYMHANDLING(H_UNICODE));
+        fnt = fp[offset];
+    } else {
+        const unsigned char __far *fp;
+
+        if (ch < 0 || 255 < ch) return FALSE;
+        offset = (ch * vesa_char_height + y) * fnt_width + x1;
+        fp = font;
+        fnt = READ_ABSOLUTE((fp + offset));
+    }
     return (fnt & (0x80 >> x2)) != 0;
 }
 

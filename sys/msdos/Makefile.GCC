@@ -294,7 +294,8 @@ else
 
 TILOBJ      = $(O)tile.o $(VGAOBJ)
 
-TILOBJ2     = $(O)tileset.o $(O)bmptiles.o $(O)giftiles.o $(O)pngtiles.o $(O)xpmtiles.o
+TILOBJ2     = $(O)tileset.o $(O)bmptiles.o $(O)giftiles.o $(O)pngtiles.o \
+              $(O)xpmtiles.o $(O)font.o
 
 TEXTIO      = $(O)tiletext.o $(O)tiletxt.o $(O)drawing.o $(O)decl.o $(O)monst.o \
 		$(O)objects.o $(O)stubvid.o
@@ -466,6 +467,7 @@ endif
 	@$(subst /,\,copy $(DOC)/guidebo*.txt  $(GAMEDIR))
 	@$(subst /,\,copy ../sys/winnt/sysconf  $(GAMEDIR))
 	@$(subst /,\,if exist $(DOC)/nethack.txt copy $(DOC)/nethack.txt $(GAMEDIR))
+	@$(subst /,\,copy ../win/share/*.psf $(GAMEDIR))
 ifdef CWSDPMI
 	@$(subst /,\,if exist $(CWSDPMI) copy $(CWSDPMI) $(GAMEDIR))
 else
@@ -1328,7 +1330,9 @@ $(O)worn.o: worn.c $(HACK_H)
 $(O)write.o: write.c $(HACK_H)
 $(O)zap.o: zap.c $(HACK_H)
 $(O)pmatchre.o: $(SSHR)/pmatchre.c $(HACK_H)
-$(O)tileset.o: $(WSHR)/tileset.c $(HACK_H)
+$(O)tileset.o: $(WSHR)/tileset.c $(HACK_H) $(INCL)/tileset.h
+$(O)font.o: $(WSHR)/tileset.c $(HACK_H) $(INCL)/font.h $(INCL)/integer.h \
+            $(INCL)/unicode.h
 $(O)bmptiles.o: $(WSHR)/bmptiles.c $(INCL)/config.h $(INCL)/tileset.h $(INCL)/integer.h
 $(O)giftiles.o: $(WSHR)/giftiles.c $(INCL)/config.h $(INCL)/tileset.h $(INCL)/integer.h
 $(O)pngtiles.o: $(WSHR)/pngtiles.c $(INCL)/config.h $(INCL)/tileset.h $(INCL)/integer.h
