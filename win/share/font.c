@@ -118,7 +118,7 @@ const char *filename;
             }
             codepoints = uni_8to32(buf2);
             for (j = 0; codepoints[j] != 0; ++j) {
-                add_unicode_index(font, j, i);
+                add_unicode_index(font, codepoints[j], i);
             }
             if (p != NULL)
                 ++i;
