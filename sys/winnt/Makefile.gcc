@@ -643,8 +643,13 @@ $(OBJ)/%.o : $(MSWIN)/%.c
 # Rules for files in win/Qt4
 #==========================================
 
+ifdef HAVE_QT5
+QT4_CXXFLAGS = -std=c++11
+else
+QT4_CXXFLAGS =
+endif
 $(OBJ)/%.o : $(QT4)/%.cpp
-	$(cxx) $(CXXFLAGS) -I$(MSWIN) -I$(QT4_DIRECTORY)/include -o$@  $<
+	$(cxx) $(CXXFLAGS) $(QT4_CXXFLAGS) -I$(MSWIN) -I$(QT4_DIRECTORY)/include -o$@  $<
 
 $(QT4)/%.moc : $(QT4)/%.h
 	$(QT4_DIRECTORY)\bin\moc -o $@ $<
