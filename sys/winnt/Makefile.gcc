@@ -81,7 +81,7 @@ WANT_WIN_CURSES = Y
 # https://www.qt.io/download-open-source/
 # Earlier versions of Qt are not compatible with Windows
 # For Qt 5, use:
-QT4_DIRECTORY = c:/Qt/Qt5.5.1/5.5/mingw492_32
+QT4_DIRECTORY = c:/Qt/Qt5.9.2/5.9.2/mingw53_32
 HAVE_QT5 = Y
 
 # For Qt 4, comment out the above two lines and use:
@@ -214,10 +214,10 @@ endif
 # the lower two.
 #
 
-#DO_YACC = YACC_MSG
-#DO_LEX  = LEX_MSG
-DO_YACC  = YACC_ACT
-DO_LEX   = LEX_ACT
+DO_YACC = YACC_MSG
+DO_LEX  = LEX_MSG
+#DO_YACC  = YACC_ACT
+#DO_LEX   = LEX_ACT
 
 # - Specify your yacc and lex programs (or work-alikes) here.
 
