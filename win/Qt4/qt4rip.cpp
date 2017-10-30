@@ -12,6 +12,8 @@
 #undef rindex
 #undef wizard
 #undef yn
+#undef min
+#undef max
 
 #include <QtGui/QtGui>
 #if QT_VERSION >= 0x050000

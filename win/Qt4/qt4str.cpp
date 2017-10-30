@@ -7,6 +7,8 @@
 extern "C" {
 #include "hack.h"
 }
+#undef min
+#undef max
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include "qt4str.h"
