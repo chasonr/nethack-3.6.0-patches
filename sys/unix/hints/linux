@@ -132,6 +132,7 @@ ifdef WANT_WIN_QT4
         QT_PACKAGES = QtGui
     endif
     CFLAGS += -DQT_GRAPHICS -DQT_NO_SOUND -fPIC $(shell pkg-config --cflags $(QT_PACKAGES))
+    CFLAGS += -DTIMED_DELAY
     WINSRC += $(WINQT4SRC)
     WINOBJ0 += $(WINQT4OBJ)
     WINLIB += $(shell pkg-config --libs $(QT_PACKAGES)) -fPIC
