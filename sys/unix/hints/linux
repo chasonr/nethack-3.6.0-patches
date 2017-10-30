@@ -24,13 +24,15 @@ WANT_WIN_CURSES=1
 WANT_DEFAULT=curses
 
 # For Qt, define this if linking to Qt 5
-#HAVE_QT5=1
+HAVE_QT5=1
 
 # For Qt 3, 4 or 5:
 # If pkg-config correctly locates the Qt installation, and the correct moc
 # is in /usr/bin, this can probably be left as is; otherwise this should point
 # to the root of the Qt installation
 QTDIR = /usr
+# Path to moc
+MOC = $(QTDIR)/bin/moc-qt5
 
 # For curses, define this if a wide ncurses is not installed
 #NO_WIDE_CURSES=1
