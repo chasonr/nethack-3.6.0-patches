@@ -856,6 +856,11 @@ void NetHackQtMainWindow::AddMessageWindow(NetHackQtMessageWindow* window)
     ShowIfReady();
 }
 
+NetHackQtMessageWindow * NetHackQtMainWindow::GetMessageWindow()
+{
+    return message;
+}
+
 void NetHackQtMainWindow::AddMapWindow(NetHackQtMapWindow2* window)
 {
 

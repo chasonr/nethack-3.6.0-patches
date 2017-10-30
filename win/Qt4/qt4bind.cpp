@@ -602,6 +602,30 @@ void NetHackQtBind::qt_outrip(winid wid, int how, time_t when)
     window->UseRIP(how, when);
 }
 
+char * NetHackQtBind::qt_getmsghistory(BOOLEAN_P init)
+{
+    NetHackQtMessageWindow* window = main->GetMessageWindow();
+    if (window)
+        return (char *)window->GetStr(init);
+    return NULL;
+}
+
+void NetHackQtBind::qt_putmsghistory(const char *msg, BOOLEAN_P is_restoring)
+{
+    NetHackQtMessageWindow* window = main->GetMessageWindow();
+    //raw_printf("msg='%s'", msg);
+    if (window && msg)
+        window->PutStr(ATR_NONE, QString::fromLatin1(msg));
+}
+
+void NetHackQtBind::qt_putmsghistory(const std::string& msg, BOOLEAN_P is_restoring)
+{
+    NetHackQtMessageWindow* window = main->GetMessageWindow();
+    if (window)
+        window->PutStr(ATR_NONE, QString::fromLatin1(msg.c_str(), msg.size()));
+}
+
+
 bool NetHackQtBind::notify(QObject *receiver, QEvent *event)
 {
     // Ignore Alt-key navigation to menubar, it's annoying when you
@@ -723,7 +747,8 @@ struct window_procs Qt_procs = {
 #endif
     genl_preference_update,
 
-    genl_getmsghistory, genl_putmsghistory,
+    nethack_qt4::NetHackQtBind::qt_getmsghistory,
+    nethack_qt4::NetHackQtBind::qt_putmsghistory,
 #ifdef STATUS_VIA_WINDOWPORT
     nethack_qt4::NetHackQtBind::_status_init,
     nethack_qt4::NetHackQtBind::_status_finish,
