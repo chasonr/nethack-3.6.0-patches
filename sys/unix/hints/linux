@@ -140,10 +140,10 @@ ifdef WANT_WIN_QT4
 endif # WANT_WIN_QT4
 
 ifdef WANT_WIN_SDL2
-CFLAGS += -DSDL2_GRAPHICS -DPOSITIONBAR $(shell pkg-config --cflags pangoft2 SDL2_image) $(shell sdl2-config --cflags)
+CFLAGS += -DSDL2_GRAPHICS -DPOSITIONBAR $(shell pkg-config --cflags pangoft2) $(shell sdl2-config --cflags)
 WINSRC += $(WINSDL2SRC)
 WINOBJ0 += $(WINSDL2OBJ)
-WINLIB += $(WINSDL2LIB) $(shell pkg-config --libs pangoft2 SDL2_image) $(shell sdl2-config --libs)
+WINLIB += $(WINSDL2LIB) $(shell pkg-config --libs pangoft2) $(shell sdl2-config --libs)
 LINK=$(CXX)
 VARDATND += nhtiles.bmp
 endif # WANT_WIN_SDL2
