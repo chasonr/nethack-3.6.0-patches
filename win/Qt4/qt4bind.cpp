@@ -18,6 +18,7 @@ extern "C" {
 #undef max
 
 #include <QtGui/QtGui>
+#include <QStringList>
 #if QT_VERSION >= 0x050000
 #include <QtWidgets/QtWidgets>
 #if defined(USER_SOUNDS) && !defined(QT_NO_SOUND)
@@ -123,6 +124,9 @@ NetHackQtBind::NetHackQtBind(int& argc, char** argv) :
     main = new NetHackQtMainWindow(keybuffer);
     connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));
     qt_settings=new NetHackQtSettings(main->width(),main->height());
+    msgs_strings = new QStringList();
+    msgs_initd = false;
+    msgs_saved = false;
 }
 
 void NetHackQtBind::qt_init_nhwindows(int* argc, char** argv)
@@ -613,18 +617,36 @@ char * NetHackQtBind::qt_getmsghistory(BOOLEAN_P init)
 void NetHackQtBind::qt_putmsghistory(const char *msg, BOOLEAN_P is_restoring)
 {
     NetHackQtMessageWindow* window = main->GetMessageWindow();
-    //raw_printf("msg='%s'", msg);
-    if (window && msg)
+    if (!window)
+        return;
+
+    if (is_restoring && !msgs_initd) {
+        /* we're restoring history from the previous session, but new
+           messages have already been issued this session */
+        int i = 0;
+        const char *str;
+
+        while ((str = window->GetStr((i == 0)))) {
+            msgs_strings->append(str);
+            i++;
+        }
+        msgs_initd = true;
+        msgs_saved = (i > 0);
+        window->ClearMessages();
+    }
+
+    if (msg) {
+        //raw_printf("msg='%s'", msg);
         window->PutStr(ATR_NONE, QString::fromLatin1(msg));
+    } else if (msgs_saved) {
+        /* restore strings */
+        int i;
+        for (i = 0; i < msgs_strings->size(); i++)
+            window->PutStr(ATR_NONE, msgs_strings->at((i)));
+        delete msgs_strings;
+        msgs_initd = false;
+    }
 }
-
-void NetHackQtBind::qt_putmsghistory(const std::string& msg, BOOLEAN_P is_restoring)
-{
-    NetHackQtMessageWindow* window = main->GetMessageWindow();
-    if (window)
-        window->PutStr(ATR_NONE, QString::fromLatin1(msg.c_str(), msg.size()));
-}
-
 
 bool NetHackQtBind::notify(QObject *receiver, QEvent *event)
 {
@@ -679,6 +701,9 @@ NetHackQtKeyBuffer NetHackQtBind::keybuffer;
 NetHackQtClickBuffer NetHackQtBind::clickbuffer;
 NetHackQtMainWindow* NetHackQtBind::main=0;
 QFrame* NetHackQtBind::splash=0;
+QStringList *NetHackQtBind::msgs_strings;
+boolean NetHackQtBind::msgs_saved = false;
+boolean NetHackQtBind::msgs_initd = false;
 
 static void Qt_positionbar(char *) {}
 
