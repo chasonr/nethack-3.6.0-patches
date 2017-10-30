@@ -63,9 +63,9 @@ NetHackQtSavedGameSelector::NetHackQtSavedGameSelector(const char** saved) :
     QVBoxLayout *bgl = new QVBoxLayout(box);
     connect(bg, SIGNAL(buttonPressed(int)), this, SLOT(done(int)));
     for (int i=0; saved[i]; i++) {
-        QPushButton* b = new QPushButton(saved[i],box);
+	QPushButton* b = new QPushButton(saved[i],box);
         bgl->addWidget(b);
-        bg->addButton(b, i+2);
+	bg->addButton(b, i+2);
     }
 }
 

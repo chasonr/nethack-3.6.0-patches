@@ -343,9 +343,9 @@ void NetHackQtBind::qt_display_file(const char *filename, BOOLEAN_P must_exist)
 	    complain = must_exist;
 	} else {
 	    while (dlb_fgets(buf, BUFSZ, f)) {
-		if ((cr = strchr(buf, '\n')) != 0) *cr = 0;
+		if ((cr = index(buf, '\n')) != 0) *cr = 0;
 #ifdef MSDOS
-		if ((cr = strchr(buf, '\r')) != 0) *cr = 0;
+		if ((cr = index(buf, '\r')) != 0) *cr = 0;
 #endif
 		window->PutStr(ATR_NONE, tabexpand(buf));
 	    }
@@ -418,10 +418,10 @@ void NetHackQtBind::qt_cliparound_window(winid wid, int x, int y)
     NetHackQtWindow* window=id_to_window[(int)wid];
     window->ClipAround(x,y);
 }
-void NetHackQtBind::qt_print_glyph(winid wid, XCHAR_P x, XCHAR_P y, int glyph, int bkglyph)
+void NetHackQtBind::qt_print_glyph(winid wid,XCHAR_P x,XCHAR_P y,int glyph,int bkglyph)
 {
     NetHackQtWindow* window=id_to_window[(int)wid];
-    window->PrintGlyph(x, y, glyph, bkglyph);
+    window->PrintGlyph(x,y,glyph,bkglyph);
 }
 //void NetHackQtBind::qt_print_glyph_compose(winid wid,xchar x,xchar y,int glyph1, int glyph2)
 //{
@@ -504,8 +504,8 @@ char NetHackQtBind::qt_yn_function(const char *question_, const char *choices, C
 	    message = QString("%1 [%2] ").arg(question, choicebuf);
 	    if (def) message += QString("(%1) ").arg(QChar(def));
 	    // escape maps to 'q' or 'n' or default, in that order
-	    yn_esc_map = (strchr(choices, 'q') ? 'q' :
-		     (strchr(choices, 'n') ? 'n' : def));
+	    yn_esc_map = (index(choices, 'q') ? 'q' :
+		     (index(choices, 'n') ? 'n' : def));
 	} else {
 	    message = question;
 	}
@@ -515,9 +515,9 @@ char NetHackQtBind::qt_yn_function(const char *question_, const char *choices, C
 	if (strcmp (choices,"ynq") == 0) {
 	    switch (QMessageBox::information (NetHackQtBind::mainWidget(),"NetHack",question,"&Yes","&No","&Quit",0,2))
 	    {
-	      case 0: return 'y'; 
-	      case 1: return 'n'; 
-	      case 2: return 'q'; 
+	      case 0: return 'y';
+	      case 1: return 'n';
+	      case 2: return 'q';
 	    }
 	}
 
@@ -525,7 +525,7 @@ char NetHackQtBind::qt_yn_function(const char *question_, const char *choices, C
 	    switch (QMessageBox::information(NetHackQtBind::mainWidget(),"NetHack",question,"&Yes", "&No",0,1))
 	    {
 	      case 0: return 'y';
-	      case 1: return 'n'; 
+	      case 1: return 'n';
 	    }
 	}
 #endif
@@ -537,7 +537,7 @@ char NetHackQtBind::qt_yn_function(const char *question_, const char *choices, C
 	    char ch=NetHackQtBind::qt_nhgetch();
 	    if (ch=='\033') {
 		result=yn_esc_map;
-	    } else if (choices && !strchr(choices,ch)) {
+	    } else if (choices && !index(choices,ch)) {
 		if (def && (ch==' ' || ch=='\r' || ch=='\n')) {
 		    result=def;
 		} else {
@@ -596,7 +596,6 @@ void NetHackQtBind::qt_end_screen()
 void NetHackQtBind::qt_outrip(winid wid, int how, time_t when)
 {
     NetHackQtWindow* window=id_to_window[(int)wid];
-
     window->UseRIP(how, when);
 }
 
@@ -627,7 +626,7 @@ bool NetHackQtBind::notify(QObject *receiver, QEvent *event)
 	    QChar ch = !key.isEmpty() ? key.at(0) : 0;
 	    if (ch > 128) ch = 0;
 	    if ( ch == 0 && (key_event->modifiers() & Qt::ControlModifier) ) {
-		// On Mac, it aint-ncessarily-control
+		// On Mac, ascii control codes are not sent, force them.
 		if ( k>=Qt::Key_A && k<=Qt::Key_Z )
 		    ch = k - Qt::Key_A + 1;
 	    }
@@ -660,10 +659,10 @@ static void Qt_positionbar(char *) {}
 
 struct window_procs Qt_procs = {
     "Qt",
-    WC_COLOR|WC_HILITE_PET|
-	WC_ASCII_MAP|WC_TILED_MAP|
-	WC_FONT_MAP|WC_TILE_FILE|WC_TILE_WIDTH|WC_TILE_HEIGHT|
-	WC_PLAYER_SELECTION|WC_SPLASH_SCREEN,
+    WC_COLOR | WC_HILITE_PET
+    | WC_ASCII_MAP | WC_TILED_MAP
+    | WC_FONT_MAP | WC_TILE_FILE | WC_TILE_WIDTH | WC_TILE_HEIGHT
+    | WC_PLAYER_SELECTION | WC_SPLASH_SCREEN,
     0L,
     nethack_qt4::NetHackQtBind::qt_init_nhwindows,
     nethack_qt4::NetHackQtBind::qt_player_selection,
@@ -720,8 +719,8 @@ struct window_procs Qt_procs = {
     genl_outrip,
 #endif
     genl_preference_update,
-    genl_getmsghistory,
-    genl_putmsghistory,
+
+    genl_getmsghistory, genl_putmsghistory,
 #ifdef STATUS_VIA_WINDOWPORT
     nethack_qt4::NetHackQtBind::_status_init,
     nethack_qt4::NetHackQtBind::_status_finish,

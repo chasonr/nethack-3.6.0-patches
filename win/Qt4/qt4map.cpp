@@ -41,7 +41,7 @@ static const QPen& nhcolor_to_pen(int c)
     static QPen* pen=0;
     if ( !pen ) {
 	pen = new QPen[17];
-	pen[0] = QColor(64,64,64); // "black" on black
+	pen[0] = QColor(64,64,64);
 	pen[1] = QColor(Qt::red);
 	pen[2] = QColor(0,191,0);
 	pen[3] = QColor(127,127,0);
@@ -57,7 +57,7 @@ static const QPen& nhcolor_to_pen(int c)
 	pen[13] = QColor(255,127,255);
 	pen[14] = QColor(127,255,255);
 	pen[15] = QColor(Qt::white);
-	pen[16] = QColor(64,64,64); // "black" on black
+	pen[16] = QColor(64,64,64);
     }
 
     return pen[c];
@@ -97,8 +97,7 @@ void NetHackQtMapViewport::paintEvent(QPaintEvent* event)
 
     painter.begin(this);
 
-    if (Is_rogue_level(&u.uz) || iflags.wc_ascii_map)
-    {
+    if (Is_rogue_level(&u.uz) || iflags.wc_ascii_map) {
 	// You enter a VERY primitive world!
 
 	painter.setClipRect( event->rect() ); // (normally we don't clip)
@@ -137,7 +136,7 @@ void NetHackQtMapViewport::paintEvent(QPaintEvent* event)
 
 		painter.setPen( Qt::green );
 		/* map glyph to character and color */
-		(void) mapglyph(g, &ch, &color, &special, i, j);
+		mapglyph(g, &ch, &color, &special, i, j);
 		ch = chrConvert(ch);
 #ifdef TEXTCOLOR
 		painter.setPen( nhcolor_to_pen(color) );
@@ -523,7 +522,7 @@ void NetHackQtMapViewport::CursorTo(int x,int y)
     Changed(cursor.x(),cursor.y());
 }
 
-void NetHackQtMapViewport::PrintGlyph(int x, int y, int glyph, int bkglyph)
+void NetHackQtMapViewport::PrintGlyph(int x,int y,int glyph,int bkglyph)
 {
     Glyph(x,y)=glyph;
     Changed(x,y);
@@ -626,7 +625,7 @@ void NetHackQtMapWindow2::ClipAround(int x,int y)
     ensureVisible(x,y,width()*0.45,height()*0.45);
 }
 
-void NetHackQtMapWindow2::PrintGlyph(int x, int y, int glyph, int bkglyph)
+void NetHackQtMapWindow2::PrintGlyph(int x,int y,int glyph,int bkglyph)
 {
     m_viewport->PrintGlyph(x, y, glyph, bkglyph);
 }
@@ -785,8 +784,7 @@ void NetHackQtMapWindow::paintEvent(QPaintEvent* event)
 
     painter.begin(this);
 
-    if (Is_rogue_level(&u.uz) || iflags.wc_ascii_map)
-    {
+    if (Is_rogue_level(&u.uz) || iflags.wc_ascii_map) {
 	// You enter a VERY primitive world!
 
 	painter.setClipRect( event->rect() ); // (normally we don't clip)
@@ -946,7 +944,7 @@ void NetHackQtMapWindow::ClipAround(int x,int y)
     viewport.center(x,y,0.45,0.45);
 }
 
-void NetHackQtMapWindow::PrintGlyph(int x, int y, int glyph, int bkglyph)
+void NetHackQtMapWindow::PrintGlyph(int x,int y,int glyph,int bkglyph)
 {
     Glyph(x,y)=glyph;
     Changed(x,y);

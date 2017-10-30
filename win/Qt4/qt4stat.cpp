@@ -446,6 +446,7 @@ void NetHackQtStatusWindow::updateStats()
     }
 
     gold.setLabel("Au:", money_cnt(invent));
+
     if (u.mtimedone) {
 	// You're a monster!
 
