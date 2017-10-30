@@ -12,7 +12,6 @@ namespace nethack_qt4 {
 class NetHackQtGlyphs {
 public:
 	NetHackQtGlyphs();
-	~NetHackQtGlyphs();
 
 	int width() const { return size.width(); }
 	int height() const { return size.height(); }
@@ -25,7 +24,7 @@ public:
 
 private:
 	QImage img;
-	QPixmap *pm;
+	QPixmap pm,pm1, pm2;
 	QSize size;
 	int tiles_per_row;
     int tilefile_tile_W;

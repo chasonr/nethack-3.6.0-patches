@@ -40,7 +40,6 @@ namespace nethack_qt4 {
 #endif
 
 NetHackQtGlyphs::NetHackQtGlyphs() :
-    pm(NULL),
 	tiles_per_row(0),
     tilefile_tile_W(16),
     tilefile_tile_H(16)
@@ -78,11 +77,6 @@ NetHackQtGlyphs::NetHackQtGlyphs() :
     setSize(tilefile_tile_W, tilefile_tile_H);
 }
 
-NetHackQtGlyphs::~NetHackQtGlyphs()
-{
-    delete pm;
-}
-
 void NetHackQtGlyphs::drawGlyph(QPainter& painter, int glyph, int x, int y)
 {
     int tile = glyph2tile[glyph];
@@ -92,7 +86,7 @@ void NetHackQtGlyphs::drawGlyph(QPainter& painter, int glyph, int x, int y)
     painter.drawPixmap(
 	x,
 	y,
-	*pm,
+	pm,
 	px,py,
 	width(),height()
     );
@@ -114,20 +108,23 @@ void NetHackQtGlyphs::setSize(int w, int h)
     if ( size == QSize(w,h) )
 	return;
 
-#if 0
     bool was1 = size == pm1.size();
-#endif
     size = QSize(w,h);
     if (!w || !h)
 	return; // Still not decided
 
-    delete pm;
-    pm = new QPixmap;
+    if ( size == pm1.size() ) {
+	pm = pm1;
+	return;
+    }
+    if ( size == pm2.size() ) {
+	pm = pm2;
+	return;
+    }
+
     if (w==tilefile_tile_W && h==tilefile_tile_H) {
-	pm->convertFromImage(img);
+	pm.convertFromImage(img);
     } else {
-	int pm_w = w*img.width()/tilefile_tile_W;
-	int pm_h = h*img.height()/tilefile_tile_H;
 	QApplication::setOverrideCursor( Qt::WaitCursor );
 	QImage scaled = img.scaled(
 	    w*img.width()/tilefile_tile_W,
@@ -135,9 +132,10 @@ void NetHackQtGlyphs::setSize(int w, int h)
 	    Qt::IgnoreAspectRatio,
 	    Qt::SmoothTransformation
 	);
-	pm->convertFromImage(scaled,Qt::ThresholdDither|Qt::PreferDither);
+	pm.convertFromImage(scaled,Qt::ThresholdDither|Qt::PreferDither);
 	QApplication::restoreOverrideCursor();
     }
+    (was1 ? pm2 : pm1) = pm;
 }
 
 } // namespace nethack_qt4

@@ -215,7 +215,7 @@ int NetHackQtMenuWindow::SelectMenu(int h, MENU_ITEM_P **menu_list)
     how=h;
 
     ok->setEnabled(how!=PICK_ONE);ok->setDefault(how!=PICK_ONE);
-    cancel->setEnabled(TRUE);
+    cancel->setEnabled(how!=PICK_NONE);
     all->setEnabled(how==PICK_ANY);
     none->setEnabled(how==PICK_ANY);
     invert->setEnabled(how==PICK_ANY);
@@ -279,10 +279,7 @@ int NetHackQtMenuWindow::SelectMenu(int h, MENU_ITEM_P **menu_list)
     int result=this->result();
 
     *menu_list=0;
-    if (how == PICK_NONE)
-	return result==0 ? -1 : 0;
-
-    if (result > 0) {
+    if (result>0 && how!=PICK_NONE) {
 	if (how==PICK_ONE) {
 	    int i;
 	    for (i=0; i<itemcount && !isSelected(i); i++)
@@ -714,7 +711,7 @@ void NetHackQtTextWindow::Display(bool block)
 	rip.hide();
     }
     int mh = QApplication::desktop()->height()*3/5;
-    if ( qt_compact_mode && (lines->TotalHeight() > mh || use_rip) ) {
+    if ( (qt_compact_mode && lines->TotalHeight() > mh) || use_rip ) {
 	// big, so make it fill
 	showMaximized();
     } else {

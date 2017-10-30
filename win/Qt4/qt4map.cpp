@@ -57,7 +57,7 @@ static const QPen& nhcolor_to_pen(int c)
 	pen[13] = QColor(255,127,255);
 	pen[14] = QColor(127,255,255);
 	pen[15] = QColor(Qt::white);
-	pen[16] = QColor(64,64,64);
+	pen[16] = QColor(Qt::black);
     }
 
     return pen[c];

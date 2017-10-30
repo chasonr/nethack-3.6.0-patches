@@ -68,7 +68,6 @@ static struct key_macro_rec {
 } key_macro[]={
     { Qt::Key_F1, 0, "n100." }, // Rest (x100)
     { Qt::Key_F2, 0, "n20s" },  // Search (x20)
-    { Qt::Key_F3, 0, "o8o4o6o2o8o4o6o2o8o4o6o2" }, // Open all doors (x3)
     { Qt::Key_Tab, 0, "\001" },
     { 0, 0, 0 }
 };
@@ -677,7 +676,7 @@ struct window_procs Qt_procs = {
     nethack_qt4::NetHackQtBind::qt_destroy_nhwindow,
     nethack_qt4::NetHackQtBind::qt_curs,
     nethack_qt4::NetHackQtBind::qt_putstr,
-    genl_putmixed,
+    nethack_qt4::NetHackQtBind::qt_putstr, /* FIXME: should be qt_putmixed() */
     nethack_qt4::NetHackQtBind::qt_display_file,
     nethack_qt4::NetHackQtBind::qt_start_menu,
     nethack_qt4::NetHackQtBind::qt_add_menu,
