@@ -542,35 +542,35 @@ objects.o:
 
 # Qt 2 or 3 windowport meta-object-compiler output
 qt_kde0.moc: ../include/qt_kde0.h
-	$(QTDIR)/bin/moc -o qt_kde0.moc ../include/qt_kde0.h
+	$(MOC) -o qt_kde0.moc ../include/qt_kde0.h
 
 qt_win.moc: ../include/qt_win.h
-	$(QTDIR)/bin/moc -o qt_win.moc ../include/qt_win.h
+	$(MOC) -o qt_win.moc ../include/qt_win.h
 
 qttableview.moc: ../include/qttableview.h
-	$(QTDIR)/bin/moc -o qttableview.moc ../include/qttableview.h
+	$(MOC) -o qttableview.moc ../include/qttableview.h
 
 # Qt 4 or 5 windowport meta-object-compiler output
 qt4kde0.moc: ../win/Qt4/qt4kde0.h
-	$(QTDIR)/bin/moc -o qt4kde0.moc ../win/Qt4/qt4kde0.h
+	$(MOC) -o qt4kde0.moc ../win/Qt4/qt4kde0.h
 qt4main.moc: ../win/Qt4/qt4main.h
-	$(QTDIR)/bin/moc -o qt4main.moc ../win/Qt4/qt4main.h
+	$(MOC) -o qt4main.moc ../win/Qt4/qt4main.h
 qt4map.moc: ../win/Qt4/qt4map.h
-	$(QTDIR)/bin/moc -o qt4map.moc ../win/Qt4/qt4map.h
+	$(MOC) -o qt4map.moc ../win/Qt4/qt4map.h
 qt4menu.moc: ../win/Qt4/qt4menu.h
-	$(QTDIR)/bin/moc -o qt4menu.moc ../win/Qt4/qt4menu.h
+	$(MOC) -o qt4menu.moc ../win/Qt4/qt4menu.h
 qt4msg.moc: ../win/Qt4/qt4msg.h
-	$(QTDIR)/bin/moc -o qt4msg.moc ../win/Qt4/qt4msg.h
+	$(MOC) -o qt4msg.moc ../win/Qt4/qt4msg.h
 qt4plsel.moc: ../win/Qt4/qt4plsel.h
-	$(QTDIR)/bin/moc -o qt4plsel.moc ../win/Qt4/qt4plsel.h
+	$(MOC) -o qt4plsel.moc ../win/Qt4/qt4plsel.h
 qt4set.moc: ../win/Qt4/qt4set.h
-	$(QTDIR)/bin/moc -o qt4set.moc ../win/Qt4/qt4set.h
+	$(MOC) -o qt4set.moc ../win/Qt4/qt4set.h
 qt4stat.moc: ../win/Qt4/qt4stat.h
-	$(QTDIR)/bin/moc -o qt4stat.moc ../win/Qt4/qt4stat.h
+	$(MOC) -o qt4stat.moc ../win/Qt4/qt4stat.h
 qt4xcmd.moc: ../win/Qt4/qt4xcmd.h
-	$(QTDIR)/bin/moc -o qt4xcmd.moc ../win/Qt4/qt4xcmd.h
+	$(MOC) -o qt4xcmd.moc ../win/Qt4/qt4xcmd.h
 qt4yndlg.moc: ../win/Qt4/qt4yndlg.h
-	$(QTDIR)/bin/moc -o qt4yndlg.moc ../win/Qt4/qt4yndlg.h
+	$(MOC) -o qt4yndlg.moc ../win/Qt4/qt4yndlg.h
 
 $(MAKEDEFS): ../util/makedefs.c  $(CONFIG_H) ../include/permonst.h \
 		../include/objclass.h ../include/monsym.h \
